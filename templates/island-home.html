@@ -1858,7 +1858,7 @@ SP.forEach(function(s,i){
   var cnt=isl?'💬 AI 問答・'+s.rows.length+' 則':frm?'📖 '+s.total+' 篇教學・'+(s.subs.length+1)+' 間小屋':s.k==='search'?'🔍 搜尋文章・🃏 抽塔羅牌':s.sub;
   s.base=frm?220+9*Math.min(s.subs.length+1,10):isl?205:s.k==='home'?255:s.k==='search'?285:s.k==='res'?170:s.k==='msg'?215:s.k==='game'?225:s.k==='mine'?230:s.k==='pets'?320:s.k==='shop'?340:235;
   if(s.major)s.base=Math.round(s.base*1.4);
-  if(s.member){var ref=FORUM.find(function(x){return x.id==='cad2d'});s.base=ref?Math.round((220+9*Math.min(ref.subs.length+1,10))*1.4):320;}
+  if(s.member){var ref=FORUM.find(function(x){return x.id==='courses'});s.base=ref?Math.round((220+9*Math.min(ref.subs.length+1,10))*1.4):320;}
   b.className='spot'+(num?'':' sp')+(s.k==='home'?' home':'')+(s.k==='search'?' oracle':'')+(isl?' qai':'')+(frm?' fi':'')+(s.major?' major':'');
   b.style.setProperty('--c',s.c);
   b.innerHTML=islandHTML(s)+'<span class="badge">🪙</span>'+(s.k==='search'?'<span class="tbadge">🃏</span>':'')+
