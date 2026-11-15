@@ -23,7 +23,7 @@ var OWNER = [{ nick: 'Tiger&蘋果爸', admin: true }, { nick: '蘋果爸', admi
 var RESERVED = /蘋果爸|管理員|站長|autocad\s*顧問|admin/i;
 /* 封測：建立新帳號（登島）要有邀請碼，每組預設限 2 位。邀請碼放在「邀請碼」分頁（第 1 欄碼、第 2 欄名額、第 3 欄已用），
    可以自己在表裡新增一列：碼填英數字，名額填 2。要結束封測就把 INVITE_ON 改成 false。已經有登島碼的人不受影響。 */
-var INVITE_ON = true;
+var INVITE_ON = false;
 var INV_HEAD = ['邀請碼', '名額', '已用', '使用者', '建立時間'];
 var INV_CAP = 2;
 function invKey_(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
@@ -513,9 +513,7 @@ function handle_(q) {
       if (gcoin) res.add = gcoin;
     } else if (a === 'dl') {
       var note = '';
-      var freeDl = /^courses\/t\d+\/$/.test(String(q.page || '')) || String(q.page || '') === 'plugins/t14746/';
       if (me.admin) note = '管理員免扣';
-      else if (freeDl) note = '免費下載';
       else if (me.bal < 1) return { ok: false, err: 'nocoin', p: me };
       else r[C.bal] = me.bal - 1;
       r[C.dls] = num_(r[C.dls]) + 1;

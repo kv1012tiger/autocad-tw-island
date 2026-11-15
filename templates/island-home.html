@@ -339,6 +339,7 @@ h1,h2,h3,h4{margin:0;line-height:1.25}
 .intro-title{font-size:clamp(40px,9vw,66px);font-weight:900;line-height:1.15}
 .intro-sub{margin:10px 0 0;color:var(--muted);font-size:clamp(15px,2vw,18px)}
 .intro-go{margin-top:26px;font-size:20px;padding:18px 34px}
+.intro-guest{display:block;margin:12px auto 0;padding:12px 18px;font-size:16px}
 .intro-mute{display:block;margin:18px auto 0;padding:6px 12px;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;cursor:pointer}
 .intro-back{display:inline-block;margin-top:10px;font-size:14px;color:var(--dim)}
 
@@ -1348,7 +1349,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
         <li>📖 <b>爬文</b>：每看 2 篇不同文章，有 7 成機率再送 1 枚（每天最多 6 枚）。</li>
         <li>⏱️ <b>在線</b>：在島上每待 5 分鐘送 1 枚（每天最多 3 枚）。</li>
         <li>💬 <b>問答島</b>：翻開一座島的 3 張問答卡，拿 1 枚（每座島每個帳號一次）。</li>
-        <li>📦 <b>下載</b>文章附件或下載連結，每次扣 1 枚；光碟課程島的課程資源不扣。</li>
+        <li>📦 <b>下載</b>文章附件或下載連結，登島後每次扣 1 枚金幣。</li>
         <li>🎁 累積拿滿 5 枚，可以到背包<b>花 5 枚金幣</b>領「提示詞禮物包」（領一次，之後免費重複查看）。</li>
         <li>✨ 地圖上的島嶼會隨機浮出發亮的 <b>🪙 金幣</b>或 <b>💎 鑽石</b>（每 15 分鐘換一批），點一下就能撿；每天最多撿 4 枚金幣、2 顆鑽石。</li>
         <li>📋 <b>🎒 背包</b>最上面有「今日任務」，每天 3 個，完成一個領 1 枚金幣。</li>
@@ -1401,7 +1402,8 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
     <div class="intro-art" aria-hidden="true"><span class="ia-core"></span><span class="ia-pk"><svg viewBox="0 0 80 80" aria-hidden="true"><path d="M40 6v50" stroke="#4a2a12" stroke-width="3"/><path d="M40 8l18 5-18 5z" fill="#e11d2e"/><path d="M42 20c14 2 22 11 22 28H42z" fill="#20222c" stroke="#0b0c10" stroke-width="1.5"/><path d="M38 20c-14 2-22 11-22 28h22z" fill="#2c2f3b" stroke="#0b0c10" stroke-width="1.5"/><g fill="#fff"><circle cx="53" cy="33" r="5"/><rect x="50.6" y="36.5" width="4.8" height="4" rx="1"/></g><g fill="#20222c"><circle cx="51.2" cy="32.6" r="1.3"/><circle cx="54.8" cy="32.6" r="1.3"/></g><path d="M46 42l14 3M60 42l-14 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M8 52h64l-8 17a5 5 0 0 1-4.5 3h-39a5 5 0 0 1-4.5-3z" fill="#8a5527" stroke="#3b2210" stroke-width="2"/><path d="M12 59h56" stroke="#5f3816" stroke-width="2"/><circle cx="26" cy="64" r="2.4" fill="#2a1a0c"/><circle cx="40" cy="64" r="2.4" fill="#2a1a0c"/><circle cx="54" cy="64" r="2.4" fill="#2a1a0c"/></svg></span><span class="ia-bat">🦜</span></div>
     <h2 class="intro-title" id="introT"><span class="grad-fire">論壇</span> <span class="grad">資源島</span></h2>
     <p class="intro-sub">蘋果爸的 AutoCAD 教學大島群</p>
-    <button class="btn btn-primary intro-go" id="introGo" type="button">⚓ 按一下，登上論壇資源島</button>
+    <button class="btn btn-primary intro-go" id="introGo" type="button">⚓ 登島，輸入暱稱</button>
+    <button class="btn intro-guest" id="introGuest" type="button">🧭 我是遊俠，想逛逛資源島</button>
     
   </div>
 </div>
@@ -4080,17 +4082,18 @@ function closeMission(){mission.hidden=true;if($('missionOff').checked){try{loca
   if(first)setTimeout(function(){toast('📖 想再看使用說明和遊戲規則，按上方的 📖 就能打開')},500)}
 $('missionGo').addEventListener('click',closeMission);
 mission.addEventListener('click',function(e){if(e.target===mission)closeMission()});
-function startCoins(){COINS.start({done:function(){setTimeout(showMission,400)}})}
+function startCoins(choice){COINS.start({ask:choice!=='guest',forceAsk:choice==='join',done:function(){setTimeout(showMission,400)}})}
 if(seen)setTimeout(startCoins,700);
-function closeIntro(withSound){
+function closeIntro(withSound,choice){
   try{sessionStorage.setItem('aikb-intro','1')}catch(e){}
   SFX_ON=withSound;try{sessionStorage.setItem('aic-sfx',withSound?'on':'off')}catch(e){}
   sfxUI();
   if(withSound){tone(1046,0,.2,'sine',.12);bgmStart()}else bgmStop();
   intro.classList.add('hide');document.documentElement.classList.remove('lock');
-  setTimeout(function(){intro.hidden=true},650);setTimeout(startCoins,800);
+  setTimeout(function(){intro.hidden=true},650);setTimeout(function(){startCoins(choice)},800);
 }
-$('introGo').addEventListener('click',function(){closeIntro(SFX_ON)});
+$('introGo').addEventListener('click',function(){closeIntro(SFX_ON,'join')});
+$('introGuest').addEventListener('click',function(){try{sessionStorage.setItem('cw-asked','1')}catch(e){}closeIntro(SFX_ON,'guest')});
 
 var rzT;
 window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(function(){layout();drawScene()},120)});

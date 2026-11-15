@@ -222,9 +222,8 @@
       return '<div class="cw-ic">🏝️</div><h3>歡迎登島！取個暱稱</h3>' +
         '<p>有暱稱才能收集金幣、上排行榜、下載資源。</p>' +
         '<input class="cw-in" maxlength="12" placeholder="例如：圖塊小達人">' +
-        '<input class="cw-in inv" style="margin-top:8px" maxlength="20" placeholder="🎟 邀請碼（封測期間需要）" autocapitalize="characters" autocomplete="off" value="' + esc(savedInv()) + '"><div class="cw-err"></div>' +
+        '<div class="cw-err"></div>' +
         '<div class="cw-row"><button class="cw-b p" type="button" data-ok>確定</button></div>' +
-        '<small style="display:block;margin-top:8px">🎟 還沒有邀請碼？封測期間要有邀請碼才能登島，請到 <a href="https://www.facebook.com/autocad.tw" target="_blank" rel="noopener">AutoCAD 粉絲團</a> 的貼文留言「我想上島」索取。</small>' +
         '<p style="margin-top:10px">已經有登島碼？<button class="cw-link" type="button" data-sw>輸入登島碼</button></p>' +
         '<p><button class="cw-link" type="button" data-x>👀 我是訪客，先逛逛（可看地圖、讀全部文章）</button></p>' +
         '<small>請不要填真實姓名、電話或 Email。暱稱、金幣與下載紀錄會存到蘋果爸的統計表。</small>';
@@ -252,7 +251,6 @@
         if (mode === 'login') { v = v.toUpperCase(); if (v.length !== 6) { err.textContent = '登島碼是 6 個字'; return; } }
         else if (v.length < 2) { err.textContent = ERR.short; return; }
         var inv = invIn ? invIn.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase() : '';
-        if (mode !== 'login' && !inv) { err.textContent = ERR.noinv; return; }
         ok.disabled = true; ok.textContent = '連線中…';
         call(mode === 'login' ? { a: 'login', code: v } : { a: 'reg', nick: v, init: initQa, inv: inv }).then(function (j) {
           ok.disabled = false; ok.textContent = mode === 'login' ? '登島' : '確定';
@@ -316,12 +314,11 @@
   }
   function confirmDownload(a) {
     if (!P.code) { welcome(function (ok) { if (ok) confirmDownload(a); }); return; }
-    var free = /\/courses\/t\d+\//.test(location.pathname) || a.hasAttribute('data-free');
-    if (!free && !P.admin && P.bal < 1) { noCoin(); return; }
+    if (!P.admin && P.bal < 1) { noCoin(); return; }
     var name = fileName(a);
     modal('<div class="cw-ic">📦</div><h3>下載資源</h3><p style="word-break:break-all">' + esc(name) + '</p>' +
-      (P.admin ? '<p>管理員帳號下載不扣金幣</p>' : free ? '<p>免費下載，會記錄下載次數</p>' : '<p>下載會扣 <b>1 枚金幣</b>（目前 <b>' + P.bal + '</b> 枚）</p>') +
-      '<div class="cw-row"><button class="cw-b p" type="button" data-ok>' + (P.admin || free ? '⬇️ 下載' : '🪙 扣 1 枚並下載') + '</button><button class="cw-b" type="button" data-x>取消</button></div>',
+      (P.admin ? '<p>管理員帳號下載不扣金幣</p>' : '<p>下載會扣 <b>1 枚金幣</b>（目前 <b>' + P.bal + '</b> 枚）</p>') +
+      '<div class="cw-row"><button class="cw-b p" type="button" data-ok>' + (P.admin ? '⬇️ 下載' : '🪙 扣 1 枚並下載') + '</button><button class="cw-b" type="button" data-x>取消</button></div>',
       function (ov, close) {
         ov.querySelector('[data-x]').addEventListener('click', close);
         ov.querySelector('[data-ok]').addEventListener('click', function () {
@@ -337,7 +334,7 @@
               return;
             }
             apply(j.p);
-            toast(P.admin || free ? '📦 開始下載' : '📦 已扣 1 枚金幣，開始下載（剩 ' + P.bal + ' 枚）');
+            toast(P.admin ? '📦 開始下載' : '📦 已扣 1 枚金幣，開始下載（剩 ' + P.bal + ' 枚）');
             if (win) { try { win.opener = null; } catch (e) {} win.location.href = a.href; }
             else { a.dataset.cwPaid = '1'; a.click(); setTimeout(function () { delete a.dataset.cwPaid; }, 500); }
           }).catch(function () { if (win) win.close(); netFail(); });
@@ -780,7 +777,7 @@
         if (opt.done) opt.done();
       };
       var asked = false; try { asked = sessionStorage.getItem('cw-asked') === '1'; sessionStorage.setItem('cw-asked', '1'); } catch (e) {}
-      if (!P.code && opt.ask !== false && !asked) welcome(begin); else begin();
+      if (!P.code && opt.ask !== false && (!asked || opt.forceAsk)) welcome(begin); else begin();
     }
   };
 })();
