@@ -2479,7 +2479,7 @@ function renderRes(n){
     '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包・兌換所・好友</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 物資排行榜</button></div></div>'+
     '<div class="p-sec"><h4>物資島規則</h4><ul class="notes"><li>6 秒內連續點 '+R.taps+' 下就能'+esc(R.act)+'，太慢會失敗，不扣次數。</li>'+(R.rk==='gold'?'<li>🪙 金礦島：每座每天全島有 15 枚金幣，大家一起搶，挖光了要等明天。</li><li>每人每座金礦每天最多挖 2 次（每次 '+R.lo+'～'+R.hi+' 枚，★★★ 時最多 3 枚、★ 時只有 1 枚）；4 座金礦分散在地圖各處。</li><li>金礦裡沒有鑽石，挖到的金幣直接加進你的錢包。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>':'<li>每座物資島每天的總量隨機（60～160 份），大家一起採，採光了就要等明天重新長出來。</li><li>每人每座島每天最多採 5 次；這座島每次 '+R.lo+'～'+R.hi+' 個，採完要等 '+R.gap+' 秒才能再採（每座島的秒數和數量都不一樣，30～120 秒）。</li><li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>')+'<li>🏪 兌換所：10 個同種物資換 1 枚金幣、1 顆鑽石換 10 枚金幣，每天最多換 3 次。</li><li>🏆 物資排行榜看累計採集量，兌換和送禮不會掉名次。</li></ul></div>';
   $('pStep').textContent=R.e+' 物資島';
-  footSimple('← 回地圖','');
+  footSimple('← 回大海','');
   resBag();resStock();
   try{if(!localStorage.getItem('aikb-star-hint')){localStorage.setItem('aikb-star-hint','1');setTimeout(function(){toast('⭐ 島上的星星 = 現在資源多不多：★ 少、★★ 普通、★★★ 多，每 1～3 分鐘會變')},900)}}catch(e){}
   var my=++RS.seq,w=COINS.get();
@@ -4230,7 +4230,7 @@ guideMaybe(COINS.get());layout();refresh();favPaint();route();centerOn(HASH_SP>=
   });
 })();
 </script>
-<script>window.FS_BTN_ONLY_TOUCH=true</script><!-- 手機只有按 ⛶ 才進全螢幕（避免每次開啟都跳出 Chrome 的退出全螢幕提示） -->
+
 <script src="assets/js/fullscreen.js"></script>
 </body>
 </html>
