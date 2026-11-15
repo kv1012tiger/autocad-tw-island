@@ -339,7 +339,7 @@ h1,h2,h3,h4{margin:0;line-height:1.25}
 .intro-title{font-size:clamp(40px,9vw,66px);font-weight:900;line-height:1.15}
 .intro-sub{margin:10px 0 0;color:var(--muted);font-size:clamp(15px,2vw,18px)}
 .intro-go{margin-top:26px;font-size:20px;padding:18px 34px}
-.intro-guest{display:block;margin:12px auto 0;padding:12px 18px;font-size:16px}
+.intro-guest{display:block;margin:12px auto 0;padding:12px 18px;font-size:16px;background:#105b70;color:#fff;border:2px solid #8bded3}.intro-guest[hidden]{display:none}
 .intro-mute{display:block;margin:18px auto 0;padding:6px 12px;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;cursor:pointer}
 .intro-back{display:inline-block;margin-top:10px;font-size:14px;color:var(--dim)}
 
@@ -4060,6 +4060,7 @@ document.addEventListener('keydown',firstGesture,{once:true});
 document.addEventListener('visibilitychange',function(){if(!AC)return;if(document.hidden)AC.suspend();else if(SFX_ON)AC.resume()});
 
 /* ---------- 開場畫面：同一次瀏覽只出現一次 ---------- */
+if(COINS.get().code){$('introGo').textContent='🧭 繼續探險資源島';$('introGuest').hidden=true}
 var seen=false;try{seen=sessionStorage.getItem('aikb-intro')==='1'}catch(e){}
 var HASH=location.hash.replace(/^#/,''),HASH_SP=-1,hm;
 if((hm=HASH.match(/^isle-([^/]+)/)))SP.forEach(function(s){if(s.k==='forum'&&s.id===decodeURIComponent(hm[1]))HASH_SP=s.si});
