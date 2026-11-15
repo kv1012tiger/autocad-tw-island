@@ -172,6 +172,7 @@ def write_home(boards, by_board):
             "id": b["id"],
             "route": b["route"],
             "major": b.get("major", False),
+            "member": b.get("member", False),
             "name": b["name"],
             "e": b["icon"],
             "sub": b["tagline"],

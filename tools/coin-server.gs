@@ -511,9 +511,11 @@ function handle_(q) {
       if(grid){gx.gm.receipts.push({id:grid,kind:gk,result:res.game});if(gx.gm.receipts.length>100)gx.gm.receipts=gx.gm.receipts.slice(-100)}
       r[C.isle] = JSON.stringify(gx);
       if (gcoin) res.add = gcoin;
-    } else if (a === 'dl') {
+    } else if (a === 'dl' || a === 'memberdl') {
       var note = '';
-      if (me.admin) note = '管理員免扣';
+      if (a === 'memberdl' && !/^(memberb|sponsora)\/t[0-9]+\/index\.html$/.test(String(q.page || ''))) return { ok: false, err: 'badpage' };
+      if (a === 'memberdl') note = '會員島免扣（記錄點擊）';
+      else if (me.admin) note = '管理員免扣';
       else if (me.bal < 1) return { ok: false, err: 'nocoin', p: me };
       else r[C.bal] = me.bal - 1;
       r[C.dls] = num_(r[C.dls]) + 1;

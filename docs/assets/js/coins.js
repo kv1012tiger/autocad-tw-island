@@ -314,11 +314,12 @@
   }
   function confirmDownload(a) {
     if (!P.code) { welcome(function (ok) { if (ok) confirmDownload(a); }); return; }
-    if (!P.admin && P.bal < 1) { noCoin(); return; }
+    var memberIsland = /\/(memberb|sponsora)\/t[0-9]+\/index\.html$/.test(location.pathname);
+    if (!memberIsland && !P.admin && P.bal < 1) { noCoin(); return; }
     var name = fileName(a);
     modal('<div class="cw-ic">📦</div><h3>下載資源</h3><p style="word-break:break-all">' + esc(name) + '</p>' +
-      (P.admin ? '<p>管理員帳號下載不扣金幣</p>' : '<p>下載會扣 <b>1 枚金幣</b>（目前 <b>' + P.bal + '</b> 枚）</p>') +
-      '<div class="cw-row"><button class="cw-b p" type="button" data-ok>' + (P.admin ? '⬇️ 下載' : '🪙 扣 1 枚並下載') + '</button><button class="cw-b" type="button" data-x>取消</button></div>',
+      (memberIsland ? '<p>會員島免扣金幣，將記錄下載連結點擊。</p>' : P.admin ? '<p>管理員帳號下載不扣金幣</p>' : '<p>下載會扣 <b>1 枚金幣</b>（目前 <b>' + P.bal + '</b> 枚）</p>') +
+      '<div class="cw-row"><button class="cw-b p" type="button" data-ok>' + (memberIsland || P.admin ? '⬇️ 下載' : '🪙 扣 1 枚並下載') + '</button><button class="cw-b" type="button" data-x>取消</button></div>',
       function (ov, close) {
         ov.querySelector('[data-x]').addEventListener('click', close);
         ov.querySelector('[data-ok]').addEventListener('click', function () {
@@ -326,7 +327,7 @@
           var win = external ? window.open('about:blank', '_blank') : null; // 先在點擊當下開分頁，避免被擋
           close();
           var page = location.pathname.replace(/^.*?\/([^\/]+\/t\d+\/)/, '$1');
-          call({ a: 'dl', code: P.code, page: page, title: (document.title || '').split(' | ')[0], file: name }).then(function (j) {
+          call({ a: memberIsland ? 'memberdl' : 'dl', code: P.code, page: page, title: (document.title || '').split(' | ')[0], file: name }).then(function (j) {
             if (!j.ok) {
               if (win) win.close();
               if (j.p) apply(j.p);
@@ -334,7 +335,7 @@
               return;
             }
             apply(j.p);
-            toast(P.admin ? '📦 開始下載' : '📦 已扣 1 枚金幣，開始下載（剩 ' + P.bal + ' 枚）');
+            toast(memberIsland ? '📦 已記錄點擊，請以會員 Google 帳號開啟' : P.admin ? '📦 開始下載' : '📦 已扣 1 枚金幣，開始下載（剩 ' + P.bal + ' 枚）');
             if (win) { try { win.opener = null; } catch (e) {} win.location.href = a.href; }
             else { a.dataset.cwPaid = '1'; a.click(); setTimeout(function () { delete a.dataset.cwPaid; }, 500); }
           }).catch(function () { if (win) win.close(); netFail(); });

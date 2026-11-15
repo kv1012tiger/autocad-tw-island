@@ -628,5 +628,77 @@
       ]
     ],
     "subs": []
+  },
+  {
+    "id": "memberb",
+    "route": 0.1,
+    "member": true,
+    "name": "專屬 B 資源島",
+    "icon": "💎",
+    "forum": "專屬資源",
+    "url": "https://www.autocad-tw.com/f35-",
+    "tagline": "會員資源・文章與教學",
+    "guide": "瀏覽蘋果爸分享的文章；附件由 Google 雲端硬碟依會員帳號控管。",
+    "c": "#c4a7ff",
+    "g": [
+      "#d8b4fe",
+      "#673bb1"
+    ],
+    "dc": [
+      "✨",
+      "📚",
+      "⚓"
+    ],
+    "res": [
+      [
+        "🦜",
+        "f"
+      ],
+      [
+        "🐢",
+        "w"
+      ],
+      [
+        "🐬",
+        "w"
+      ]
+    ],
+    "subs": []
+  },
+  {
+    "id": "sponsora",
+    "route": 0.2,
+    "member": true,
+    "name": "贊助 A 資源島",
+    "icon": "🌟",
+    "forum": "贊助 A 資源",
+    "url": "https://www.autocad-tw.com/f68-",
+    "tagline": "會員資源・文章與教學",
+    "guide": "瀏覽蘋果爸分享的文章；附件由 Google 雲端硬碟依會員帳號控管。",
+    "c": "#ffc36e",
+    "g": [
+      "#ffe49b",
+      "#b36a13"
+    ],
+    "dc": [
+      "✨",
+      "📚",
+      "⚓"
+    ],
+    "res": [
+      [
+        "🦜",
+        "f"
+      ],
+      [
+        "🐢",
+        "w"
+      ],
+      [
+        "🐬",
+        "w"
+      ]
+    ],
+    "subs": []
   }
 ]
