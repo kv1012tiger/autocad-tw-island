@@ -1260,6 +1260,7 @@ function isleAct_(a, q, r, me) {
   } else if (a === 'adopt') {
     var an = ANIMALS[String(q.k || '')], name = cleanNick_(q.name).slice(0, 8);
     if (!an) return { err: 'bad' };
+    if (o.pets.some(function(p) { return p.k === String(q.k); })) return { err: 'petowned' };
     if (o.h < 1) return { err: 'nohouse' };
     if (o.pets.length >= Math.min(o.h, 8)) return { err: 'petmax' };
     if (name.length < 1) name = an.name;

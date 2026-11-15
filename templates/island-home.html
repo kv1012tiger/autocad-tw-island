@@ -3380,7 +3380,7 @@ function renderPets(){
   pBody.innerHTML='<div class="ph" style="--c:#fb7185"><span class="ph-e">🐾</span><div><div class="p-kicker">PET ISLAND・寵物島</div><h3 id="pTitle">寵物島</h3><p>花金幣領養一隻寵物，帶回你的小島一起生活</p></div></div>'+
     '<div class="pt-cap" id="ptCap">'+(w.code?'看看你的小屋還有沒有空位…':'取個暱稱、蓋好小屋，就能領養寵物。')+'</div>'+
     '<div class="pt-grid" id="ptGrid"></div>'+
-    '<div class="p-sec"><h4>領養須知</h4><ul class="notes"><li>要先在 🏝️ 我的小島蓋小屋：小屋 Lv1 可以養 1 隻，Lv2 養 2 隻，Lv3 養 3 隻，Lv8 養 8 隻；小屋可升到 Lv10，最多養 8 隻。</li><li>領養要付金幣，還可以幫牠取名字（8 個字以內）。</li><li>寵物飽足度每天掉 25，用菜園種的菜或水果餵牠；每天摸摸親密度 +1，親密度每 10 點升一級。</li><li>飽足度 50 以上時摸摸，寵物會送你 1 個物資，偶爾送 1 枚金幣。餓了不會跑掉，只是不開心、不送禮。</li></ul></div>';
+    '<div class="p-sec"><h4>領養須知</h4><ul class="notes"><li>要先在 🏝️ 我的小島蓋小屋：小屋 Lv1 可以養 1 隻，Lv2 養 2 隻，Lv3 養 3 隻，Lv8 養 8 隻；小屋可升到 Lv10，最多養 8 隻。</li><li>每種動物只能領養一隻；領養要付金幣，還可以幫牠取名字（8 個字以內）。</li><li>寵物飽足度每天掉 25，用菜園種的菜或水果餵牠；每天摸摸親密度 +1，親密度每 10 點升一級。</li><li>飽足度 50 以上時摸摸，寵物會送你 1 個物資，偶爾送 1 枚金幣。餓了不會跑掉，只是不開心、不送禮。</li></ul></div>';
   $('pStep').textContent='🐾 寵物島';
   footSimple('← 回地圖','🏝️ 我的小島 →');
   MI.adopt=null;paintPets();
@@ -3391,10 +3391,10 @@ function paintPets(){
   var w=COINS.get(),d=MI.data&&MI.data.mine?MI.data:null,room=d?Math.min(d.h,8)-d.pets.length:0;
   if(w.code&&d)cap.innerHTML=d.h?'🏠 你的小屋 Lv'+d.h+' 可以養 <b>'+Math.min(d.h,8)+'</b> 隻，已經有 <b>'+d.pets.length+'</b> 隻'+(room>0?'，還可以領養 '+room+' 隻！':(d.h<8?'；升級小屋就能多養一隻。':'；寵物名額已滿。'))+'・你有 🪙 <b>'+w.bal+'</b> 枚'+(w.admin?'（管理員免費）':''):'🚧 你還沒有小屋，先到 <button class="mb-b" type="button" data-open="mine">🏝️ 我的小島</button> 用 🪵 10・🪨 5 蓋一間。';
   g.innerHTML=ANI_KEYS.map(function(k){
-    var a=ANI[k],ad=MI.adopt===k,can=w.code&&d&&room>0&&(w.admin||w.bal>=a[2]);
+    var a=ANI[k],owned=!!(d&&d.pets.some(function(p){return p.k===k})),ad=MI.adopt===k&&!owned,can=w.code&&d&&room>0&&!owned&&(w.admin||w.bal>=a[2]);
     return '<div class="pt-c'+(a[3]?' rare':'')+'"><span class="pt-e">'+a[0]+'</span><b>'+a[1]+(a[3]?'<em>稀有</em>':'')+'</b><span class="pt-p">🪙 '+a[2]+'</span>'+
       (ad?'<input class="pt-in" maxlength="8" placeholder="幫牠取名字" id="ptName"><button class="btn btn-primary btn-sm" type="button" data-adopt="'+k+'">確定領養</button><button class="mb-b" type="button" data-acancel>取消</button>'
-        :'<button class="btn '+(can?'btn-primary':'btn-ghost')+' btn-sm" type="button" data-pick="'+k+'">🏡 領養</button>')+'</div>';
+        :(owned?'<button class="btn btn-ghost btn-sm" type="button" disabled>✓ 已領養</button>':'<button class="btn '+(can?'btn-primary':'btn-ghost')+' btn-sm" type="button" data-pick="'+k+'">🏡 領養</button>'))+'</div>';
   }).join('');
   var inp=$('ptName');if(inp)inp.focus();
 }
@@ -3405,6 +3405,7 @@ pBody.addEventListener('click',function(e){
     if(!w.code){COINS.need(function(){renderPets()});return}
     var md=MI.data;if(!md){toast('小島資料載入中，稍等一下');return}
     var a=ANI[d.pick];
+    if(md.pets.some(function(p){return p.k===d.pick})){toast('🐾 這種動物已經領養過了');return}
     if(!md.h){toast('🚧 要先在我的小島蓋小屋，才能領養寵物');return}
     if(md.pets.length>=Math.min(md.h,8)){toast(md.h<8?'🏠 小屋住滿了，升級小屋就能多養一隻':'🏠 寵物名額已滿，最多 8 隻');return}
     if(!w.admin&&w.bal<a[2]){toast('🪙 金幣不夠，領養'+a[1]+'要 '+a[2]+' 枚（你有 '+w.bal+' 枚）');return}
