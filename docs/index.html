@@ -629,6 +629,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .scene{position:fixed;left:0;right:0;top:var(--hud,60px);bottom:0;z-index:70;overflow-y:auto;background:linear-gradient(180deg,#2cc2cf,#139bb8);overscroll-behavior:contain}
 .scene-bar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(3,42,60,.92);border-bottom:2px solid var(--c,#ffd166)}
 .scene-bar .btn{flex:none}
+.scene-return{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5}
 .scene-t{min-width:0}
 .scene-t b{display:block;font-size:22px;line-height:1.25}
 .scene-t small{display:block;font-size:15px;color:var(--muted)}
@@ -1258,6 +1259,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 
 <div class="scene" id="scene" hidden>
   <div class="land" id="land"></div>
+  <button class="btn btn-primary scene-return" id="sceneBackBottom" type="button">← 回大海</button>
 </div>
 
 <div class="reader" id="reader" hidden>
@@ -2144,6 +2146,7 @@ function route(){
 }
 window.addEventListener('hashchange',route);
 $('sceneBack').addEventListener('click',function(){location.hash=''});
+$('sceneBackBottom').addEventListener('click',function(){location.hash=''});
 
 /* ---------- 分享連結與收藏島 ---------- */
 function spotHash(s){return s.k==='forum'?'isle-'+s.id:s.k==='isle'?'qa-'+s.n:s.k==='res'?'res-'+s.n:s.k}
@@ -2310,6 +2313,7 @@ function renderHut(k){
   pFoot.hidden=false;pDots.hidden=true;
   pPrev.textContent=k>0?'← '+s.huts[k-1].name:'← 回島上';
   pNext.textContent=k<n-1?s.huts[k+1].name+' →':'回島上 →';
+  if(n===1){pPrev.classList.remove('btn-ghost');pPrev.classList.add('btn-primary');pNext.hidden=true}
 }
 function curSi(){return ISLES[V.i].si}
 function openSi(si,dir){var s=SP[si];if(s.k==='forum'){closePanel();placeBoat(si);location.hash='isle-'+encodeURIComponent(s.id);return}openPanel(s.k,s.k==='isle'||s.k==='res'?s.n:0,dir);placeBoat(si)}
@@ -3827,7 +3831,7 @@ function actsHTML(){
   return '<button class="act" type="button" data-share="'+esc(h)+'" data-title="'+esc(title)+'">🔗<span class="tx"> 分享</span></button>'+(s?'<button class="act" type="button" id="pFavBtn" data-fav="'+s.si+'"></button>':'');
 }
 function render(dir){
-  pNext.hidden=false;
+  pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='shop')renderShop();else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
