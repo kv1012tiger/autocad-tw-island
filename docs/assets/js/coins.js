@@ -5,6 +5,8 @@
   var LINE = 'https://lin.ee/4xw8yKI';
   var KEY = 'aikb-player';
   var TOP = window.top === window;
+  var guestMode = false; try { guestMode = sessionStorage.getItem('cw-guest-mode') === '1'; } catch (e) {}
+  function setGuest(on) { guestMode = !!on; try { sessionStorage.setItem('cw-guest-mode', on ? '1' : '0'); } catch (e) {} load(); emit({ t: 'identity' }); }
   var ONLINE_MS = 5 * 60 * 1000, ONLINE_MAX = 3, READ_EVERY = 2, READ_MAX = 6;
 
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
@@ -14,13 +16,14 @@
   var P = null, started = false, listeners = [];
   function blank() { return { code: '', nick: '', bal: 0, earned: 0, streak: 0, admin: false, onl: { d: '', ms: 0, n: 0 }, rd: { d: '', seen: [], n: 0 } }; }
   function load() {
+    if (guestMode) { P = blank(); return P; }
     try { P = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { P = null; }
     if (!P || typeof P.bal !== 'number') P = blank();
     if (!P.onl) P.onl = { d: '', ms: 0, n: 0 };
     if (!P.rd) P.rd = { d: '', seen: [], n: 0 };
     return P;
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+  function save() { if (guestMode) return; try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
   function emit(ev) { listeners.forEach(function (f) { try { f(ev, P); } catch (e) {} }); }
   function apply(p) {
     if (!p) return;
@@ -256,6 +259,7 @@
           ok.disabled = false; ok.textContent = mode === 'login' ? '登島' : '確定';
           if (!j.ok) { err.textContent = ERR[j.err] || ERR.bad; return; }
           try { localStorage.removeItem('aikb-inv'); } catch (e) {}
+          guestMode = false; try { sessionStorage.setItem('cw-guest-mode', '0'); } catch (e) {}
           P = blank(); apply(j.p); close();
           if (mode === 'login') { toast('👋 歡迎回來，' + P.nick + '！'); if (done) done(true); }
           else showCode(true, function () { pickAvatar(function () { if (done) done(true); }, true); });
@@ -733,6 +737,7 @@
 
   window.COINS = {
     get: function () { return P; },
+    setGuest: setGuest,
     on: function (f) { listeners.push(f); },
     earn: earn,
     stats: function (cb) { if (TOPC) cb(TOPC); fetchTop().then(cb).catch(function () {}); },
