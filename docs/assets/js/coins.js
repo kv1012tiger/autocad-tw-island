@@ -455,12 +455,13 @@
     function fb() { var ta = document.createElement('textarea'); ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); toast(msg); }
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(s).then(function () { toast(msg); }, fb); else fb();
   }
+  var INBOX_MEM = null;   /* 上次抓到的悄悄話：再開背包時先秀這份，背景再更新 */
   function bag(focus) {
     if (!P.code) { welcome(function (ok) { if (ok) bag(focus); }); return; }
     modal('<div class="cw-ic">🎒</div><h3>' + av(P) + ' ' + esc(P.nick) + ' 的背包</h3><div data-box></div>' +
       '<div class="cw-row"><button class="cw-b p" type="button" data-x>關閉</button></div>',
       function (ov, close) {
-        var box = ov.querySelector('[data-box]'), FR = null, INBOX = null, open = {};
+        var box = ov.querySelector('[data-box]'), FR = null, INBOX = INBOX_MEM, inboxFail = false, open = {};
         ov.querySelector('[data-x]').addEventListener('click', close);
         function questHTML() {
           var qs = P.qs || [];
@@ -508,13 +509,13 @@
           }).join('') + '</div>';
         }
         function inboxHTML() {
-          if (!INBOX) return '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>';
+          if (!INBOX) return inboxFail ? '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>' : '<small>載入中…</small>';
           if (!INBOX.length) return '<small>還沒有人傳悄悄話給你。</small>';
           return INBOX.map(function (n) { return '<div class="cw-note">' + av(n) + ' <b>' + esc(n.nick) + '</b> <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + (String(n.text || '').indexOf('📮 回覆了你的留言：') === 0 ? '<br><button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + '</div>'; }).join('');
         }
         function busy(btn) { if (btn) { btn.disabled = true; btn.textContent = '…'; } }
         function fail(j) { toast('⚠️ ' + errText(j)); paint(); }
-        function loadInbox() { api({ a: 'inbox' }).then(function (j) { INBOX = (j && j.inbox) || []; paint(); }).catch(function () { netFail(); }); }
+        function loadInbox() { api({ a: 'inbox' }).then(function (j) { INBOX = INBOX_MEM = (j && j.inbox) || []; inboxFail = false; paint(); }).catch(function () { inboxFail = true; if (!INBOX) paint(); }); }
         ov.addEventListener('click', function (e) {
           var t = e.target.closest('button'); if (!t || !box.contains(t)) return;
           var d = t.dataset;
@@ -550,11 +551,16 @@
           } else if (d.op) { open[d.f] = open[d.f] === d.op ? '' : d.op; paint(); var ta = ov.querySelector('[data-nt="' + d.f + '"]'); if (ta) ta.focus(); }
           else if (d.gift) {
             if (((P.bag || {})[d.gift] || 0) < 5) { toast('⚠️ ' + RES[d.gift][1] + '不足 5 個，無法送禮'); return; }
-            busy(t);
-            api({ a: 'gift', fid: d.f, k: d.gift }).then(function (j) {
-              if (!j.ok) return fail(j);
-              FR = j.friends; open[d.f] = ''; paint(); toast('🎁 送出 5 個' + RES[d.gift][1] + '！');
-            }).catch(function () { netFail(); paint(); });
+            /* 先在畫面上扣掉、標成「今天送過了」並提示成功；伺服器說不行再復原 */
+            var gk = d.gift, gf = d.f, bagBak = P.bag ? JSON.parse(JSON.stringify(P.bag)) : null, fo = (FR || []).filter(function (x) { return x.fid === gf; })[0], gBak = fo ? fo.gifted : false;
+            if (P.bag) P.bag[gk] = Math.max(0, (P.bag[gk] || 0) - 5);
+            if (fo) fo.gifted = true;
+            open[gf] = ''; paint(); toast('🎁 送出 5 個' + RES[gk][1] + '！');
+            function undo(msg) { if (bagBak) P.bag = bagBak; if (fo) fo.gifted = gBak; paint(); toast(msg); }
+            api({ a: 'gift', fid: gf, k: gk }).then(function (j) {
+              if (!j.ok) return undo('⚠️ 送禮沒成功：' + errText(j));
+              FR = j.friends || FR; paint();
+            }).catch(function () { undo('⚠️ 暫時連不上金幣小島，這次送禮沒有送出，請再試一次'); });
           } else if (d.send) {
             var tx = ov.querySelector('[data-nt="' + d.send + '"]'), msg = tx ? tx.value.trim() : '';
             if (!msg) { if (tx) tx.focus(); return; }
@@ -563,11 +569,11 @@
               if (!j.ok) return fail(j);
               open[d.send] = ''; paint(); toast('✉️ 悄悄話送出了');
             }).catch(function () { netFail(); paint(); });
-          } else if (d.inbox != null) { busy(t); loadInbox(); }
+          } else if (d.inbox != null) { busy(t); inboxFail = false; loadInbox(); }
         });
         paint();
         api({ a: 'friends' }).then(function (j) { FR = (j && j.friends) || []; paint(); if (focus === 'friends') { var s = ov.querySelectorAll('.cw-sec')[P.qs && P.qs.length ? 4 : 3]; if (s) s.scrollIntoView(); } }).catch(function () { FR = []; paint(); });
-        if (P.unread) loadInbox();
+        loadInbox();   /* 一打開背包就在背景抓悄悄話，不用再按「打開收件匣」等它 */
       }, false, 'wide');
   }
 
