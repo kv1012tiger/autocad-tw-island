@@ -318,7 +318,8 @@
   }
   function confirmDownload(a) {
     if (!P.code) { welcome(function (ok) { if (ok) confirmDownload(a); }); return; }
-    var memberIsland = /\/(memberb|sponsora)\/t[0-9]+\/index\.html$/.test(location.pathname);
+    /* 網址可能是 …/memberb/t30372/ 或 …/memberb/t30372/index.html，兩種都算會員島（免扣金幣） */
+    var memberIsland = /\/(memberb|sponsora)\/t[0-9]+\/(index\.html)?$/.test(location.pathname);
     if (!memberIsland && !P.admin && P.bal < 1) { noCoin(); return; }
     var name = fileName(a);
     modal('<div class="cw-ic">📦</div><h3>下載資源</h3><p style="word-break:break-all">' + esc(name) + '</p>' +
@@ -331,6 +332,7 @@
           var win = external ? window.open('about:blank', '_blank') : null; // 先在點擊當下開分頁，避免被擋
           close();
           var page = location.pathname.replace(/^.*?\/([^\/]+\/t\d+\/)/, '$1');
+          if (/\/$/.test(page)) page += 'index.html';   /* 後端認的是 …/index.html 格式 */
           call({ a: memberIsland ? 'memberdl' : 'dl', code: P.code, page: page, title: (document.title || '').split(' | ')[0], file: name }).then(function (j) {
             if (!j.ok) {
               if (win) win.close();
