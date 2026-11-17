@@ -132,8 +132,22 @@ def load_topics():
         meta["_videos"] = len(re.findall(r"<iframe", content))
         meta["_dir"] = tdir
         by_board.setdefault(meta["board"], []).append(meta)
+    # 站長要求：小屋（版區）裡的文章依「發文日期」排，新的在上；同一天的以文章編號大（較新）的在前。
+    # 少數文章沒有發文日期時，借用「編號最接近」那篇的日期來排（只影響排序，頁面顯示的日期不變）。
+    def topic_num(m):
+        found = re.search(r"\d+", str(m.get("id", "")))
+        return int(found.group()) if found else 0
+
+    dated = sorted((topic_num(m), m["posted_at"]) for ms in by_board.values() for m in ms if m.get("posted_at"))
+
+    def sort_date(m):
+        if m.get("posted_at"):
+            return m["posted_at"]
+        n = topic_num(m)
+        return min(dated, key=lambda x: abs(x[0] - n))[1] if dated else ""
+
     for topics in by_board.values():
-        topics.sort(key=lambda m: m.get("order", 0))
+        topics.sort(key=lambda m: (sort_date(m), topic_num(m)), reverse=True)
     return by_board
 
 
