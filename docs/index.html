@@ -198,6 +198,11 @@ h1,h2,h3,h4{margin:0;line-height:1.25}
 @keyframes swapIn{from{opacity:0;transform:translateX(var(--dir,24px))}to{opacity:1;transform:none}}
 .p-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:rgba(2,30,44,.6)}
 .p-foot .btn{padding:11px 18px;font-size:14.5px}
+/* 問答島、物資島、主題小屋：底部按鈕改成懸浮（沒有底部列背景），內容往下多留空白不被擋住 */
+.panel.ff .p-foot{position:absolute;left:0;right:0;bottom:0;z-index:5;border-top:0;background:none;padding:12px 16px calc(16px + env(safe-area-inset-bottom));pointer-events:none}
+.panel.ff .p-foot .btn{pointer-events:auto;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.panel.ff .p-foot .btn-ghost{background:rgba(3,38,54,.95);border:1.5px solid rgba(255,255,255,.4)}
+.panel.ff .p-body{padding-bottom:104px}
 .p-dots{display:flex;gap:6px;align-items:center}
 .p-dots[hidden],.p-foot[hidden]{display:none}
 .p-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
@@ -3951,6 +3956,7 @@ function actsHTML(){
 }
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
+  panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
   if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='shop')renderShop();else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
