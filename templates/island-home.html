@@ -549,7 +549,16 @@ body{overflow:hidden;background:#1581bd}
 }
 .fav-list{display:grid;gap:12px}
 .fav-note{margin-top:14px;font-size:14px;color:var(--muted);text-align:center}
-.fa-list{display:grid;gap:12px}.fa-row{display:grid;gap:6px}.fa-row .btn{justify-self:end}
+.fa-list{display:grid;gap:12px}
+.fav-row{display:flex;align-items:stretch;gap:6px}
+.fav-row>.card,.fav-row>.t-card{flex:1;min-width:0}
+.fav-ck{flex:none;display:grid;place-items:center;width:46px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fav-ck input{width:26px;height:26px;margin:0;accent-color:#ffd166;cursor:pointer}
+.fav-sh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 8px}
+.fav-sh .s-h{margin:0}
+.fav-bar{position:sticky;top:0;z-index:6;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px;padding:8px 10px;border-radius:14px;background:rgba(6,58,80,.97);border:1.5px solid #ffd166;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.fav-bar b{flex:1 1 auto;font-size:15px}
+.fav-bar .btn[hidden]{display:none}
 .sq{margin:2px 0 8px}.sq[hidden]{display:none}.sq .sq-l{align-self:center;font-size:13px;color:var(--muted)}.sq .sq-x{opacity:.8}
 .quest .qbtn.on i{filter:drop-shadow(0 0 6px rgba(255,209,102,.9))}
 @media (max-width:480px){
@@ -3801,21 +3810,43 @@ function footSimple(a,b){pFoot.hidden=false;pDots.hidden=true;pPrev.textContent=
 var FAKEY='aikb-fav-art';
 function loadFavA(){try{return (JSON.parse(localStorage.getItem(FAKEY))||[]).filter(function(x){return x&&typeof x.h==='string'&&/^[\w-]+\/t\d+\/index\.html$/.test(x.h)})}catch(e){return []}}
 function saveFavA(a){try{localStorage.setItem(FAKEY,JSON.stringify(a.slice(0,300)))}catch(e){}}
+/* 收藏面板：島與文章每一列左邊有勾選框，單選、多選、全選都可以，再一次取消收藏 */
+var FSEL={};
 function favACard(x){
   var s=FORUM_BY[x.h.split('/')[0]]||{c:'#5eead4',name:'',e:'📘'};
-  return '<div class="fa-row"><a class="t-card s-art" style="--c:'+s.c+'" href="'+esc(x.h)+'"><span class="te">'+s.e+'</span><span class="tb"><b>'+esc(x.t)+'</b><span class="tm">📍 '+esc(s.name)+'・⭐ 收藏於 '+ago(x.at)+'</span></span></a><button class="btn btn-ghost btn-sm" type="button" data-unfa="'+esc(x.h)+'" aria-label="取消收藏這篇文章">取消收藏</button></div>';
+  return '<div class="fav-row"><label class="fav-ck" aria-label="選取這篇文章"><input type="checkbox" data-fsel="a:'+esc(x.h)+'"></label><a class="t-card s-art" style="--c:'+s.c+'" href="'+esc(x.h)+'"><span class="te">'+s.e+'</span><span class="tb"><b>'+esc(x.t)+'</b><span class="tm">📍 '+esc(s.name)+'・⭐ 收藏於 '+ago(x.at)+'</span></span></a></div>';
+}
+function favICard(s){
+  return '<div class="fav-row"><label class="fav-ck" aria-label="選取這座島"><input type="checkbox" data-fsel="i:'+esc(spotHash(s))+'"></label><button class="card il" type="button" data-go="'+s.si+'" style="--c:'+s.c+'"><span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span></button></div>';
 }
 function renderFav(){
-  var list=SP.filter(isFav),fa=loadFavA();
-  pBody.innerHTML='<div class="ph" style="--c:#ffd166"><span class="ph-e">⭐</span><div><div class="p-kicker">FAVORITES・我的收藏</div><h3 id="pTitle">我的收藏</h3><p>島：點一下，船就開過去；文章：點一下直接打開</p></div></div>'+
-    (list.length?'<h4 class="s-h">🏝️ 收藏的島（'+list.length+'）</h4><div class="fav-list">'+list.map(function(s){return '<button class="card il" type="button" data-go="'+s.si+'" style="--c:'+s.c+'"><span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span></button>'}).join('')+'</div>':'')+
-    (fa.length?'<h4 class="s-h">📖 收藏的文章（'+fa.length+'）</h4><div class="fa-list">'+fa.map(favACard).join('')+'</div>':'')+
+  var list=SP.filter(isFav),fa=loadFavA();FSEL={};
+  pBody.innerHTML='<div class="ph" style="--c:#ffd166"><span class="ph-e">⭐</span><div><div class="p-kicker">FAVORITES・我的收藏</div><h3 id="pTitle">我的收藏</h3><p>點卡片前往；左邊打勾可單選或多選，再按「取消收藏」</p></div></div>'+
+    ((list.length||fa.length)?'<div class="fav-bar" id="favBar"><b id="favCnt">勾選要取消收藏的項目</b><button class="btn btn-ghost btn-sm" type="button" data-fall="all">全選</button><button class="btn btn-ghost btn-sm" type="button" data-fclr hidden>清除選取</button><button class="btn btn-primary btn-sm" type="button" data-fdo hidden>取消收藏</button></div>':'')+
+    (list.length?'<div class="fav-sh"><h4 class="s-h">🏝️ 收藏的島（'+list.length+'）</h4><button class="btn btn-ghost btn-sm" type="button" data-fall="i">全選這區</button></div><div class="fav-list">'+list.map(favICard).join('')+'</div>':'')+
+    (fa.length?'<div class="fav-sh"><h4 class="s-h">📖 收藏的文章（'+fa.length+'）</h4><button class="btn btn-ghost btn-sm" type="button" data-fall="a">全選這區</button></div><div class="fa-list">'+fa.map(favACard).join('')+'</div>':'')+
     (!list.length&&!fa.length?'<div class="t-empty"><span>☆</span><b>還沒有收藏</b><small>進到島上點「☆ 收藏」，那座島會在地圖上發光；打開任何一篇文章，點上方的「☆ 收藏」，文章就會出現在這裡。</small></div>':'')+
     '<p class="fav-note">收藏只存在這台裝置的瀏覽器裡；換手機或電腦可以用瀏覽紀錄頁的「同步碼」帶過去。</p>';
   $('pStep').textContent='⭐ 我的收藏';
   pFoot.hidden=true;
-  [].forEach.call(pBody.querySelectorAll('[data-unfa]'),function(b){b.addEventListener('click',function(){
-    var h=b.getAttribute('data-unfa');saveFavA(loadFavA().filter(function(x){return x.h!==h}));toast('已取消收藏');if(V.t==='fav')renderFav()})});
+  function boxes(sec){return [].filter.call(pBody.querySelectorAll('[data-fsel]'),function(c){return !sec||sec==='all'||c.dataset.fsel.charAt(0)===sec})}
+  function barPaint(){
+    var n=Object.keys(FSEL).length,cnt=$('favCnt'),clr=pBody.querySelector('[data-fclr]'),go=pBody.querySelector('[data-fdo]');if(!cnt)return;
+    cnt.textContent=n?'已選 '+n+' 項':'勾選要取消收藏的項目';clr.hidden=!n;go.hidden=!n;go.textContent='取消收藏（'+n+'）';
+  }
+  pBody.querySelectorAll('[data-fsel]').forEach(function(c){c.addEventListener('change',function(){if(c.checked)FSEL[c.dataset.fsel]=1;else delete FSEL[c.dataset.fsel];barPaint()})});
+  pBody.querySelectorAll('[data-fall]').forEach(function(b){b.addEventListener('click',function(){
+    var bs=boxes(b.dataset.fall),all=bs.every(function(c){return c.checked});   /* 已經全選就變成全不選 */
+    bs.forEach(function(c){c.checked=!all;if(!all)FSEL[c.dataset.fsel]=1;else delete FSEL[c.dataset.fsel]});barPaint()})});
+  var fc=pBody.querySelector('[data-fclr]');if(fc)fc.addEventListener('click',function(){FSEL={};boxes('all').forEach(function(c){c.checked=false});barPaint()});
+  var fd=pBody.querySelector('[data-fdo]');if(fd)fd.addEventListener('click',function(){
+    var keys=Object.keys(FSEL),n=keys.length;if(!n)return;
+    if(n>1&&!confirm('要取消收藏這 '+n+' 項嗎？'))return;
+    var isl=keys.filter(function(k){return k.charAt(0)==='i'}).map(function(k){return k.slice(2)}),art=keys.filter(function(k){return k.charAt(0)==='a'}).map(function(k){return k.slice(2)});
+    if(isl.length){isl.forEach(function(h){delete FAV[h]});try{localStorage.setItem('aikb-fav',JSON.stringify(Object.keys(FAV)))}catch(e){}favPaint()}
+    if(art.length)saveFavA(loadFavA().filter(function(x){return art.indexOf(x.h)<0}));
+    toast('已取消收藏 '+n+' 項');FSEL={};if(V.t==='fav')renderFav();
+  });
 }
 /* ---------- 瀏覽紀錄（只存在這台裝置，可用同步碼帶到別台） ---------- */
 var HKEY='aikb-hist',HIST=[];
