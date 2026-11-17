@@ -1044,7 +1044,10 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mi-sea{position:relative;margin:12px 0 6px;padding-bottom:112px;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 100%,#1f8fbf,#0b4f78 75%)}
 .mi-scene{position:relative;height:430px;margin:0}
 @media (max-width:560px){.mi-scene{height:392px}}
-.mi-land{position:absolute;left:6.5%;right:6.5%;top:5.5%;bottom:5%;border-radius:9% 8% 10% 8%/10% 9% 8% 10%;background:radial-gradient(ellipse at 45% 40%,#9be36b,#4f9a2e 80%);box-shadow:0 0 0 5px #7a5630,0 0 0 17px #f7e6b4,0 0 0 20px #b98a52,0 7px 0 20px #b98a52,0 14px 22px 20px rgba(6,70,100,.4)}
+/* .mi-land 只是「活動範圍」（果樹、木材樹、寵物都排在這裡面，剛好縮在畫出來的草地內）；島的外形由 .mi-shape 這張 SVG 畫（跟資源島同一套畫法：不規則外緣、沙灘、土層、草地，邊緣一叢一叢的樹） */
+.mi-land{position:absolute;left:12%;right:12%;top:10%;bottom:13%;pointer-events:none}
+.mi-shape{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+@media (max-width:560px){.mi-scene .mi-fields{left:43%;gap:4px}.mi-scene .mi-fields .mi-plot{width:42px}}
 .mi-dock{position:absolute;left:50%;bottom:6px;width:46px;height:132px;margin-left:-23px;border:3px solid #5f3d1c;border-radius:3px 3px 2px 2px;background:repeating-linear-gradient(0deg,#a8743a 0 15px,#6b4220 15px 17px);box-shadow:0 6px 8px rgba(0,0,0,.3)}
 .mi-dock::before,.mi-dock::after{content:'';position:absolute;bottom:-4px;width:8px;height:44px;background:#4a2f14;border-radius:2px}
 .mi-dock::before{left:-12px}.mi-dock::after{right:-12px}
@@ -3290,9 +3293,40 @@ function fitIslandPoint(el,x,y){
   }
   return best||[50,50];
 }
+/* 我的小島的外形：跟資源島同一套畫法（rectBlob 的不規則外緣）；每位玩家的外緣起伏、樹叢位置固定（用 fid 當種子），重畫不會變 */
+function miBlob(x0,y0,x1,y1,seed,step,jit){
+  var P=[],k=0,x,y;function j(){return (rnd(seed,k++)-.5)*jit}
+  for(x=x0;x<x1;x+=step)P.push({x:x,y:y0+j()});
+  for(y=y0;y<y1;y+=step)P.push({x:x1+j(),y:y});
+  for(x=x1;x>x0;x-=step)P.push({x:x,y:y1+j()});
+  for(y=y1;y>y0;y-=step)P.push({x:x0+j(),y:y});
+  P.push(P[0]);return crPath(P)+'Z';
+}
+function miShape(sc){
+  var w=sc.offsetWidth,h=sc.offsetHeight;if(!w||!h)return;
+  var old=sc.querySelector('.mi-shape');if(old)old.remove();
+  var id=String(MI.fid||'me'),sd=3,i;for(i=0;i<id.length;i++)sd=(sd*31+id.charCodeAt(i))%97;sd+=3;
+  var gx0=w*.065,gx1=w*.935,gy0=h*.055,gy1=h*.95,st=Math.max(60,w/6),jit=Math.max(12,w/32),tr='#2a8030',lf='#9be36b';
+  var o='<svg class="mi-shape" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+
+    '<path d="'+miBlob(gx0-16,gy0-6,gx1+16,gy1+22,sd,st,jit)+'" fill="#0b6f8c" opacity=".3"/>'+
+    '<path d="'+miBlob(gx0-22,gy0-12,gx1+22,gy1+16,sd,st,jit)+'" fill="#b98a52"/>'+
+    '<path d="'+miBlob(gx0-22,gy0-20,gx1+22,gy1+8,sd,st,jit)+'" fill="#f7e6b4" stroke="#fff3cf" stroke-width="2"/>'+
+    '<path d="'+miBlob(gx0-4,gy0-6,gx1+4,gy1+2,sd+1,st,jit)+'" fill="#7a5630"/>'+
+    '<path d="'+miBlob(gx0-4,gy0-16,gx1+4,gy1-8,sd+1,st,jit)+'" fill="#3b8f2c"/>'+
+    '<path d="'+miBlob(gx0+10,gy0-4,gx1-10,gy1-22,sd+2,st,jit*.9)+'" fill="#86d85a"/>';
+  /* 背景樹：一叢一叢、大小不一，貼著島的邊緣（[中心x%, 中心y%, 棵數, 散開px, 最大半徑]）；島中央和棧橋前面留空 */
+  var C=[[12,17,10,42,21],[33,9,4,20,12],[55,8,5,24,14],[86,14,8,36,19],[93,38,3,14,12],[92,57,6,26,16],[7,42,3,14,12],[8,62,5,20,14],[11,82,9,38,20],[27,94,4,16,11],[70,93,4,16,11],[88,84,7,30,18]],T=[];
+  C.forEach(function(c,ci){for(var k=0;k<c[2];k++){
+    var a=rnd(sd+ci,k*3+1)*6.28,d=Math.sqrt(rnd(sd+ci,k*3+2))*c[3],big=k===0?1:.45+rnd(sd+ci,k*3+3)*.55;
+    T.push([w*c[0]/100+Math.cos(a)*d,h*c[1]/100+Math.sin(a)*d*.7,Math.max(7,c[4]*big)]);
+  }});
+  T.sort(function(p,q){return p[1]-q[1]}).forEach(function(t){o+=treeSVG(t[0],t[1],t[2],tr,lf)});
+  sc.insertAdjacentHTML('afterbegin',o+'</svg>');
+}
 function fitIslandItems(){
   var sc=document.querySelector('#miBox .mi-scene');if(!sc)return;
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect();if(!b.width||!b.height)return;
+  miShape(sc);
   var cx=(l.left+l.right)/2-b.left,cy=(l.top+l.bottom)/2-b.top,rx=l.width*.475,ry=l.height*.475;
   function rect(el){var r=el.getBoundingClientRect();return [r.left-b.left,r.top-b.top,r.right-b.left,r.bottom-b.top]}
   function overlap(a,c,pad){return a[0]<c[2]+pad&&a[2]>c[0]-pad&&a[1]<c[3]+pad&&a[3]>c[1]-pad}
