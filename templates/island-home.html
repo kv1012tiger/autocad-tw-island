@@ -2274,10 +2274,7 @@ function renderIsle(n){
     '<div class="qa-list">'+s.rows.map(function(r){return qaHTML(r)}).join('')+'</div>'+
     '<div class="rel"><b>🏰 想學這個？AI課程城堡裡的相關單元</b><div class="chips">'+s.units.map(function(id){var u=UNITS[UIDX[id]];return '<button class="chip" type="button" data-unit="'+id+'">'+u.e+' '+(u.moon?'附錄 ':'')+esc(u.id)+' '+esc(u.short)+'</button>'}).join('')+'</div></div>';
   $('pStep').textContent='🏝️ 問答島';
-  pFoot.hidden=false;pDots.hidden=false;
-  pPrev.textContent='← '+SP[s.si-1].name;
-  pNext.textContent=SP[s.si+1].name+' →';
-  pDots.innerHTML=ISLES.map(function(x,k){return '<i class="'+(k===n?'on':'')+(ST.c[k]?' v':'')+'"></i>'}).join('');
+  footSimple('← 回地圖','');   /* 問答島底部只留一顆「回地圖」，不再有上一座／下一座按鈕和圓點 */
 }
 function tCard(x,c){
   return '<a class="t-card" style="--c:'+c+'" href="'+esc(x.href)+'"><span class="te">'+x.e+'</span><span class="tb"><b>'+esc(x.title)+'</b><small>'+esc(x.tagline)+'</small><span class="tm">'+(x.videos?'🎬 '+x.videos+' 支影片':'📖 圖文教學')+'</span></span></a>';
@@ -3970,14 +3967,14 @@ function closePanel(){
 $('pClose').addEventListener('click',closePanel);
 backdrop.addEventListener('click',closePanel);
 pPrev.addEventListener('click',function(){
-  if(V.t==='isle')openSi(curSi()-1,-1);else if(V.t==='hut'){if(V.i>0)openPanel('hut',V.i-1,-1);else closePanel()}
+  if(V.t==='isle')closePanel();else if(V.t==='hut'){if(V.i>0)openPanel('hut',V.i-1,-1);else closePanel()}
   else if(V.t==='session')openPanel('dock',0,-1);
   else if(V.t==='voyage')openPanel('mine',0);
   else if(V.t==='mine'&&V.i===1)openPanel('voyage');
   else closePanel();
 });
 pNext.addEventListener('click',function(){
-  if(V.t==='isle')openSi(curSi()+1);else if(V.t==='hut'){if(V.i<SCN.huts.length-1)openPanel('hut',V.i+1);else closePanel()}
+  if(V.t==='isle')closePanel();else if(V.t==='hut'){if(V.i<SCN.huts.length-1)openPanel('hut',V.i+1);else closePanel()}
   else if(V.t==='home')openPanel('isle',0);
   else if(V.t==='castle')openPanel('dock');
   else if(V.t==='dock')openPanel('castle');
