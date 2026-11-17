@@ -25,6 +25,14 @@ TOPIC_PAGE = Template("""<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="canonical" href="$page_url">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="$site_name">
+<meta property="og:title" content="$title｜$site_name">
+<meta property="og:description" content="$tagline">
+<meta property="og:url" content="$page_url">
+<meta property="og:image" content="$og_image">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
@@ -39,6 +47,7 @@ TOPIC_PAGE = Template("""<!doctype html>
     <h1 class="topic-title">$icon $title</h1>
     <p class="topic-tagline">$tagline</p>
     <p class="t-meta">✍ $author · $posted_at</p>
+    <div class="topic-acts"><button class="topic-act" id="tShare" type="button" aria-label="複製這篇文章的連結">🔗 分享連結</button><button class="topic-act" id="tFav" type="button" aria-pressed="false">☆ 收藏</button></div>
     <div class="tag-row">
 $tag_chips
     </div>
@@ -75,6 +84,7 @@ $nav_next
 <script>if(window.COINS&&window.top===window){COINS.start({ask:false});COINS.read(location.pathname)}</script>
 <script src="../../assets/js/fullscreen.js"></script>
 <script src="../../assets/js/lightbox.js"></script>
+<script src="../../assets/js/topic-actions.js"></script>
 </body>
 </html>
 """)
@@ -194,7 +204,7 @@ def write_home(boards, by_board):
     (DOCS / "index.html").write_text(bust(template.replace(FORUM_MARKER, data)), encoding="utf-8", newline="\n")
 
 
-def write_topics(board, topics, site_name):
+def write_topics(board, topics, site_name, site_url=""):
     island_href = f'../../index.html#isle-{board["id"]}'
     sub_names = {s["id"]: s["name"] for s in board.get("subs", [])}
     for idx, meta in enumerate(topics):
@@ -262,6 +272,8 @@ def write_topics(board, topics, site_name):
             g1=board["g"][0],
             g2=board["g"][1],
             residents=residents_html(board["res"]),
+            page_url=html.escape(f'{site_url}{board["id"]}/{meta["id"]}/', quote=True),
+            og_image=html.escape(f'{site_url}assets/og-sea.jpg', quote=True),
         )
         (topic_dir / "index.html").write_text(bust(page), encoding="utf-8", newline="\n")
 
@@ -276,7 +288,7 @@ def main():
 
     write_home(boards, by_board)
     for board in boards:
-        write_topics(board, by_board.get(board["id"], []), config["site_name"])
+        write_topics(board, by_board.get(board["id"], []), config["site_name"], config.get("site_url", ""))
 
     print("Build complete ->", DOCS)
 

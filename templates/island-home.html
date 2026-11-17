@@ -549,6 +549,8 @@ body{overflow:hidden;background:#1581bd}
 }
 .fav-list{display:grid;gap:12px}
 .fav-note{margin-top:14px;font-size:14px;color:var(--muted);text-align:center}
+.fa-list{display:grid;gap:12px}.fa-row{display:grid;gap:6px}.fa-row .btn{justify-self:end}
+.sq{margin:2px 0 8px}.sq[hidden]{display:none}.sq .sq-l{align-self:center;font-size:13px;color:var(--muted)}.sq .sq-x{opacity:.8}
 .quest .qbtn.on i{filter:drop-shadow(0 0 6px rgba(255,209,102,.9))}
 @media (max-width:480px){
   .act{padding:6px 9px;font-size:14px}
@@ -2290,12 +2292,12 @@ function renderHut(k){
   var s=SCN,h=s.huts[k],t=h.topics,n=s.huts.length;
   pBody.innerHTML='<div class="ph" style="--c:'+s.c+'"><span class="ph-e">'+h.e+'</span><div><div class="p-kicker">'+esc(s.name)+'・小屋 '+(k+1)+' / '+n+'</div><h3 id="pTitle">'+esc(h.name)+'</h3><p>'+esc(h.sub)+'</p></div></div>'+
     (h.main?'<div class="gd"><span class="ge">🧭</span><div><b>島嶼導覽</b><p>'+esc(s.guide)+'</p></div></div><div class="res-row"><b>島上居民</b><span>'+s.res.map(function(r){return r[0]}).join(' ')+'</span></div>':'')+
-    (t.length?'<div class="sbox hut-s"><input id="hutIn" type="search" placeholder="🔍 搜尋這裡的文章…" autocomplete="off" aria-label="搜尋這裡的文章"></div>'+
+    (t.length?'<div class="sbox hut-s"><input id="hutIn" type="search" placeholder="🔍 搜尋這裡的文章…" autocomplete="off" aria-label="搜尋這裡的文章"></div><div class="chips sq" id="sqHut" hidden></div>'+
       (n>1?'<div class="scope" role="radiogroup" aria-label="搜尋範圍"><label><input type="radio" name="hsc" value="hut" checked> 只找這間小屋</label><label><input type="radio" name="hsc" value="isle"> 找整座島</label></div>':'')+
       '<p class="s-count" id="hutCount"></p><div id="hutBox"></div>':'<div class="t-empty"><span>🚧</span><b>這間小屋還在整理中</b><small>整理好就會出現在這裡</small></div>')+
     '<a class="forum" href="'+esc(h.url)+'" target="_blank" rel="noopener">到論壇看「'+esc(h.main?s.forum:h.name)+'」↗</a>';
   if(t.length){
-    var inp=$('hutIn');
+    var inp=$('hutIn');sqBind(inp,$('sqHut'));
     var fill=function(){
       if(V.t!=='hut'||!$('hutCount'))return;
       var v=inp.value.trim().toLowerCase(),cnt=$('hutCount'),sc=pBody.querySelector('input[name="hsc"]:checked'),isle=sc&&sc.value==='isle';
@@ -3430,6 +3432,33 @@ function artCard(a,v){
   var s=FORUM_BY[a[2]]||{c:'#5eead4',name:''};
   return '<a class="t-card s-art" style="--c:'+s.c+'" href="'+esc(a[0])+'"><span class="te">'+a[4]+'</span><span class="tb"><b>'+mark(a[1],v)+'</b><small>'+mark(snip(a[5],v),v)+'</small><span class="tm">📍 '+esc(s.name)+'・'+esc(a[3])+'</span></span></a>';
 }
+/* 最近搜尋：占卜島搜尋與主題小屋搜尋共用，存在這台裝置（localStorage 'aikb-sq'，最多 10 個，最新的在前） */
+var SQKEY='aikb-sq';
+function sqLoad(){try{var a=JSON.parse(localStorage.getItem(SQKEY));return Array.isArray(a)?a.filter(function(x){return typeof x==='string'&&x}).slice(0,10):[]}catch(e){return []}}
+function sqAdd(v){
+  v=String(v||'').trim();if(v.length<2)return;
+  var a=sqLoad().filter(function(x){return x!==v&&v.toLowerCase().indexOf(x.toLowerCase())!==0});   /* 打字過程中的前半段不留 */
+  a.unshift(v.slice(0,30));try{localStorage.setItem(SQKEY,JSON.stringify(a.slice(0,10)))}catch(e){}
+}
+function sqBind(inp,box){
+  if(!inp||!box)return;
+  function paint(){
+    var a=sqLoad();
+    if(!a.length||inp.value.trim()){box.innerHTML='';box.hidden=true;return}
+    box.hidden=false;
+    box.innerHTML='<span class="sq-l">🕘 最近搜尋</span>'+a.map(function(k){return '<button class="chip" type="button" data-sq="'+esc(k)+'">'+esc(k)+'</button>'}).join('')+'<button class="chip sq-x" type="button" data-sqx aria-label="清除最近搜尋">✕ 清除</button>';
+  }
+  var t=0;
+  inp.addEventListener('input',function(){clearTimeout(t);paint();t=setTimeout(function(){sqAdd(inp.value)},1200)});
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){clearTimeout(t);sqAdd(inp.value)}});
+  inp.addEventListener('blur',function(){clearTimeout(t);sqAdd(inp.value)});
+  box.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.hasAttribute('data-sqx')){try{localStorage.removeItem(SQKEY)}catch(x){}paint();return}
+    inp.value=b.getAttribute('data-sq');inp.dispatchEvent(new Event('input'));inp.focus();
+  });
+  paint();
+}
 function renderSearch(){
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🔮</span><div><div class="p-kicker">占卜島・水晶球與塔羅</div><h3 id="pTitle">占卜島</h3><p>搜尋全部文章，也能抽今天的六種運勢塔羅</p></div></div>'+
     '<div class="otabs" id="oTabs">'+['🔎 搜尋文章','🃏 塔羅占卜','📖 牌義說明'].map(function(t,i){return '<button class="otab" type="button" data-otab="'+i+'">'+t+'</button>'}).join('')+'</div><div id="oBody"></div>';
@@ -3439,9 +3468,10 @@ function renderSearch(){
 }
 function renderSearchBody(b){
   b.innerHTML='<div class="sbox"><input id="qIn" type="search" placeholder="例如：圖塊、LISP、出圖、3D…" autocomplete="off" aria-label="搜尋文章與問答"></div>'+
+    '<div class="chips sq" id="sqBox" hidden></div>'+
     '<div class="chips" id="kw">'+SEARCH_KW.map(function(k){return '<button class="chip" type="button" data-kw="'+k+'">'+k+'</button>'}).join('')+'</div>'+
     '<p class="s-count" id="sCount"></p><div id="sArt"></div><div class="qa-list" id="sRes"></div>';
-  var inp=$('qIn');inp.addEventListener('input',function(){doSearch(inp.value)});doSearch('');
+  var inp=$('qIn');inp.addEventListener('input',function(){doSearch(inp.value)});sqBind(inp,$('sqBox'));doSearch('');
   loadArt().then(function(){var q=$('qIn');if(V.t==='search'&&V.i===0&&q)doSearch(q.value)});
 }
 function doSearch(v){
@@ -3749,14 +3779,25 @@ function resPaint(){
   var mn=0;RESI.forEach(function(s){var c=cdLeft(s);if(c>0&&(!mn||c<mn))mn=c});if(mn)RSV.tm=setTimeout(resPaint,mn*1000+250);
 }
 function footSimple(a,b){pFoot.hidden=false;pDots.hidden=true;pPrev.textContent=a;pNext.textContent=b;pNext.hidden=!b}
+/* 收藏的文章：文章頁的「☆ 收藏」按鈕（docs/assets/js/topic-actions.js）寫在這個鍵，格式和瀏覽紀錄相同 {h,t,at} */
+var FAKEY='aikb-fav-art';
+function loadFavA(){try{return (JSON.parse(localStorage.getItem(FAKEY))||[]).filter(function(x){return x&&typeof x.h==='string'&&/^[\w-]+\/t\d+\/index\.html$/.test(x.h)})}catch(e){return []}}
+function saveFavA(a){try{localStorage.setItem(FAKEY,JSON.stringify(a.slice(0,300)))}catch(e){}}
+function favACard(x){
+  var s=FORUM_BY[x.h.split('/')[0]]||{c:'#5eead4',name:'',e:'📘'};
+  return '<div class="fa-row"><a class="t-card s-art" style="--c:'+s.c+'" href="'+esc(x.h)+'"><span class="te">'+s.e+'</span><span class="tb"><b>'+esc(x.t)+'</b><span class="tm">📍 '+esc(s.name)+'・⭐ 收藏於 '+ago(x.at)+'</span></span></a><button class="btn btn-ghost btn-sm" type="button" data-unfa="'+esc(x.h)+'" aria-label="取消收藏這篇文章">取消收藏</button></div>';
+}
 function renderFav(){
-  var list=SP.filter(isFav);
-  pBody.innerHTML='<div class="ph" style="--c:#ffd166"><span class="ph-e">⭐</span><div><div class="p-kicker">FAVORITES・我的收藏</div><h3 id="pTitle">收藏的島</h3><p>點一下，船就開過去</p></div></div>'+
-    (list.length?'<div class="fav-list">'+list.map(function(s){return '<button class="card il" type="button" data-go="'+s.si+'" style="--c:'+s.c+'"><span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span></button>'}).join('')+'</div>'
-      :'<div class="t-empty"><span>☆</span><b>還沒有收藏的島</b><small>進到島上或打開島的介紹，點「☆ 收藏」，那座島就會在地圖上發光，也會出現在這裡。</small></div>')+
-    '<p class="fav-note">收藏只存在這台裝置的瀏覽器裡。</p>';
+  var list=SP.filter(isFav),fa=loadFavA();
+  pBody.innerHTML='<div class="ph" style="--c:#ffd166"><span class="ph-e">⭐</span><div><div class="p-kicker">FAVORITES・我的收藏</div><h3 id="pTitle">我的收藏</h3><p>島：點一下，船就開過去；文章：點一下直接打開</p></div></div>'+
+    (list.length?'<h4 class="s-h">🏝️ 收藏的島（'+list.length+'）</h4><div class="fav-list">'+list.map(function(s){return '<button class="card il" type="button" data-go="'+s.si+'" style="--c:'+s.c+'"><span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span></button>'}).join('')+'</div>':'')+
+    (fa.length?'<h4 class="s-h">📖 收藏的文章（'+fa.length+'）</h4><div class="fa-list">'+fa.map(favACard).join('')+'</div>':'')+
+    (!list.length&&!fa.length?'<div class="t-empty"><span>☆</span><b>還沒有收藏</b><small>進到島上點「☆ 收藏」，那座島會在地圖上發光；打開任何一篇文章，點上方的「☆ 收藏」，文章就會出現在這裡。</small></div>':'')+
+    '<p class="fav-note">收藏只存在這台裝置的瀏覽器裡；換手機或電腦可以用瀏覽紀錄頁的「同步碼」帶過去。</p>';
   $('pStep').textContent='⭐ 我的收藏';
   pFoot.hidden=true;
+  [].forEach.call(pBody.querySelectorAll('[data-unfa]'),function(b){b.addEventListener('click',function(){
+    var h=b.getAttribute('data-unfa');saveFavA(loadFavA().filter(function(x){return x.h!==h}));toast('已取消收藏');if(V.t==='fav')renderFav()})});
 }
 /* ---------- 瀏覽紀錄（只存在這台裝置，可用同步碼帶到別台） ---------- */
 var HKEY='aikb-hist',HIST=[];
@@ -3801,7 +3842,7 @@ function fnv(s){var h=0x811c9dc5;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);
 function b64e(s){return btoa(unescape(encodeURIComponent(s)))}
 function b64d(s){return decodeURIComponent(escape(atob(s)))}
 function makeSync(){
-  var d=JSON.stringify({v:1,fav:Object.keys(FAV),hist:HIST.map(function(x){return [x.h,x.t,x.at]}),f:Object.keys(ST.f),c:Object.keys(ST.c),chest:ST.chest?1:0}),b=b64e(d);
+  var d=JSON.stringify({v:1,fav:Object.keys(FAV),fa:loadFavA().map(function(x){return [x.h,x.t,x.at]}),hist:HIST.map(function(x){return [x.h,x.t,x.at]}),f:Object.keys(ST.f),c:Object.keys(ST.c),chest:ST.chest?1:0}),b=b64e(d);
   return 'AIKB1.'+b+'.'+fnv(b);
 }
 function applySync(code){
@@ -3811,6 +3852,12 @@ function applySync(code){
   loadArt().then(function(art){
     var okH={},okF={},n=0;art.forEach(function(a){okH[a[0]]=a[1]});SP.forEach(function(s){okF[spotHash(s)]=1});
     (Array.isArray(d.fav)?d.fav:[]).slice(0,100).forEach(function(k){if(okF[k]&&!FAV[k]){FAV[k]=1;n++}});
+    var faCur=loadFavA();
+    (Array.isArray(d.fa)?d.fa:[]).slice(0,300).forEach(function(x){
+      if(!Array.isArray(x)||!okH[x[0]])return;var at=+x[2];if(!(at>0&&at<=Date.now()+864e5))at=Date.now();
+      if(!faCur.some(function(y){return y.h===x[0]})){faCur.push({h:x[0],t:okH[x[0]],at:at});n++}
+    });
+    faCur.sort(function(a,b){return b.at-a.at});saveFavA(faCur);
     (Array.isArray(d.hist)?d.hist:[]).slice(0,200).forEach(function(x){
       if(!Array.isArray(x)||!okH[x[0]])return;var at=+x[2];if(!(at>0&&at<=Date.now()+864e5))at=0;
       var cur=HIST.filter(function(y){return y.h===x[0]})[0];
