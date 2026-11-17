@@ -4090,7 +4090,9 @@ function burst(x,y,em){
 
 /* ---------- 音效與背景音樂（瀏覽器即時合成） ---------- */
 /* 預設靜音：每次新來都從靜音開始；按喇叭打開後，同一個分頁內換頁沿用 */
-var AC=null,SFX_ON=false;try{SFX_ON=sessionStorage.getItem('aic-sfx')==='on'}catch(e){}
+/* 音效預設：手機（觸控為主）開、電腦關；自己按 🔊/🔇 選過，就只在這次瀏覽內記住 */
+var AC=null,SFX_ON=false,IS_PHONE=!!(window.matchMedia&&matchMedia('(pointer: coarse)').matches);
+try{var sfxSaved=sessionStorage.getItem('aic-sfx');SFX_ON=sfxSaved?sfxSaved==='on':IS_PHONE}catch(e){SFX_ON=IS_PHONE}
 function ac(){if(!AC){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}
 function tone(f0,f1,dur,type,vol,delay){
   var a=ac();if(!a)return;var t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();
@@ -4337,6 +4339,6 @@ guideMaybe(COINS.get());layout();refresh();favPaint();route();centerOn(HASH_SP>=
 })();
 </script>
 
-<script src="assets/js/fullscreen.js?v=141849e2"></script>
+<script src="assets/js/fullscreen.js?v=698a99d5"></script>
 </body>
 </html>

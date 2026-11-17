@@ -38,9 +38,10 @@
     btn.setAttribute("aria-label", on ? "離開全螢幕" : "全螢幕");
   }
 
-  // Browsers only allow fullscreen from a user gesture, so every device enters it on the first click/tap.
+  // 手機（觸控為主要操作）第一次點擊就進全螢幕；電腦預設不全螢幕，想要的話按右上角的全螢幕按鈕。
   // A page can set window.FS_BTN_ONLY_TOUCH so touch devices only enter fullscreen from the button.
-  var btnOnly = !!window.FS_BTN_ONLY_TOUCH && !!window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  var coarse = !!window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  var btnOnly = !coarse || (!!window.FS_BTN_ONLY_TOUCH && coarse);
   document.addEventListener("click", function (e) {
     if (btnOnly || active() || optedOut() || (btn && btn.contains(e.target))) return;
     go();
