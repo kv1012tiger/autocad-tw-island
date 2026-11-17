@@ -1030,11 +1030,19 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .reader.game .reader-bar{border-bottom-color:#38bdf8}
 .reader.game iframe{background:#0a1f35}
 /* 我的小島 */
-.mi-scene{position:relative;height:390px;margin:12px 0 6px;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 120%,#1f7fb0,#0b4f78 70%)}
-@media (max-width:560px){.mi-scene{height:350px}}
-.mi-land{position:absolute;border-radius:48% 52% 46% 54%/56% 50% 50% 44%;background:radial-gradient(ellipse at 45% 40%,#9be36b,#4f9a2e 75%);box-shadow:0 0 0 10px #f2d79a,0 0 0 18px rgba(166,242,232,.45);transition:left .9s,right .9s,top .9s,bottom .9s}
-.mi-land.t0{left:14%;right:14%;top:17%;bottom:10%}.mi-land.t1{left:10%;right:10%;top:13%;bottom:9%}.mi-land.t2{left:6%;right:6%;top:9%;bottom:7%}.mi-land.t3{left:3.5%;right:3.5%;top:6%;bottom:5%}
-.mi-size{position:absolute;left:10px;top:8px;z-index:60;font-size:12px;font-weight:800;padding:2px 9px;border-radius:9px;background:rgba(0,0,0,.38);color:#fff}
+/* 我的小島：跟資源島同一種畫法——方形羊皮紙陸地（草地＋咖啡土＋米色沙邊），底部木棧橋，旁邊停著自己的船 */
+.mi-sea{position:relative;margin:12px 0 6px;padding-bottom:112px;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 100%,#1f8fbf,#0b4f78 75%)}
+.mi-scene{position:relative;height:430px;margin:0}
+@media (max-width:560px){.mi-scene{height:392px}}
+.mi-land{position:absolute;left:6.5%;right:6.5%;top:5.5%;bottom:5%;border-radius:9% 8% 10% 8%/10% 9% 8% 10%;background:radial-gradient(ellipse at 45% 40%,#9be36b,#4f9a2e 80%);box-shadow:0 0 0 5px #7a5630,0 0 0 17px #f7e6b4,0 0 0 20px #b98a52,0 7px 0 20px #b98a52,0 14px 22px 20px rgba(6,70,100,.4)}
+.mi-dock{position:absolute;left:50%;bottom:6px;width:46px;height:132px;margin-left:-23px;border:3px solid #5f3d1c;border-radius:3px 3px 2px 2px;background:repeating-linear-gradient(0deg,#a8743a 0 15px,#6b4220 15px 17px);box-shadow:0 6px 8px rgba(0,0,0,.3)}
+.mi-dock::before,.mi-dock::after{content:'';position:absolute;bottom:-4px;width:8px;height:44px;background:#4a2f14;border-radius:2px}
+.mi-dock::before{left:-12px}.mi-dock::after{right:-12px}
+.mi-ship{position:absolute;left:calc(50% + 40px);bottom:10px;width:104px;text-align:center;pointer-events:none;animation:miBob 3.2s ease-in-out infinite}
+.mi-ship svg{display:block;width:104px;height:104px;margin-bottom:-26px;overflow:visible;filter:drop-shadow(0 6px 4px rgba(0,0,0,.28))}
+.mi-ship em{position:relative;display:inline-block;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 8px;border-radius:8px;font-style:normal;font-size:12px;font-weight:800;color:#12384d;background:rgba(255,255,255,.88)}
+@keyframes miBob{50%{transform:translateY(-4px) rotate(1deg)}}
+@media (prefers-reduced-motion:reduce){.mi-ship{animation:none}}
 .mi-sc{position:absolute;line-height:1;pointer-events:none;opacity:.95}
 .mi-house{position:absolute;left:27%;top:19%;transform:translateX(-50%);text-align:center;line-height:1}
 .mi-house span{display:block;font-size:80px;filter:drop-shadow(0 6px 4px rgba(0,0,0,.35))}
@@ -3028,13 +3036,13 @@ function strangerBox(){return '<div class="p-sec"><h4>🤝 先成為好友</h4><
 var TIERN=['空地','小島','中型島','大島'];
 function landTier(d){var n=d.h+Math.min(3,d.fields||0)+d.deco.length+Math.min(2,(d.trees||[]).length),t=n<1?0:n<3?1:n<6?2:3;if(d.deco.indexOf('tower')>=0)t=Math.max(t,2);return t}
 function sceneHTML(d){
-  var t=landTier(d),o='<div class="mi-scene"><div class="mi-land t'+t+'"></div><span class="mi-size">🏝️ '+TIERN[t]+'</span>';
-  if(t>=1)o+='<span class="mi-sc" style="left:20%;top:80%;font-size:20px">🌼</span><span class="mi-sc" style="left:58%;top:82%;font-size:18px">🌿</span>';
-  if(t>=2)o+='<span class="mi-sc" style="left:40%;top:76%;font-size:22px">🌸</span><span class="mi-sc" style="left:87%;top:62%;font-size:26px">🪨</span>';
-  if(t>=3)o+='<span class="mi-sc" style="left:89%;top:38%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:4%;top:62%;font-size:34px">🌴</span>';
+  var t=3,o='<div class="mi-sea"><div class="mi-scene"><div class="mi-land t3"></div>';   /* 陸地一律是整片大陸地（不再依等級由小變大） */
+  if(t>=1)o+='<span class="mi-sc" style="left:20%;top:80%;font-size:20px">🌼</span><span class="mi-sc" style="left:70%;top:82%;font-size:18px">🌿</span>';
+  if(t>=2)o+='<span class="mi-sc" style="left:40%;top:76%;font-size:22px">🌸</span><span class="mi-sc" style="left:79%;top:66%;font-size:26px">🪨</span>';
+  if(t>=3)o+='<span class="mi-sc" style="left:73%;top:42%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
   o+='<div class="mi-house lv'+d.h+'"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
-  var dp={fountain:[64,58],tower:[70,20]},dl=d.dl||{};
+  var dp={fountain:[62,60],tower:[66,20]},dl=d.dl||{};
   d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(3,dl[k]||1),pp=dp[k];o+='<span class="mi-deco" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(lv-1)*9)+'px">'+DECOI[k][0]+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
   (d.trees||[]).forEach(function(t,i){
     var v=treeView(t,d),pp=TREE_POS[i%TREE_POS.length];
@@ -3044,23 +3052,25 @@ function sceneHTML(d){
   Object.keys(d.bb||{}).forEach(function(k){var pp=k==='tree'?TREE_POS[(d.trees||[]).length%TREE_POS.length]:dp[k];if(pp)o+='<span class="mi-deco bld" style="left:'+pp[0]+'%;top:'+pp[1]+'%">🚧</span>'});
   o+=d.pets.map(function(p,i){var a=ANI[p.k]||['🐾',''];return '<span class="mi-pet" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" style="font-size:'+(32+Math.min(4,p.lv-1)*4)+'px"><i><u>'+a[0]+'</u></i><em>'+esc(p.n)+'</em></span>'}).join('');
   if(!d.h&&!d.fields&&!d.deco.length&&!(d.trees||[]).length&&!d.pets.length)o+='<p class="mi-empty">'+(d.mine?'這座島還是一片空地，先用 🪵 木材和 🪨 石頭蓋一間小屋吧！':'這座島還是一片空地')+'</p>';
-  return o+'</div>';
+  var sh=(d.ships||[]).filter(function(x){return x.k===d.shipCur})[0];
+  return o+'</div><div class="mi-dock" aria-hidden="true"></div><div class="mi-ship">'+shipSVG(d.shipCur||0)+'<em>'+esc(sh?sh.n:'小船')+'</em></div></div>';
 }
 /* 寵物在島上隨機走動：每隻挑一個陸地上的點走過去、停一下、再挑下一個；位置存在 PW.st，島每 30 秒重畫也不會跳回原點 */
 var PW={st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 function pwGeom(sc,t){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect(),o=[];
   sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
-  return {sc:sc,t:t,w:b.width,h:b.height,cx:l.left-b.left+l.width/2,cy:l.top-b.top+l.height/2,a:l.width/2*.8,b:l.height/2*.74,r:o};
+  return {sc:sc,t:t,w:b.width,h:b.height,cx:l.left-b.left+l.width/2,cy:l.top-b.top+l.height/2,a:l.width/2*.9,b:l.height/2*.88,r:o};
 }
+function inLand(u,v){return Math.pow(Math.abs(u),6)+Math.pow(Math.abs(v),6)<=1}   /* 圓角方形陸地（比橢圓寬很多，四個角也能用） */
 function pwBlocked(G,x,y){
-  var u=(x-G.cx)/G.a,v=(y-G.cy)/G.b;if(u*u+v*v>1)return true;
+  var u=(x-G.cx)/G.a,v=(y-G.cy)/G.b;if(!inLand(u,v))return true;
   for(var i=0;i<G.r.length;i++){var r=G.r[i];if(x>r[0]&&x<r[2]&&y>r[1]&&y<r[3])return true}
   return false;
 }
 function pwPick(G,st){
   for(var k=0;k<30;k++){
-    var an=Math.random()*6.283,rr=Math.sqrt(Math.random()),x=G.cx+Math.cos(an)*rr*G.a,y=G.cy+Math.sin(an)*rr*G.b;
+    var x=G.cx+(Math.random()*2-1)*G.a,y=G.cy+(Math.random()*2-1)*G.b;
     if(pwBlocked(G,x,y))continue;
     if(st.x==null)return [x,y];
     if(Math.hypot(x-st.x,y-st.y)<40)continue;
@@ -3117,7 +3127,6 @@ function paintMine(){
   $('pTitle').textContent=d.nick+' 的小島';
   $('miSub').innerHTML=COINS.av(d)+' 🏝️ 島主分 <b>'+d.score+'</b>・小屋 Lv'+d.h+'・'+d.pets.length+' 隻寵物';
   var o=guideHTML(d)+sceneHTML(d)+wipHTML(d)+harborHTML(d);
-  if(d.mine){var lt=landTier(d);if(lt<3)o+='<p class="mi-note">🌱 你的島會長大：多蓋小屋、菜田和裝飾，陸地就會越來越大（現在是「'+TIERN[lt]+'」）。</p>'}
   if(d.mine&&d.starterTree)o+='<p class="mi-note">🌳 第一棵果樹免費，在下方「建造」點果樹即可種植。</p>';
   if(d.mine)o+='<p class="mi-note">👆 點果樹摘果、點成熟 🌲 採木材（每棵每天最多 2 次）。</p>';
   if(d.mine)o+=mineTop(d)+'<button class="btn btn-ghost btn-sm" type="button" data-guide-open>🧭 查看新手導引</button>';
@@ -3264,7 +3273,7 @@ function fitIslandPoint(el,x,y){
   var best=null,bd=Infinity;
   for(var gx=0;gx<=100;gx+=5)for(var gy=0;gy<=100;gy+=5){
     var px=gx*b.width/100+ox,py=gy*b.height/100+oy,ok=true;
-    [[px,py],[px+er.width,py],[px,py+er.height],[px+er.width,py+er.height]].forEach(function(c){if(Math.pow((c[0]-cx)/rx,2)+Math.pow((c[1]-cy)/ry,2)>1)ok=false});
+    [[px,py],[px+er.width,py],[px,py+er.height],[px+er.width,py+er.height]].forEach(function(c){if(!inLand((c[0]-cx)/rx,(c[1]-cy)/ry))ok=false});
     var dist=Math.pow((gx-x)*b.width/100,2)+Math.pow((gy-y)*b.height/100,2);
     if(ok&&dist<bd){best=[gx,gy];bd=dist}
   }
@@ -3299,7 +3308,7 @@ function fitIslandItems(){
         var ox=hit[0]-base[i].x*b.width/100,oy=hit[1]-base[i].y*b.height/100,w=hit[2]-hit[0],h=hit[3]-hit[1],best=null,score=Infinity;
         for(var x=0;x<=100;x+=2.5)for(var y=0;y<=100;y+=2.5){
           var px=x*b.width/100+ox,py=y*b.height/100+oy,box=[px,py,px+w,py+h],inside=true;
-          [[box[0],box[1]],[box[2],box[1]],[box[0],box[3]],[box[2],box[3]]].forEach(function(c){if(Math.pow((c[0]-cx)/rx,2)+Math.pow((c[1]-cy)/ry,2)>1)inside=false});
+          [[box[0],box[1]],[box[2],box[1]],[box[0],box[3]],[box[2],box[3]]].forEach(function(c){if(!inLand((c[0]-cx)/rx,(c[1]-cy)/ry))inside=false});
           if(!inside||(farmBox&&overlap(box,farmBox,4))||(phase===0&&houseBox&&overlap(box,houseBox,2))||used.some(function(v){return overlap(box,v,3)}))continue;
           var dist=Math.pow((x-base[i].x)*b.width/100,2)+Math.pow((y-base[i].y)*b.height/100,2);
           if(dist<score){score=dist;best=[x,y,box]}
@@ -3316,7 +3325,7 @@ function fitIslandItems(){
   var overflow=[],liveW={};
   function wildOk(box){
     var ok=true;
-    [[box[0],box[1]],[box[2],box[1]],[box[0],box[3]],[box[2],box[3]]].forEach(function(c){if(Math.pow((c[0]-cx)/rx,2)+Math.pow((c[1]-cy)/ry,2)>1)ok=false});
+    [[box[0],box[1]],[box[2],box[1]],[box[0],box[3]],[box[2],box[3]]].forEach(function(c){if(!inLand((c[0]-cx)/rx,(c[1]-cy)/ry))ok=false});
     return ok&&!(farmBox&&overlap(box,farmBox,5))&&!fruit.some(function(r){return overlap(box,r,8)})&&!obstacles.some(function(r){return overlap(box,r,5)})&&!placed.some(function(r){return overlap(box,r,4)});
   }
   sc.querySelectorAll('.mi-wild').forEach(function(el,i){
@@ -3346,7 +3355,7 @@ function fitIslandItems(){
     var grove=document.createElement('div');grove.className='mi-wood-overflow';
     var label=document.createElement('span');label.textContent='🌲 木材林';grove.appendChild(label);
     overflow.forEach(function(el){el.style.position='relative';el.style.left='auto';el.style.top='auto';grove.appendChild(el)});
-    sc.insertAdjacentElement('afterend',grove);
+    (sc.closest('.mi-sea')||sc).insertAdjacentElement('afterend',grove);
   }
 }
 pBody.addEventListener('click',function(e){
