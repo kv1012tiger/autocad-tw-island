@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>扭蛋島</title>
+<style>
+/* 扭蛋島：夜市扭蛋機。轉把手 → 扭蛋滾出來 → 點三下打開；顏色先預告稀有度 */
+:root{--gold:#ffd166;--pink:#ff5d8f;--night:#1b1240;--night2:#0b2a4a;--ink:#fff;--muted:#c9c2ea;
+  --w:#f4f1ea;--g:#66bb6a;--b:#42a5f5;--p:#ab47bc;--y:#ffca28}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:transparent}
+body{font-family:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif;color:var(--ink);overflow:hidden}
+body.solo{background:#0a0820;overflow:auto;padding:12px max(12px,env(safe-area-inset-right,0px)) 24px max(12px,env(safe-area-inset-left,0px))}
+.wrap{max-width:440px;margin:0 auto;padding:16px 14px 16px;position:relative;border-radius:22px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#3b2a7a 0%,var(--night) 55%,var(--night2) 100%)}
+.wrap::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(2px 2px at 12% 18%,#fff8,transparent),radial-gradient(2px 2px at 82% 12%,#fff8,transparent),
+  radial-gradient(1.5px 1.5px at 30% 40%,#fff6,transparent),radial-gradient(2px 2px at 70% 34%,#fff7,transparent),radial-gradient(1.5px 1.5px at 90% 52%,#fff6,transparent)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.35);border:1.5px solid rgba(255,209,102,.5);font-weight:800;font-size:14px}
+.chip b{color:var(--gold);font-size:17px}
+.sfx{border:0;background:rgba(0,0,0,.35);color:#fff;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer}
+h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color:var(--gold);text-shadow:0 2px 0 #7a3b00,0 0 18px rgba(255,209,102,.5)}
+.sub{text-align:center;font-size:13px;color:var(--muted);margin:0 0 6px}
+/* 機台 */
+.stage{position:relative;height:330px}
+.mach{position:absolute;left:50%;top:6px;width:230px;margin-left:-115px;transform-origin:50% 100%}
+.mach.shake{animation:shake .12s linear 8}
+@keyframes shake{25%{transform:translateX(-3px) rotate(-1deg)}75%{transform:translateX(3px) rotate(1deg)}}
+.mach svg{display:block;width:100%;height:auto;overflow:visible}
+.balls circle{transition:transform .2s}
+.mach.shake .balls{animation:jig .1s linear 10 alternate}
+@keyframes jig{to{transform:translate(2px,-3px)}}
+.crank{transform-box:fill-box;transform-origin:50% 50%;cursor:grab;touch-action:none}
+.crank.spin{animation:crank .9s cubic-bezier(.4,.1,.3,1)}
+@keyframes crank{to{transform:rotate(360deg)}}
+.hint{position:absolute;left:calc(50% - 168px);top:236px;font-size:12px;font-weight:800;color:var(--gold);animation:bob 1s ease-in-out infinite alternate;pointer-events:none}
+@keyframes bob{to{transform:translateY(-5px)}}
+/* 扭蛋 */
+.cap{position:absolute;left:50%;top:250px;width:84px;height:84px;margin-left:-42px;border-radius:50%;cursor:pointer;opacity:0;pointer-events:none;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.45));touch-action:manipulation}
+.cap.show{opacity:1;pointer-events:auto}
+.cap.drop{animation:drop .9s cubic-bezier(.3,.7,.4,1) forwards}
+@keyframes drop{0%{transform:translate(52px,-80px) scale(.4) rotate(0)}45%{transform:translate(30px,0) scale(1) rotate(200deg)}70%{transform:translate(0,-18px) rotate(300deg)}100%{transform:translate(0,0) rotate(360deg)}}
+.cap .top,.cap .bot{position:absolute;left:0;right:0;height:50%;transition:transform .5s cubic-bezier(.3,1.6,.5,1),opacity .5s}
+.cap .top{top:0;border-radius:42px 42px 0 0;background:var(--cc);box-shadow:inset -8px 6px 0 rgba(255,255,255,.35),inset 0 -4px 0 rgba(0,0,0,.15)}
+.cap .bot{bottom:0;border-radius:0 0 42px 42px;background:#fafafa;box-shadow:inset -6px -6px 0 rgba(0,0,0,.08)}
+.cap .band{position:absolute;left:-2px;right:-2px;top:calc(50% - 4px);height:8px;border-radius:4px;background:rgba(0,0,0,.18)}
+.cap .crk{position:absolute;inset:0;opacity:0;transition:opacity .2s}
+.cap .crk.on{opacity:1}
+.cap.wob{animation:wob .4s ease-in-out}
+@keyframes wob{20%{transform:rotate(-14deg) scale(1.06)}50%{transform:rotate(12deg)}80%{transform:rotate(-6deg)}}
+.cap.open .top{transform:translate(-30px,-60px) rotate(-50deg);opacity:0}
+.cap.open .bot{transform:translate(30px,50px) rotate(40deg);opacity:0}
+.cap.r{--cc:conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)}
+.cap.glow{animation:capglow 1s ease-in-out infinite alternate}
+@keyframes capglow{to{filter:drop-shadow(0 0 16px var(--gl)) drop-shadow(0 8px 10px rgba(0,0,0,.45))}}
+.tapn{position:absolute;left:0;right:0;top:340px;text-align:center;font-weight:900;color:#fff;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none}
+.tapn.on{opacity:1}
+/* 開獎 */
+.prize{position:absolute;left:24px;right:24px;top:96px;padding:16px 10px 14px;border-radius:22px;background:radial-gradient(ellipse at 50% 40%,rgba(40,24,90,.92),rgba(10,8,32,.88));border:1.5px solid rgba(255,255,255,.18);display:grid;justify-items:center;gap:6px;opacity:0;transform:scale(.5);transition:all .45s cubic-bezier(.3,1.6,.5,1);pointer-events:none;z-index:6}
+.prize.on{opacity:1;transform:none}
+.prize .em{font-size:76px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.prize .em svg{width:180px;height:auto;overflow:visible}
+.prize .nm{font-size:22px;font-weight:900;background:rgba(0,0,0,.45);border:2px solid var(--tc,#fff);padding:4px 16px;border-radius:999px;text-align:center}
+.prize .ds{font-size:13px;color:#fff;background:rgba(0,0,0,.4);padding:3px 12px;border-radius:10px;text-align:center;max-width:300px}
+.rays{position:absolute;left:50%;top:190px;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;opacity:0;pointer-events:none;z-index:5;
+  background:repeating-conic-gradient(var(--rc,rgba(255,255,255,.35)) 0 8deg,transparent 8deg 22deg);transition:opacity .4s;mask:radial-gradient(circle,#000 18%,transparent 62%);-webkit-mask:radial-gradient(circle,#000 18%,transparent 62%)}
+.rays.on{opacity:1;animation:rays 6s linear infinite}
+@keyframes rays{to{transform:rotate(360deg)}}
+.dark{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.2),rgba(0,0,0,.85));opacity:0;transition:opacity .6s;pointer-events:none;z-index:4}
+.dark.on{opacity:1}
+.beam{position:absolute;left:50%;top:-20px;width:120px;margin-left:-60px;height:420px;opacity:0;pointer-events:none;z-index:5;
+  background:linear-gradient(180deg,rgba(255,82,82,.0),rgba(255,202,40,.55),rgba(102,187,106,.55),rgba(66,165,245,.55),rgba(171,71,188,.0));filter:blur(6px)}
+.beam.on{animation:beam 1.6s ease-out forwards}
+@keyframes beam{0%{opacity:0;transform:scaleX(.2)}30%{opacity:1;transform:scaleX(1.4)}100%{opacity:.5;transform:scaleX(1)}}
+.fx{position:fixed;left:0;top:0;pointer-events:none;z-index:50;font-size:22px;line-height:1}
+/* 按鈕 */
+.act{display:flex;justify-content:center;gap:10px;margin-top:4px;position:relative;z-index:7}
+.btn{font:900 17px/1 inherit;font-family:inherit;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;color:#3a1600;
+  background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 5px 0 #b26a00,0 10px 18px rgba(0,0,0,.4);touch-action:manipulation}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b26a00}
+.btn:disabled{filter:grayscale(.8);opacity:.6;cursor:default}
+.btn.ghost{background:rgba(255,255,255,.12);color:#fff;box-shadow:none;border:1.5px solid rgba(255,255,255,.4)}
+.msg{text-align:center;font-size:13px;color:var(--muted);min-height:20px;margin-top:8px;position:relative}
+/* 獎品表與紀錄 */
+.sec{margin-top:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 12px;position:relative}
+.sec h2{margin:0 0 6px;font-size:14px;color:var(--gold)}
+.odds{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;font-size:13px;align-items:center}
+.dot{width:14px;height:14px;border-radius:50%;box-shadow:inset -2px 2px 0 rgba(255,255,255,.4)}
+.odds .pc{font-variant-numeric:tabular-nums;color:var(--muted)}
+.log{display:flex;flex-wrap:wrap;gap:6px;font-size:13px}
+.log span{background:rgba(255,255,255,.08);border-radius:999px;padding:3px 10px}
+.beasts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;font-size:12px}
+.beasts div{display:grid;justify-items:center;gap:2px;background:rgba(255,255,255,.05);border-radius:12px;padding:6px 2px}
+.beasts svg{width:78px;height:auto;overflow:visible}
+.bfx{animation:bfx 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes bfx{0%,100%{opacity:.25;transform:translateY(2px) scale(.7)}50%{opacity:1;transform:translateY(-3px) scale(1.1)}}
+.wg{transform-box:fill-box;transform-origin:70% 10%;animation:flap .3s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(-.6) rotate(-16deg)}}
+.flt{animation:flt 2s ease-in-out infinite alternate}
+@keyframes flt{to{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="top">
+    <div class="chip">🪙 <b id="coins">0</b></div>
+    <div class="chip">今天還能抽 <b id="left">3</b> 次</div>
+    <button class="sfx" id="sfx" type="button" aria-label="音效開關">🔊</button>
+  </div>
+  <h1>✨ 扭蛋島 ✨</h1>
+  <p class="sub">每抽 🪙 5 枚・每天 3 次・神獸只有 3%</p>
+
+  <div class="stage" id="stage">
+    <div class="dark" id="dark"></div>
+    <div class="rays" id="rays"></div>
+    <div class="beam" id="beam"></div>
+    <div class="mach" id="mach">
+      <svg viewBox="0 0 230 300" aria-hidden="true">
+        <defs>
+          <radialGradient id="gl" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".5" stop-color="#bfe9ff" stop-opacity=".18"/><stop offset="1" stop-color="#7fc8ff" stop-opacity=".3"/></radialGradient>
+          <linearGradient id="bd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b8b"/><stop offset="1" stop-color="#c2185b"/></linearGradient>
+        </defs>
+        <ellipse cx="115" cy="292" rx="96" ry="8" fill="rgba(0,0,0,.35)"/>
+        <rect x="58" y="12" width="114" height="14" rx="7" fill="#ffd166" stroke="#b26a00" stroke-width="2"/>
+        <circle cx="115" cy="100" r="82" fill="#11103a" opacity=".5"/>
+        <g class="balls">
+          <circle cx="78" cy="132" r="17" fill="#66bb6a"/><circle cx="112" cy="140" r="17" fill="#f4f1ea"/><circle cx="146" cy="132" r="17" fill="#42a5f5"/>
+          <circle cx="62" cy="104" r="16" fill="#f4f1ea"/><circle cx="95" cy="110" r="17" fill="#ab47bc"/><circle cx="130" cy="108" r="17" fill="#f4f1ea"/><circle cx="163" cy="104" r="16" fill="#66bb6a"/>
+          <circle cx="80" cy="80" r="16" fill="#ffca28"/><circle cx="114" cy="78" r="17" fill="#f4f1ea"/><circle cx="148" cy="80" r="16" fill="#42a5f5"/>
+          <circle cx="100" cy="50" r="15" fill="#66bb6a"/><circle cx="132" cy="50" r="15" fill="#ff5252"/>
+          <circle cx="78" cy="132" r="17" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="2"/>
+        </g>
+        <circle cx="115" cy="100" r="82" fill="url(#gl)" stroke="#e3f2fd" stroke-width="4"/>
+        <path d="M60 52 Q80 30 108 26" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".6"/>
+        <path d="M40 170 h150 l14 110 h-178z" fill="url(#bd)" stroke="#880e4f" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="34" y="166" width="162" height="14" rx="7" fill="#ffd166" stroke="#b26a00" stroke-width="2"/>
+        <rect x="78" y="196" width="74" height="26" rx="6" fill="#2b0f2a" stroke="#ffd166" stroke-width="2"/>
+        <text x="115" y="214" text-anchor="middle" font-size="13" font-weight="900" fill="#ffd166" font-family="sans-serif">🪙 5</text>
+        <path d="M150 240 h34 v26 h-34 q-8 0 -8 -13 q0 -13 8 -13z" fill="#2b0f2a" stroke="#ffd166" stroke-width="2"/>
+        <g class="crank" id="crank" role="button" tabindex="0" aria-label="轉把手抽扭蛋">
+          <circle cx="78" cy="248" r="22" fill="#fff" stroke="#b26a00" stroke-width="3"/>
+          <rect x="74" y="230" width="8" height="36" rx="4" fill="#ff5d8f"/>
+          <circle cx="78" cy="248" r="5" fill="#ffd166"/>
+        </g>
+        <text x="115" y="290" text-anchor="middle" font-size="10" font-weight="800" fill="#ffe0ec" font-family="sans-serif" opacity=".8">GACHA ISLAND</text>
+      </svg>
+    </div>
+    <div class="hint" id="hint">轉把手 👉</div>
+    <div class="cap" id="cap" role="button" tabindex="0" aria-label="點扭蛋打開">
+      <div class="top"></div><div class="bot"></div><div class="band"></div>
+      <svg class="crk" id="crk1" viewBox="0 0 84 84"><path d="M30 20 l8 10 l-5 6 l9 8" stroke="#3a2a2a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      <svg class="crk" id="crk2" viewBox="0 0 84 84"><path d="M56 26 l-7 9 l6 7 l-8 9 M40 44 l-10 8" stroke="#3a2a2a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="tapn" id="tapn">👆 點扭蛋 3 下打開！</div>
+    <div class="prize" id="prize"><div class="em" id="pem"></div><div class="nm" id="pnm"></div><div class="ds" id="pds"></div></div>
+  </div>
+
+  <div class="act"><button class="btn" id="go" type="button">🎰 轉一次（🪙 5）</button></div>
+  <div class="msg" id="msg" role="status"></div>
+
+  <div class="sec">
+    <h2>🐲 三隻神獸（各 1%）</h2>
+    <div class="beasts" id="bst"></div>
+    <p style="margin:6px 0 0;font-size:12px;color:var(--muted)">抽到會住進你的小島，不佔小屋的寵物名額；已經有的神獸再抽到，自動換成 💎 2 顆。</p>
+  </div>
+  <div class="sec">
+    <h2>🎁 獎品與機率</h2>
+    <div class="odds" id="odds"></div>
+  </div>
+  <div class="sec" id="logsec" hidden>
+    <h2>📜 最近抽到</h2>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var API=null;try{API=parent!==window&&parent.AIKB_GACHA?parent.AIKB_GACHA:null}catch(e){}
+if(!API)document.body.classList.add('solo');
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(i){return document.getElementById(i)}
+/* ---- 神獸畫法（和小島上同一套） ---- */
+var PV_UID=0;
+function pvEye(x,y,dark){return '<circle cx="'+x+'" cy="'+y+'" r="2.4" fill="'+(dark?'#f4f4f4':'#1d1d1d')+'"/><circle cx="'+(x+.8)+'" cy="'+(y-.8)+'" r=".8" fill="'+(dark?'#222':'#fff')+'"/>'}
+function pvCrown(x,y){return '<g><path d="M'+(x-7)+' '+y+'l2-8 3.5 4.5 1.5-6.5 1.5 6.5 3.5-4.5 2 8z" fill="#ffd54f" stroke="#b7791f" stroke-width="1"/><circle cx="'+x+'" cy="'+(y-3)+'" r="1.4" fill="#e53935"/></g>'}
+/* 神獸外觀（水靈龍、火鳳凰、木麒麟）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
+function pvBeastFx(el,st){
+  if(st<2)return '';
+  var o='';
+  if(el==='water')[[8,18,2.6],[74,10,2],[30,8,1.8],[80,48,2.2]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-c[2]*1.6)+' Q'+(c[0]+c[2])+' '+c[1]+' '+c[0]+' '+(c[1]+c[2])+' Q'+(c[0]-c[2])+' '+c[1]+' '+c[0]+' '+(c[1]-c[2]*1.6)+'Z" fill="#81d4fa"/>'});
+  if(el==='fire')[[6,20],[70,6],[26,10],[82,40]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.35)+'s" d="M'+c[0]+' '+(c[1]-5)+' Q'+(c[0]+3.5)+' '+c[1]+' '+c[0]+' '+(c[1]+3)+' Q'+(c[0]-3.5)+' '+c[1]+' '+c[0]+' '+(c[1]-5)+'Z" fill="#ffb74d"/>'});
+  if(el==='wood')[[8,22,'#f48fb1'],[76,8,'#a5d6a7'],[28,8,'#fff59d'],[80,46,'#f48fb1']].forEach(function(c,i){o+='<g class="bfx" style="animation-delay:'+(i*.45)+'s"><circle cx="'+c[0]+'" cy="'+c[1]+'" r="2.6" fill="'+c[2]+'"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="1" fill="#fff"/></g>'});
+  return o;
+}
+function pvDragon(st,id){
+  var o='',b=st===3?'url(#dg'+id+')':'#0288d1';
+  o+='<path d="M12 46 L2 37 L6 47 L1 56Z" fill="#4fc3f7"/>';
+  o+='<path class="lg a" d="M30 46 l-2 10 h5 l1-9z" fill="#0277bd"/><path class="lg b" d="M47 41 l-1 11 h5 l0-10z" fill="#0277bd"/>';
+  o+='<path d="M10 45 C18 31 28 56 40 43 S57 29 63 34" stroke="'+b+'" stroke-width="12" fill="none" stroke-linecap="round"/>';
+  o+='<path d="M11 48 C19 35 28 59 40 47 S56 33 62 38" stroke="#b3e5fc" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  [[18,33],[29,45],[43,35],[54,30]].forEach(function(c){o+='<path d="M'+(c[0]-3)+' '+c[1]+' l3-7 l3 7z" fill="#e1f5fe"/>'});
+  var hd='<path d="M62 23 L57 10 M67 22 L66 8" stroke="#fff59d" stroke-width="2.8" stroke-linecap="round"/>'+
+    '<ellipse cx="66" cy="30" rx="11" ry="8.5" fill="#29b6f6"/><ellipse cx="74" cy="33" rx="7" ry="5" fill="#4fc3f7"/>'+
+    '<circle cx="66" cy="27" r="3.2" fill="#fff"/>'+pvEye(66.5,27)+'<circle cx="79" cy="31" r="1.2" fill="#01579b"/>'+
+    '<path d="M77 36 Q86 39 83 47 M74 37 Q78 44 74 49" stroke="#b3e5fc" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+    (st===3?pvCrown(64,20):'');
+  if(st>=2)o+='<circle cx="80" cy="52" r="4" fill="#e1f5fe" stroke="#4fc3f7"/><circle cx="79" cy="51" r="1.3" fill="#fff"/>';
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvPhoenix(st,id){
+  var o='',w=st===3?'url(#ph'+id+')':'#ff9800';
+  o+='<path d="M40 56 L37 61 M46 56 L49 61" stroke="#8d6e63" stroke-width="2.4" stroke-linecap="round"/>';
+  o+='<g class="tl"><path d="M32 46 Q14 46 4 62 Q18 54 34 50Z" fill="#ff5722"/><path d="M33 48 Q20 56 14 64 Q26 58 36 51Z" fill="#ffc107"/><path d="M31 44 Q12 38 2 46 Q16 44 32 48Z" fill="#ff7043"/></g>';
+  o+='<ellipse cx="42" cy="38" rx="13" ry="17" fill="#ff7043" transform="rotate(-18 42 38)"/>';
+  o+='<ellipse cx="47" cy="42" rx="7" ry="11" fill="#ffcc80" transform="rotate(-18 47 42)"/>';
+  o+='<g class="wg"><path d="M32 28 Q20 44 34 54 Q44 44 40 28Z" fill="'+w+'"/><path d="M27 42 Q29 52 34 54 Q31 47 32 41Z" fill="#ffeb3b"/></g>';
+  var hd='<path d="M46 11 Q44 3 49 1 Q48 6 51 9 Q52 2 57 2 Q53 7 54 11Z" fill="#ffc107"/>'+
+    '<circle cx="50" cy="20" r="11" fill="#ff7043"/><circle cx="53" cy="18" r="3.4" fill="#fff"/>'+pvEye(53.5,18)+
+    '<path d="M58 16 Q67 18 61 27 Q60 23 57 23Z" fill="#ffd54f" stroke="#6d4c41" stroke-width="1"/><circle cx="46" cy="23" r="2.4" fill="#ffab91" opacity=".7"/>'+
+    (st===3?pvCrown(50,8):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvQilin(st,id){
+  var o='',b=st===3?'url(#ql'+id+')':'#66bb6a',d='#2e7d32';
+  o+='<g class="tl"><path d="M21 38 Q10 34 8 26" stroke="'+b+'" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M8 26 Q2 22 6 16 Q10 20 12 18 Q12 24 8 26Z" fill="'+d+'"/></g>';
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="44" width="6" height="14" rx="3" fill="#43a047"/><rect class="lg '+l[1]+'" x="'+l[0]+'" y="54" width="6" height="4" rx="1.5" fill="#3e2723"/>'});
+  o+='<ellipse cx="40" cy="42" rx="21" ry="12" fill="'+b+'"/>';
+  [[30,38],[38,36],[46,38],[34,44],[42,43]].forEach(function(c){o+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="2" fill="#a5d6a7"/>'});
+  o+='<ellipse cx="44" cy="48" rx="13" ry="5" fill="#c5e1a5"/>';
+  var hd='<path d="M50 30 Q52 16 60 14 Q58 24 56 32Z" fill="'+d+'"/>'+
+    '<path d="M60 18 L56 6 M58 11 L53 9 M66 17 L70 5 M68 10 L73 8" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>'+
+    '<ellipse cx="55" cy="6" rx="3" ry="1.8" fill="#81c784"/><ellipse cx="71" cy="4" rx="3" ry="1.8" fill="#81c784"/>'+
+    '<circle cx="63" cy="26" r="11" fill="'+b+'"/><ellipse cx="71" cy="30" rx="7" ry="5" fill="#c5e1a5"/>'+pvEye(65,23)+
+    '<circle cx="76" cy="28" r="1.8" fill="#1b5e20"/><circle cx="60" cy="30" r="2.4" fill="#ff8fa3" opacity=".45"/>'+
+    (st>=2?'<path d="M58 34 Q64 39 70 35" stroke="#f48fb1" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="64" cy="38" r="2.4" fill="#fff59d"/>':'')+
+    (st===3?pvCrown(63,13):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvBeastDefs(k,id){
+  if(k==='dragon')return '<linearGradient id="dg'+id+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4dd0e1"/><stop offset=".5" stop-color="#7c4dff"/><stop offset="1" stop-color="#29b6f6"/></linearGradient>';
+  if(k==='phoenix')return '<linearGradient id="ph'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeb3b"/><stop offset=".5" stop-color="#ff9800"/><stop offset="1" stop-color="#e53935"/></linearGradient>';
+  if(k==='qilin')return '<linearGradient id="ql'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ccc65"/><stop offset=".6" stop-color="#ffd54f"/><stop offset="1" stop-color="#43a047"/></linearGradient>';
+  return '';
+}
+var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood'};
+
+function beastSVG(k,st){var id=++PV_UID,b=k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):pvQilin(st,id);
+  return '<svg viewBox="-4 -8 92 76" aria-hidden="true">'+(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':'')+'<g class="'+(k==='qilin'?'':'flt')+'">'+b+'</g>'+pvBeastFx(PV_BEAST[k],st)+'</svg>'}
+var BN={dragon:['水靈龍','💧 水','#4fc3f7'],phoenix:['火鳳凰','🔥 火','#ff9800'],qilin:['木麒麟','🌿 木','#9ccc65']};
+$('bst').innerHTML=['dragon','phoenix','qilin'].map(function(k){return '<div>'+beastSVG(k,2)+'<b>'+BN[k][0]+'</b><span>'+BN[k][1]+'屬性</span></div>'}).join('');
+
+/* ---- 獎品表（要和後台 GACHA 一致） ---- */
+var TIER={w:['#f4f1ea','安慰獎'],g:['#66bb6a','普通'],b:['#42a5f5','不錯'],p:['#ab47bc','稀有'],y:['#ffca28','超稀有'],r:['conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)','神獸']};
+var TABLE=[['fruit',3,45,'w'],['wood',8,15,'g'],['iron',6,13,'g'],['coin',8,12,'b'],['dia',1,8,'p'],['coin',20,3,'p'],['dia',3,1,'y'],['beast',1,3,'r']];
+var RN={fruit:['🍎','水果'],wood:['🪵','木材'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸']};
+$('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（三選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
+
+/* ---- 狀態 ---- */
+var S={coins:50,left:3,login:true,busy:false,cap:null,taps:0,res:null,sfx:true,log:[]};
+function sync(){
+  if(API){var st=API.state();S.coins=st.coins;S.left=st.left;S.login=st.login;S.sfx=st.sfx!==false;if(st.log)S.log=st.log}
+  $('coins').textContent=S.coins;$('left').textContent=S.left;$('sfx').textContent=S.sfx?'🔊':'🔇';
+  var go=$('go');
+  if(!S.login){go.textContent='🔑 登島後才能抽';go.disabled=false}
+  else if(S.cap){go.textContent='👆 先打開扭蛋';go.disabled=true}
+  else if(S.left<=0){go.textContent='今天抽完了，明天再來';go.disabled=true}
+  else if(S.coins<5){go.textContent='🪙 金幣不夠（要 5 枚）';go.disabled=true}
+  else{go.textContent=S.res?'🎰 再轉一次（🪙 5）':'🎰 轉一次（🪙 5）';go.disabled=S.busy}
+  $('hint').hidden=S.busy||!!S.cap||S.left<=0||!S.login;
+  if(S.log.length){$('logsec').hidden=false;$('log').innerHTML=S.log.slice(0,6).map(function(g){return '<span>'+label(g)+'</span>'}).join('')}
+  fit();
+}
+window.gachaSync=sync;
+function label(g){if(g.k==='beast')return (g.dup?'🐲 '+g.name+'（重複→💎'+g.n+'）':'🐲 '+g.name);return RN[g.k][0]+' '+RN[g.k][1]+' ×'+g.n}
+
+/* ---- 音效 ---- */
+var AC=null;function tone(f,d,type,v,delay){if(!S.sfx)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+(delay||0);o.type=type||'sine';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
+function sClick(){tone(320,.08,'square',.06)}
+function sCrank(){for(var i=0;i<8;i++)tone(180+i*20,.05,'square',.05,i*.1)}
+function sPop(){tone(660,.12,'triangle',.15);tone(990,.15,'triangle',.1,.06)}
+function sWin(big){var n=big?[523,659,784,1047,1319]:[523,659,784];n.forEach(function(f,i){tone(f,.22,'triangle',.12,i*.11)})}
+$('sfx').addEventListener('click',function(){S.sfx=!S.sfx;if(API&&API.setSfx)API.setSfx(S.sfx);sync()});
+
+/* ---- 特效 ---- */
+function burst(x,y,em,n,spread){for(var i=0;i<n;i++){(function(){var e=document.createElement('span');e.className='fx';e.textContent=em[Math.floor(Math.random()*em.length)];document.body.appendChild(e);
+  var a=Math.random()*Math.PI*2,d=(spread||90)*(.4+Math.random()*.8),t0=performance.now(),dur=900+Math.random()*500;
+  (function an(t){var k=Math.min(1,(t-t0)/dur);e.style.transform='translate('+(x+Math.cos(a)*d*k-11)+'px,'+(y+Math.sin(a)*d*k+60*k*k-11)+'px) rotate('+k*300+'deg)';e.style.opacity=1-k*k;if(k<1)requestAnimationFrame(an);else e.remove()})(t0)})()}}
+function capCenter(){var r=$('cap').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]}
+
+/* ---- 抽 ---- */
+function newId(){return 'g'+Math.random().toString(36).slice(2,12)+'-'+Date.now().toString(36)}
+function fake(){var tot=0,i,rv;TABLE.forEach(function(t){tot+=t[2]});rv=Math.random()*tot;for(i=0;i<TABLE.length;i++){rv-=TABLE[i][2];if(rv<0)break}var t=TABLE[Math.min(i,TABLE.length-1)],g={k:t[0],n:t[1],tier:t[3]};
+  if(g.k==='beast'){var ks=['dragon','phoenix','qilin'],b=ks[Math.floor(Math.random()*3)];g.b=b;g.name=BN[b][0];g.el=b}
+  S.coins-=5;if(g.k==='coin')S.coins+=g.n;S.left--;return Promise.resolve({ok:true,gacha:g})}
+function spin(){
+  if(!S.login){if(API)API.login();return}
+  if(S.busy||S.cap||S.left<=0||S.coins<5)return;
+  S.busy=true;S.res=null;$('prize').className='prize';$('rays').className='rays';$('dark').className='dark';$('beam').className='beam';$('msg').textContent='';
+  var cap=$('cap');cap.className='cap';cap.style.removeProperty('--gl');
+  sync();sClick();
+  var cr=$('crank');cr.classList.remove('spin');void cr.getBBox();cr.classList.add('spin');
+  var m=$('mach');m.classList.remove('shake');void m.offsetWidth;m.classList.add('shake');sCrank();
+  var t0=Date.now(),pr=API?API.spin(newId()):fake();
+  pr.then(function(j){
+    if(!j||!j.ok){S.busy=false;$('msg').textContent='⚠️ '+((j&&j.msg)||'這次沒有抽成功，金幣沒有扣');sync();return}
+    S.res=j.gacha;var wait=Math.max(0,(reduce?100:1000)-(Date.now()-t0));
+    setTimeout(function(){dropCap(j.gacha)},wait);
+  }).catch(function(){S.busy=false;$('msg').textContent='⚠️ 網路不穩，請再試一次（金幣沒有扣）';sync()});
+}
+function dropCap(g){
+  var cap=$('cap');cap.className='cap show drop'+(g.tier==='r'?' r':'');
+  if(g.tier!=='r')cap.style.setProperty('--cc',TIER[g.tier][0]);
+  if(g.tier==='p'||g.tier==='y'||g.tier==='r'){cap.style.setProperty('--gl',g.tier==='r'?'#fff':TIER[g.tier][0]);setTimeout(function(){cap.classList.add('glow')},900)}
+  $('crk1').classList.remove('on');$('crk2').classList.remove('on');
+  S.cap=g;S.taps=0;S.busy=false;
+  tone(400,.1,'sine',.1,.4);tone(300,.1,'sine',.1,.6);
+  setTimeout(function(){$('tapn').classList.add('on')},800);
+  sync();
+}
+function tapCap(){
+  var g=S.cap;if(!g)return;var cap=$('cap');
+  S.taps++;cap.classList.remove('wob');void cap.offsetWidth;cap.classList.add('wob');tone(500+S.taps*120,.08,'square',.07);
+  if(S.taps===1)$('crk1').classList.add('on');
+  if(S.taps===2){$('crk2').classList.add('on');var c=capCenter();burst(c[0],c[1],['✨'],4,50)}
+  if(S.taps>=3){$('tapn').classList.remove('on');openCap(g)}
+}
+function openCap(g){
+  var cap=$('cap'),c=capCenter(),big=g.tier==='p'||g.tier==='y'||g.tier==='r';
+  cap.classList.add('open');sPop();S.cap=null;
+  if(g.tier==='r'){$('dark').classList.add('on');setTimeout(function(){$('beam').classList.add('on')},250);$('rays').style.setProperty('--rc','rgba(255,240,180,.4)')}
+  else $('rays').style.setProperty('--rc',g.tier==='w'?'rgba(255,255,255,.18)':'rgba(255,255,255,.32)');
+  setTimeout(function(){
+    $('rays').classList.add('on');
+    var em=$('pem'),nm=$('pnm'),ds=$('pds'),tc=g.tier==='r'?BN[g.b][2]:TIER[g.tier][0];
+    $('prize').style.setProperty('--tc',tc);
+    if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=g.dup?'你已經有 '+g.name+' 了，換成 💎 鑽石 ×'+g.n:BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）'}
+    else{em.textContent=RN[g.k][0];nm.textContent=RN[g.k][1]+' ×'+g.n;ds.textContent=TIER[g.tier][1]+(g.tier==='w'?'・下次一定更好！':'・已放進背包')}
+    $('prize').classList.add('on');
+    sWin(big);
+    if(g.tier==='r')burst(c[0],c[1]-40,['✨','🌟','💫',g.b==='dragon'?'💧':g.b==='phoenix'?'🔥':'🌸'],26,180);
+    else if(big)burst(c[0],c[1]-30,[RN[g.k][0],'✨','🌟'],16,140);
+    else burst(c[0],c[1]-20,[RN[g.k][0],'✨'],g.tier==='w'?5:9,100);
+    S.log.unshift(g);if(S.log.length>6)S.log.pop();
+    if(API&&API.done)API.done(g);
+    sync();
+  },g.tier==='r'?900:350);
+}
+$('go').addEventListener('click',spin);
+$('crank').addEventListener('click',spin);
+$('crank').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();spin()}});
+$('cap').addEventListener('click',tapCap);
+$('cap').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();tapCap()}});
+function fit(){if(API&&API.size)API.size(Math.ceil(document.getElementById('wrap').getBoundingClientRect().height)+4)}
+if(window.ResizeObserver)new ResizeObserver(fit).observe($('wrap'));
+sync();
+})();
+</script>
+</body>
+</html>

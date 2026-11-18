@@ -173,8 +173,16 @@ var FRUIT_FOOD = 10, HUNGER_PER_DAY = 25, PUMPKIN_RATE = 5, WATER_BONUS = HOUR;
 var ANIMALS = {
   hamster: { name: '倉鼠', cost: 10 }, rabbit: { name: '兔兔', cost: 15 }, turtle: { name: '烏龜', cost: 15 },
   dog: { name: '狗狗', cost: 20 }, cat: { name: '貓貓', cost: 20 }, parrot: { name: '鸚鵡', cost: 25 },
-  fox: { name: '狐狸', cost: 40 }, panda: { name: '熊貓', cost: 60 }
+  fox: { name: '狐狸', cost: 40 }, panda: { name: '熊貓', cost: 60 },
+  // 神獸：只能從扭蛋島抽到；不佔小屋的寵物名額
+  dragon: { name: '水靈龍', cost: 0, beast: 'water' }, phoenix: { name: '火鳳凰', cost: 0, beast: 'fire' }, qilin: { name: '木麒麟', cost: 0, beast: 'wood' }
 };
+function isBeast_(k) { return !!(ANIMALS[k] && ANIMALS[k].beast); }
+function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k); }).length; } // 佔名額的寵物（不含神獸）
+/* 扭蛋島：每抽 5 枚金幣、每天 3 次；[種類, 數量, 機率權重, 扭蛋顏色] */
+var GACHA_COST = 5, GACHA_DAY = 3, BEAST_DUP_DIA = 2;
+var GACHA = [['fruit', 3, 45, 'w'], ['wood', 8, 15, 'g'], ['iron', 6, 13, 'g'], ['coin', 8, 12, 'b'], ['dia', 1, 8, 'p'], ['coin', 20, 3, 'p'], ['dia', 3, 1, 'y'], ['beast', 1, 3, 'r']];
+var BEASTS = ['dragon', 'phoenix', 'qilin'];
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
@@ -482,6 +490,38 @@ function handle_(q) {
         }
       }
       betIsland.bets=bets;r[C.isle]=JSON.stringify(betIsland);res.betstats={slot:10-num_(bets.slot),rps:10-num_(bets.rps)};
+    } else if (a === 'gacha') {
+      /* 扭蛋島：q.id 有值就抽一次（同一個 id 重送只回原結果），沒有 id 只回今天剩幾次 */
+      var gIsle=isleOf_(r), gDay=day_(), ga=gIsle.gacha||{};
+      if (ga.d!==gDay) ga={d:gDay,n:0,receipts:Array.isArray(ga.receipts)?ga.receipts.slice(-50):[]};
+      if (!Array.isArray(ga.receipts)) ga.receipts=[];
+      gIsle.pets=Array.isArray(gIsle.pets)?gIsle.pets:[];
+      var gid=String(q.id||'');
+      if (gid) {
+        if (!/^[A-Za-z0-9_-]{12,80}$/.test(gid)) return {ok:false,err:'bad',p:me};
+        var gOld=ga.receipts.find(function(x){return x.id===gid});
+        if (gOld) res.gacha=gOld.result;
+        else {
+          var gTime=parseInt(gid.split('-').pop(),36);if(!isFinite(gTime)||Math.abs(Date.now()-gTime)>86400000) return {ok:false,err:'expired',p:me};
+          if (num_(ga.n)>=GACHA_DAY) return {ok:false,err:'gachamax',p:me};
+          if (num_(r[C.bal])<GACHA_COST) return {ok:false,err:'nocoin',p:me};
+          var tot=0,pick=null,rv;GACHA.forEach(function(g){tot+=g[2]});rv=Math.random()*tot;
+          for (var gi=0;gi<GACHA.length;gi++){rv-=GACHA[gi][2];if(rv<0){pick=GACHA[gi];break}} if(!pick)pick=GACHA[0];
+          r[C.bal]=num_(r[C.bal])-GACHA_COST;
+          var gr={k:pick[0],n:pick[1],tier:pick[3]};
+          if (pick[0]==='coin'){r[C.bal]=num_(r[C.bal])+pick[1];r[C.earned]=num_(r[C.earned])+Math.max(0,pick[1]-GACHA_COST);}
+          else if (pick[0]==='beast'){
+            var bk=BEASTS[Math.floor(Math.random()*BEASTS.length)];gr.b=bk;gr.name=ANIMALS[bk].name;gr.el=ANIMALS[bk].beast;
+            if (gIsle.pets.some(function(x){return x.k===bk})){gr.dup=1;gr.n=BEAST_DUP_DIA;r[C.dia]=num_(r[C.dia])+BEAST_DUP_DIA;}
+            else {var gnow=Date.now();gIsle.pets.push({id:'P'+gnow.toString(36).toUpperCase()+'B'+Math.floor(Math.random()*1296).toString(36).toUpperCase(),k:bk,n:ANIMALS[bk].name,full:80,ft:gnow,aff:0,pd:0});}
+          }
+          else r[BAG_COL[pick[0]]]=num_(r[BAG_COL[pick[0]]])+pick[1];
+          ga.n=num_(ga.n)+1;res.gacha=gr;
+          ga.receipts.push({id:gid,result:gr,t:Date.now()});if(ga.receipts.length>50)ga.receipts=ga.receipts.slice(-50);
+        }
+      }
+      gIsle.gacha=ga;r[C.isle]=JSON.stringify(gIsle);res.gachaLeft=Math.max(0,GACHA_DAY-num_(ga.n));res.gachaCost=GACHA_COST;
+      res.gachaLog=ga.receipts.slice(-6).reverse().map(function(x){return x.result});
     } else if (a === 'login' || a === 'me') {
       // 只回傳資料
     } else if (a === 'daily') {
@@ -733,7 +773,7 @@ function handle_(q) {
     } else if (a === 'setopen') {
       r[C.open] = q.o ? '' : '否';
       res.island = islePub_(r, true);
-    } else if (a === 'build' || a === 'plant' || a === 'harvest' || a === 'pick' || a === 'moveitem' || a === 'chopwood' || a === 'adopt' || a === 'feed' || a === 'pat') {
+    } else if (a === 'build' || a === 'plant' || a === 'harvest' || a === 'pick' || a === 'moveitem' || a === 'chopwood' || a === 'adopt' || a === 'feed' || a === 'pat' || a === 'pethome') {
       var out = isleAct_(a, q, r, me);
       if (out.err) return { ok: false, err: out.err, miss: out.miss, p: me };
       if (out.add) res.add = out.add;
@@ -1199,7 +1239,7 @@ function islePub_(r, mine, viewer) {
     hb: o.hb ? { t: num_(o.hb.t), left: Math.max(0, num_(o.hb.e) - now), total: HOUSE_MS[num_(o.hb.t)] || 0 } : null,
     f: o.f.map(function (c) { return c && VEG[c.v] ? { v: c.v, left: cropLeft_(c, now), total: VEG[c.v].hours * HOUR } : null; }),
     pets: o.pets.map(function (p) {
-      return { id: p.id, k: p.k, n: p.n, full: Math.round(fullNow_(p, now)), aff: num_(p.aff), lv: petLv_(p), patted: num_(p.pd) === day_(), fa: num_(p.fd) === day_() ? num_(p.fa) : 0 };
+      return { id: p.id, k: p.k, n: p.n, full: Math.round(fullNow_(p, now)), aff: num_(p.aff), lv: petLv_(p), patted: num_(p.pd) === day_(), fa: num_(p.fd) === day_() ? num_(p.fa) : 0, home: num_(p.home) ? 1 : 0, beast: isBeast_(p.k) ? ANIMALS[p.k].beast : '' };
     })
   };
   if (mine) { out.open = r[C.open] !== '否'; out.vis = o.vis.map(function (x) { return { n: x.n, a: x.a, t: x.t, f: x.f }; }); out.veg = o.veg; out.rules = { house: HOUSE, houseMs: HOUSE_MS, fieldMs: FIELD_MS, decoMs: DECO_MS, field: FIELD, deco: DECO,
@@ -1285,17 +1325,22 @@ function isleAct_(a, q, r, me) {
     out.got = { k: 'wood', n: 3 }; out.log = ['砍樹', '木材×3'];
   } else if (a === 'adopt') {
     var an = ANIMALS[String(q.k || '')], name = cleanNick_(q.name).slice(0, 8);
-    if (!an) return { err: 'bad' };
+    if (!an || an.beast) return { err: 'bad' };
     if (o.pets.some(function(p) { return p.k === String(q.k); })) return { err: 'petowned' };
     if (o.h < 1) return { err: 'nohouse' };
-    if (o.pets.length >= Math.min(o.h, 8)) return { err: 'petmax' };
+    if (petCount_(o) >= Math.min(o.h, 8)) return { err: 'petmax' };
     if (name.length < 1) name = an.name;
     if (!me.admin) {
       if (num_(r[C.bal]) < an.cost) return { err: 'nocoin' };
       r[C.bal] = num_(r[C.bal]) - an.cost;
     }
-    o.pets.push({ id: 'P' + now.toString(36).toUpperCase(), k: String(q.k), n: text_(name, 8), full: 80, ft: now, aff: 0, pd: 0 });
+    o.pets.push({ id: 'P' + now.toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: String(q.k), n: text_(name, 8), full: 80, ft: now, aff: 0, pd: 0 });
     out.log = ['領養', an.name + '「' + name + '」' + (me.admin ? '（管理員免費）' : '（' + an.cost + ' 金幣）')];
+  } else if (a === 'pethome') {   // 寵物帶回家（小島上不出現）或放出來
+    var hp = null;
+    o.pets.forEach(function (p) { if (p.id === String(q.id || '')) hp = p; });
+    if (!hp) return { err: 'bad' };
+    hp.home = num_(q.home) ? 1 : 0;
   } else if (a === 'feed' || a === 'pat') {
     var pet = null;
     o.pets.forEach(function (p) { if (p.id === String(q.id || '')) pet = p; });
