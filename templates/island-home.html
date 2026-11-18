@@ -1150,6 +1150,35 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .sh-swap{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .sh-swap select{padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.1);color:inherit;border:1px solid rgba(255,255,255,.25);font-size:15px}
 .sh-swap option{color:#111}
+/* 商店：背景確認改成浮在下方的小標籤（不再插在頁面上方把整頁推下去造成跳動） */
+.sh-float{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;max-width:92vw;padding:7px 8px 7px 14px;border-radius:999px;background:rgba(3,38,54,.96);border:1.5px solid rgba(255,209,102,.6);box-shadow:0 8px 20px rgba(0,0,0,.45);font-size:13px;font-weight:700;white-space:nowrap}
+.sh-left{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:999px;background:rgba(255,209,102,.18);color:#ffd166;font-size:12.5px;font-weight:800;vertical-align:middle}
+/* 交易動畫：鸚鵡商人、你付出 → 天秤 → 你得到 */
+.tfx{position:fixed;left:50%;top:38%;z-index:200;width:min(330px,88vw);margin-left:calc(min(330px,88vw)/-2);padding:16px 14px 14px;border-radius:24px;pointer-events:none;text-align:center;
+  background:linear-gradient(180deg,#fff6dc,#ffe2a8);color:#4a2a10;box-shadow:0 0 0 4px #c98a16,0 18px 40px rgba(0,0,0,.5);animation:tfxIn .35s cubic-bezier(.3,1.6,.5,1),tfxOut .35s ease-in forwards;animation-delay:0s,var(--tfx-out,1.5s)}
+.tfx.big{background:linear-gradient(180deg,#eefcff,#bdeeff);box-shadow:0 0 0 4px #38bdf8,0 0 40px rgba(125,211,252,.8),0 18px 40px rgba(0,0,0,.5)}
+@keyframes tfxIn{from{transform:scale(.4) translateY(30px);opacity:0}}
+@keyframes tfxOut{to{transform:scale(.85) translateY(-20px);opacity:0}}
+.tfx-m{position:relative;display:inline-block;font-size:44px;line-height:1;animation:tfxBob .4s ease-in-out 3 alternate}
+@keyframes tfxBob{to{transform:translateY(-6px) rotate(-6deg)}}
+.tfx-say{position:absolute;left:100%;top:-4px;margin-left:6px;padding:4px 10px;border-radius:12px;background:#fff;color:#4a2a10;font-size:14px;font-weight:900;font-style:normal;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.tfx-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-top:10px}
+.tfx-side small{display:block;font-size:12px;font-weight:800;opacity:.7}
+.tfx-it{display:inline-block;margin-top:4px;font-size:26px;font-weight:900;white-space:nowrap}
+.tfx-it b{font-size:18px}
+.tfx .give .tfx-it{animation:tfxGive .55s ease-in .35s forwards}
+@keyframes tfxGive{60%{transform:translateX(40px) scale(.9);opacity:1}100%{transform:translateX(60px) scale(.3);opacity:0}}
+.tfx .get .tfx-it{opacity:0;animation:tfxGet .5s cubic-bezier(.3,1.8,.5,1) var(--tfx-get,.8s) forwards}
+@keyframes tfxGet{from{opacity:0;transform:translateX(-50px) scale(.3)}to{opacity:1;transform:none}}
+.tfx-mid{font-size:34px;animation:tfxTilt .3s ease-in-out .5s 3 alternate}
+@keyframes tfxTilt{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.tfx-lens{position:absolute;font-size:30px;left:8%;top:52%;opacity:0;animation:tfxLens 1s ease-in-out}
+@keyframes tfxLens{0%{transform:translate(-20px,10px) rotate(-20deg);opacity:0}25%{opacity:1}50%{transform:translate(10px,-6px) rotate(10deg);opacity:1}75%{transform:translate(0,4px);opacity:1}100%{opacity:0}}
+.tfx-coin{position:fixed;z-index:201;font-size:22px;pointer-events:none;animation:tfxDrop .55s cubic-bezier(.5,0,.7,1) forwards}
+@keyframes tfxDrop{from{transform:translateY(-70px) rotate(0);opacity:0}30%{opacity:1}to{transform:translateY(0) rotate(360deg);opacity:0}}
+.tfx-flash{position:fixed;inset:0;z-index:199;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(125,211,252,0) 60%);animation:tfxFlash .7s ease-out forwards}
+@keyframes tfxFlash{from{opacity:1}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.tfx,.tfx *{animation-duration:.01s!important;animation-delay:0s!important}}
 .mi-deco.bld{font-size:36px;opacity:.9}
 .gm-reward{margin:12px 0 6px;padding:10px 12px;border-radius:14px;background:rgba(255,209,102,.14);border:1.5px solid rgba(255,209,102,.55);font-size:14px;line-height:1.6}
 .mi-lv{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);padding:0 6px;border-radius:999px;background:#0ea5e9;color:#fff;font:900 11px/1.5 "Noto Sans TC",sans-serif;font-style:normal;white-space:nowrap;box-shadow:0 0 0 2px rgba(4,46,64,.8)}
@@ -1398,7 +1427,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
         <li>每座島每天的總量隨機 60～160 份，大家一起採，採光了要等明天重新長出來。</li>
         <li>每人每座島每天最多採 <b>5 次</b>；<b>每座島的數量和冷卻都不一樣</b>：每次採 1～8 個不等，採完要等 30～120 秒才能再採同一座島。</li>
         <li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li>
-        <li>🏪 兌換所：10 個同種物資換 1 枚 🪙；1 顆 💎 換 10 枚；5 顆 🎃 換 1 枚；每天最多換 3 次。<br>🏪 <b>商店島</b>：用金幣買物資（1 枚 🪙 = 6 個）、物資互換（3 換 2）、20 枚 🪙 買 1 顆 💎，還能買 5 艘不同的船。</li>
+        <li>🏪 兌換所：10 個同種物資換 1 枚 🪙、5 顆 🎃 換 1 枚，每天最多 3 次；1 顆 💎 換 10 枚，另外每天最多 3 次。<br>🏪 <b>商店島</b>：用金幣買物資（1 枚 🪙 = 6 個，不限次數）、物資互換（3 換 2，每天 5 次）、20 枚 🪙 買 1 顆 💎，還能買 5 艘不同的船。</li>
         <li>🔊 打開上方喇叭，點擊會有音效和特效。</li>
       </ul></section>
       <section class="hp" data-p="2" hidden><ul>
@@ -2510,7 +2539,7 @@ function renderRes(n){
       (SFX_ON?'':'<button class="rs-snd" type="button" id="rsSnd">🔇 打開音效更好玩</button>')+
     '</div>'+
     '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包・兌換所・好友</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 物資排行榜</button></div></div>'+
-    '<div class="p-sec"><h4>物資島規則</h4><ul class="notes"><li>6 秒內連續點 '+R.taps+' 下就能'+esc(R.act)+'，太慢會失敗，不扣次數。</li>'+(R.rk==='gold'?'<li>🪙 金礦島：每座每天全島有 15 枚金幣，大家一起搶，挖光了要等明天。</li><li>每人每座金礦每天最多挖 2 次（每次 '+R.lo+'～'+R.hi+' 枚，★★★ 時最多 3 枚、★ 時只有 1 枚）；4 座金礦分散在地圖各處。</li><li>金礦裡沒有鑽石，挖到的金幣直接加進你的錢包。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>':'<li>每座物資島每天的總量隨機（60～160 份），大家一起採，採光了就要等明天重新長出來。</li><li>每人每座島每天最多採 5 次；這座島每次 '+R.lo+'～'+R.hi+' 個，採完要等 '+R.gap+' 秒才能再採（每座島的秒數和數量都不一樣，30～120 秒）。</li><li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>')+'<li>🏪 兌換所：10 個同種物資換 1 枚金幣、1 顆鑽石換 10 枚金幣，每天最多換 3 次。</li><li>🏆 物資排行榜看累計採集量，兌換和送禮不會掉名次。</li></ul></div>';
+    '<div class="p-sec"><h4>物資島規則</h4><ul class="notes"><li>6 秒內連續點 '+R.taps+' 下就能'+esc(R.act)+'，太慢會失敗，不扣次數。</li>'+(R.rk==='gold'?'<li>🪙 金礦島：每座每天全島有 15 枚金幣，大家一起搶，挖光了要等明天。</li><li>每人每座金礦每天最多挖 2 次（每次 '+R.lo+'～'+R.hi+' 枚，★★★ 時最多 3 枚、★ 時只有 1 枚）；4 座金礦分散在地圖各處。</li><li>金礦裡沒有鑽石，挖到的金幣直接加進你的錢包。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>':'<li>每座物資島每天的總量隨機（60～160 份），大家一起採，採光了就要等明天重新長出來。</li><li>每人每座島每天最多採 5 次；這座島每次 '+R.lo+'～'+R.hi+' 個，採完要等 '+R.gap+' 秒才能再採（每座島的秒數和數量都不一樣，30～120 秒）。</li><li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>')+'<li>🏪 兌換所：10 個同種物資換 1 枚金幣（每天 3 次）、1 顆鑽石換 10 枚金幣（另外每天 3 次）。</li><li>🏆 物資排行榜看累計採集量，兌換和送禮不會掉名次。</li></ul></div>';
   $('pStep').textContent=R.e+' 物資島';
   footSimple('← 回大海','');
   resBag();resStock();
@@ -2784,8 +2813,8 @@ function shopTicket(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRando
 function shopPreview(q,w){
   var v=JSON.parse(JSON.stringify(w)),b=v.bag||{},n=Number(v.bal)||0;v.bag=b;
   if(q.a==='xbuy'){var cost=q.k==='dia'?20:1;if(n<cost)return null;v.bal=n-cost;if(q.k==='dia')v.dia=(+v.dia||0)+1;else b[q.k]=(+b[q.k]||0)+6}
-  else if(q.a==='xswap'){if((+b[q.f]||0)<3)return null;b[q.f]-=3;b[q.t]=(+b[q.t]||0)+2}
-  else if(q.a==='trade'){if((+v.trades||0)>=(+v.tradeMax||3))return null;if(q.k==='dia'){if((+v.dia||0)<1)return null;v.dia--;v.bal=n+10}else{if((+b[q.k]||0)<10)return null;b[q.k]-=10;v.bal=n+1}v.trades=(+v.trades||0)+1;v.earned=(+v.earned||0)+(q.k==='dia'?10:1)}
+  else if(q.a==='xswap'){if((+b[q.f]||0)<3||(+v.swaps||0)>=(+v.swapMax||5))return null;b[q.f]-=3;b[q.t]=(+b[q.t]||0)+2;v.swaps=(+v.swaps||0)+1}
+  else if(q.a==='trade'){if(q.k==='dia'){if((+v.diaSells||0)>=(+v.diaSellMax||3)||(+v.dia||0)<1)return null;v.dia--;v.bal=n+10;v.diaSells=(+v.diaSells||0)+1}else{if((+v.trades||0)>=(+v.tradeMax||3)||(+b[q.k]||0)<10)return null;b[q.k]-=10;v.bal=n+1;v.trades=(+v.trades||0)+1}v.earned=(+v.earned||0)+(q.k==='dia'?10:1)}
   return v;
 }
 function shopSync(){
@@ -2795,12 +2824,36 @@ function shopSync(){
   COINS.api(p.q).then(function(j){
     SH.busy=false;if(COINS.get().code!==p.owner)return;
     if(!j.ok){
-      if(j.err==='expired'||j.err==='bad'||j.err==='few'||j.err==='nocoin'||j.err==='trademax'){SH.q.shift();shopStore(owner,SH.q);toast('⚠️ '+(j.err==='expired'?'有一筆交易已逾時，請重新確認餘額':COINS.errText(j)));paintShop();shopSync();return}
+      if(j.err==='expired'||j.err==='bad'||j.err==='few'||j.err==='nocoin'||j.err==='trademax'||j.err==='swapmax'||j.err==='diamax'){SH.q.shift();shopStore(owner,SH.q);toast('⚠️ '+(j.err==='expired'?'有一筆交易已逾時，請重新確認餘額':COINS.errText(j)));paintShop();shopSync();return}
       toast('⚠️ '+COINS.errText(j));paintShop();return;
     }
     SH.q.shift();shopStore(owner,SH.q);toast(p.ok+' ✅');paintShop();shopSync();
   }).catch(function(){SH.busy=false;if(COINS.get().code!==p.owner)return;toast('⚠️ 正在確認交易結果，請按「確認兌換」');paintShop()});
 }
+/* 交易動畫：give/get 是 [[圖示, 數量], …]；big＝鑽石交易（鑑定、金幣一枚一枚掉下來、閃光）。只是畫面，結果仍由後端確認 */
+var TFX=null;
+function tradeFx(give,get,big){
+  try{
+    if(TFX){TFX.forEach(function(e){e.remove()});TFX=null}
+    var rd=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches),out=big?2.5:1.55,els=[];
+    var say=big?['好貨！亮晶晶！','鑑定完成，成交！','發財啦！'][Math.floor(Math.random()*3)]:['成交！','客官好眼光！','划算吧？','謝謝惠顧～','下次再來喔！'][Math.floor(Math.random()*5)];
+    var it=function(a){return a.map(function(x){return x[0]+'<b>×'+x[1]+'</b>'}).join(' ')};
+    var c=document.createElement('div');c.className='tfx'+(big?' big':'');c.setAttribute('aria-hidden','true');
+    c.style.setProperty('--tfx-out',out+'s');c.style.setProperty('--tfx-get',(big?1.15:.8)+'s');
+    c.innerHTML='<div class="tfx-m">🦜<i class="tfx-say">'+say+'</i></div><div class="tfx-row"><div class="tfx-side give"><small>你付出</small><span class="tfx-it">'+it(give)+'</span></div><div class="tfx-mid">'+(big?'💎':'⚖️')+'</div><div class="tfx-side get"><small>你得到</small><span class="tfx-it">'+it(get)+'</span></div></div>'+(big?'<span class="tfx-lens">🔍</span>':'');
+    document.body.appendChild(c);els.push(c);
+    if(SFX_ON){tone(520,0,.06,'square',.05);tone(660,0,.06,'square',.05,.42);tone(880,1320,.18,'triangle',.07,big?1.15:.8)}
+    if(big&&!rd){
+      setTimeout(function(){
+        var g=c.querySelector('.get');if(!g)return;var r=g.getBoundingClientRect(),n=Math.min(10,(get[0]&&get[0][1])||10);
+        for(var k=0;k<n;k++)(function(k){setTimeout(function(){var e=document.createElement('span');e.className='tfx-coin';e.textContent='🪙';e.style.left=(r.left+r.width/2-11+(Math.random()-.5)*30)+'px';e.style.top=(r.top+r.height/2-8)+'px';document.body.appendChild(e);els.push(e);if(SFX_ON)tone(1200+k*60,0,.05,'square',.03);setTimeout(function(){e.remove()},600)},k*90)})(k);
+        setTimeout(function(){var f=document.createElement('div');f.className='tfx-flash';document.body.appendChild(f);els.push(f);setTimeout(function(){f.remove()},750)},n*90);
+      },1150);
+    }
+    TFX=els;setTimeout(function(){els.forEach(function(e){e.remove()});if(TFX===els)TFX=null},(out+.4)*1000);
+  }catch(e){}
+}
+window.TRADE_FX=tradeFx;
 function renderShop(){
   pBody.innerHTML='<div class="ph" style="--c:#fb923c"><span class="ph-e">🏪</span><div><div class="p-kicker">SHOP ISLAND・商店島</div><h3 id="pTitle">商店島</h3><p>買自己的船、用金幣換物資、鑽石換金幣</p></div></div><div id="shBox"></div>';
   $('pStep').textContent='🏪 商店島';
@@ -2813,8 +2866,10 @@ function paintShop(){
   var prevFrom=$('shFrom'),prevTo=$('shTo'),fromVal=prevFrom?prevFrom.value:'fruit',toVal=prevTo?prevTo.value:'wood';
   var w=SH.q.length?shopShadow():COINS.get();
   if(!w.code){box.innerHTML='<div class="mb-login"><p>取個暱稱登島，就能在商店買船、換物資。</p><button class="btn btn-primary btn-sm" type="button" data-shjoin>🏝️ 取暱稱・登島</button></div>';return}
-  var sh=w.ship&&w.ship.own?w.ship:{cur:0,own:[0]},b=w.bag||{},o=SH.q.length?'<div class="mb-hint">'+(SH.busy?'🔄 背景確認中（還有 '+SH.q.length+' 筆），可以繼續兌換':'⚠️ 有 '+SH.q.length+' 筆兌換尚待確認')+' <button class="btn btn-primary btn-sm" type="button" data-shop-retry '+(SH.busy?'disabled':'')+'>確認兌換</button></div>':'';
+  var sh=w.ship&&w.ship.own?w.ship:{cur:0,own:[0]},b=w.bag||{},o=SH.q.length?'<div class="sh-float" role="status">'+(SH.busy?'🔄 確認中（'+SH.q.length+' 筆），可以繼續換':'⚠️ 有 '+SH.q.length+' 筆尚待確認')+(SH.busy?'':' <button class="btn btn-primary btn-sm" type="button" data-shop-retry>確認兌換</button>')+'</div>':'';
   o+='<div class="p-sec"><h4>我的錢包</h4><div class="rs-bag"><span>🪙 <b>'+(w.bal||0)+'</b> 金幣</span>'+RTYPE.map(function(x){return '<span>'+x.it+' <b>'+(b[x.rk]||0)+'</b> '+x.item+'</span>'}).join('')+'<span>💎 <b>'+(w.dia||0)+'</b> 鑽石</span></div></div>';
+  var dleft=Math.max(0,(w.diaSellMax||3)-(w.diaSells||0)),sleft=Math.max(0,(w.swapMax||5)-(w.swaps||0));
+  o+='<div class="p-sec"><h4>💎 鑽石換金幣<span class="sh-left">今天還能換 '+dleft+' 次</span></h4><div class="mi-seeds"><button class="mb-b" type="button" data-sell="dia"'+((w.dia||0)<1||!dleft?' disabled':'')+'>💎1 → 🪙10<small>'+((w.dia||0)<1?'你還沒有鑽石':'找鸚鵡商人鑑定')+'</small></button></div><p class="mi-note">每天最多 '+(w.diaSellMax||3)+' 次。鑽石可以在物資島採集、看文章時撿到。</p></div>';
   o+='<div class="p-sec"><h4>⛵ 船塢（你有 '+sh.own.length+' / '+SHIPC.length+' 艘）</h4><div class="sh-ships">'+SHIPC.map(function(c,i){
     var own=sh.own.indexOf(i)>=0,cur=sh.cur===i;
     return '<div class="sh-ship'+(cur?' cur':'')+'"><div class="sh-pv">'+shipSVG(i)+'</div><b>'+esc((sh.names&&sh.names[i])||SHIPN[i][0])+'</b><small>'+esc(SHIPN[i][1])+'</small>'+
@@ -2824,11 +2879,11 @@ function paintShop(){
   o+='<div class="p-sec"><h4>🪙 金幣買東西</h4><div class="mi-seeds">'+RTYPE.map(function(x){return '<button class="mb-b" type="button" data-xbuy="'+x.rk+'"'+((w.bal||0)<1?' disabled':'')+'>🪙1 → '+x.it+'×6<small>'+x.item+'</small></button>'}).join('')+
     '<button class="mb-b" type="button" data-xbuy="dia"'+((w.bal||0)<20?' disabled':'')+'>🪙20 → 💎1<small>鑽石</small></button></div></div>';
   var opt=RTYPE.map(function(x){return '<option value="'+x.rk+'">'+x.it+' '+x.item+'</option>'}).join('');
-  o+='<div class="p-sec"><h4>🔁 物資互換</h4><div class="sh-swap">3 個 <select id="shFrom">'+opt+'</select> 換 2 個 <select id="shTo">'+opt.replace('value="fruit"','value="fruit"')+'</select> <button class="btn btn-primary btn-sm" type="button" data-xswap>換</button></div></div>';
+  o+='<div class="p-sec"><h4>🔁 物資互換<span class="sh-left">今天還能換 '+sleft+' 次</span></h4><div class="sh-swap">3 個 <select id="shFrom">'+opt+'</select> 換 2 個 <select id="shTo">'+opt+'</select> <button class="btn btn-primary btn-sm" type="button" data-xswap'+(sleft?'':' disabled')+'>換</button></div><p class="mi-note">每天最多 '+(w.swapMax||5)+' 次。</p></div>';
   var left=Math.max(0,(w.tradeMax||3)-(w.trades||0));
-  o+='<div class="p-sec"><h4>💎 賣出換金幣</h4><div class="mi-seeds"><button class="mb-b" type="button" data-sell="dia"'+((w.dia||0)<1||!left?' disabled':'')+'>💎1 → 🪙10<small>鑽石</small></button>'+
+  o+='<div class="p-sec"><h4>🪙 物資賣金幣<span class="sh-left">今天還能換 '+left+' 次</span></h4><div class="mi-seeds">'+
     RTYPE.map(function(x){return '<button class="mb-b" type="button" data-sell="'+x.rk+'"'+((b[x.rk]||0)<10||!left?' disabled':'')+'>'+x.it+'×10 → 🪙1<small>'+x.item+'</small></button>'}).join('')+'</div>'+
-    '<p class="mi-note">賣出每天最多 '+(w.tradeMax||3)+' 次（今天還剩 '+left+' 次）。買東西和互換不限次數。買 1 枚金幣只能換 6 個物資，賣出要 10 個才換 1 枚，所以不能無限賺。</p></div>';
+    '<p class="mi-note">物資賣金幣每天最多 '+(w.tradeMax||3)+' 次（和背包兌換所共用）。金幣買東西不限次數。買 1 枚金幣只能換 6 個物資，賣出要 10 個才換 1 枚，所以不能無限賺。</p></div>';
   box.innerHTML=o;
   var f=$('shFrom'),t=$('shTo');if(f&&t){f.value=fromVal;t.value=toVal}
 }
@@ -2856,7 +2911,12 @@ pBody.addEventListener('click',function(e){
     if(!preview){toast('⚠️ 資源或可兌換次數不足');return}
     q.tx=shopTicket();var nq=SH.q.concat([{owner:owner,q:q,ok:ok}]);
     if(!shopStore(owner,nq)){toast('⚠️ 無法安全保存交易，請確認瀏覽器允許儲存資料');return}
-    SH.owner=owner;SH.q=nq;paintShop();shopSync();return;
+    SH.owner=owner;SH.q=nq;paintShop();shopSync();
+    var IT={fruit:'🍎',iron:'🔩',wood:'🪵',stone:'🪨'};
+    if(q.a==='xbuy')tradeFx([['🪙',q.k==='dia'?20:1]],[[q.k==='dia'?'💎':IT[q.k],q.k==='dia'?1:6]],q.k==='dia');
+    else if(q.a==='xswap')tradeFx([[IT[q.f],3]],[[IT[q.t],2]],false);
+    else tradeFx([[q.k==='dia'?'💎':IT[q.k],q.k==='dia'?1:10]],[['🪙',q.k==='dia'?10:1]],q.k==='dia');
+    return;
   }
   if(SH.act)return;
   if(SH.q.length){toast('⚠️ 兌換還在背景確認中，請稍等一下再操作');return}

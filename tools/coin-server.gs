@@ -115,7 +115,9 @@ var GATHER_MAX = 5;                  // 每人每座島每天最多採 5 次
 var GATHER_GAP = 1000;               // 任兩次採集至少隔 1 秒（防連點）；每座島另有自己的冷卻（30～120 秒）
 var TRADE_RATE = 10;                 // 10 個同種物資換 1 枚金幣
 var DIA_RATE = 10;                    // 1 顆鑽石換 5 枚金幣
-var TRADE_MAX = 3;                   // 每天最多兌換 3 次
+var TRADE_MAX = 3;                   // 物資賣金幣（含南瓜）每天最多 3 次
+var SWAP_DAY = 5;                    // 物資互換每天最多 5 次（2026-11-18 站長要求）
+var DIA_SELL_DAY = 3;                // 鑽石換金幣每天最多 3 次（獨立計算，不再和物資賣金幣共用）
 var FRIEND_MAX = 50;
 var A_HEAD = ['編號', '時間', '標題', '內容', '發布者', '修改時間', '狀態'];
 var ANN_TITLE = 40, ANN_LEN = 500, ANN_KEEP = 20, VISIT_KEEP = 10, VISIT_GAP = 10 * 60 * 1000, VOY_KEEP = 60;
@@ -215,7 +217,7 @@ var QUESTS = {
   gather3: { e: '⛏️', t: '在物資島採集 3 次', chk: function (r) { var c = counts_(r[C.gToday]), n = 0; Object.keys(c).forEach(function (k) { n += c[k]; }); return n >= 3; } },
   trade1: { e: '🏪', t: '到兌換所換 1 次',
     ok: function (r) { var b = bag_(r), m = 0; Object.keys(b).forEach(function (k) { m = Math.max(m, b[k]); }); return m >= TRADE_RATE || num_(r[C.dia]) >= 1; },
-    chk: function (r) { return num_(r[C.trades]) >= 1; } },
+    chk: function (r, o) { return num_(r[C.trades]) >= 1 || (!!o && !!o.xd && o.xd.d === day_() && num_(o.xd.ds) >= 1); } },
   msg1: { e: '📮', t: '在留言碼頭留言 1 次', chk: function (r) { return num_(r[C.msgN]) >= 1; } },
   water1: { e: '💧', t: '幫好友的菜園澆水 1 次', ok: function (r) { return list_(r[C.friends]).length >= 1; },
     chk: function (r, o) { return !!o.wd && o.wd.d === day_() && o.wd.f.length >= 1; } },
@@ -334,6 +336,7 @@ function counts_(v) {
   return o;
 }
 function countsStr_(o) { return Object.keys(o).map(function (k) { return k + ':' + o[k]; }).join(','); }
+function xd_(io) { var t = day_(); if (!io.xd || io.xd.d !== t) io.xd = { d: t, sw: 0, ds: 0 }; return io.xd; }   // 小島資料裡的「今天交易次數」
 function bag_(r) { return { fruit: num_(r[C.fruit]), iron: num_(r[C.iron]), wood: num_(r[C.wood]), stone: num_(r[C.stone]) }; }
 function profile_(r) {
   var io = isleOf_(r), pd = day_(), cur = String(dropSlot_());
@@ -341,7 +344,8 @@ function profile_(r) {
     streak: num_(r[C.streak]), admin: r[C.admin] === '是', qa: list_(r[C.qaDone]),
     av: plain_(r[C.av]), fid: String(r[C.fid] || ''), bag: bag_(r), dia: num_(r[C.dia]),
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
-    trades: num_(r[C.trades]), tradeMax: TRADE_MAX, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
+    trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
+    swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',
@@ -669,15 +673,23 @@ function handle_(q) {
     } else if (a === 'xswap') {
       var sf = String(q.f || ''), st2 = String(q.t || ''), sn = Math.max(1, Math.min(XCHG_MAX, Math.floor(num_(q.n) || 1)));
       if (!RES[sf] || !RES[st2] || sf === st2) return { ok: false, err: 'bad', p: me };
+      var swo = isleOf_(r), swd = xd_(swo);
+      if (num_(swd.sw) + sn > SWAP_DAY) return { ok: false, err: 'swapmax', p: me };
       if (num_(r[RES[sf].col]) < SWAP_FROM * sn) return { ok: false, err: 'few', p: me };
       r[RES[sf].col] = num_(r[RES[sf].col]) - SWAP_FROM * sn;
       r[RES[st2].col] = num_(r[RES[st2].col]) + SWAP_TO * sn;
+      swd.sw = num_(swd.sw) + sn; r[C.isle] = JSON.stringify(swo);
     } else if (a === 'trade') {
       var tk = String(q.k || '');
-      if (num_(r[C.trades]) >= TRADE_MAX) return { ok: false, err: 'trademax', p: me };
-      if (tk === 'dia') {
+      if (tk === 'dia') {   // 鑽石換金幣：自己的每日次數，不佔物資賣金幣的 3 次
+        var dso = isleOf_(r), dsd = xd_(dso);
+        if (num_(dsd.ds) >= DIA_SELL_DAY) return { ok: false, err: 'diamax', p: me };
         if (num_(r[C.dia]) < 1) return { ok: false, err: 'few', p: me };
         r[C.dia] = num_(r[C.dia]) - 1; res.add = DIA_RATE;
+        dsd.ds = num_(dsd.ds) + 1; r[C.isle] = JSON.stringify(dso);
+      }
+      if (tk !== 'dia' && num_(r[C.trades]) >= TRADE_MAX) return { ok: false, err: 'trademax', p: me };
+      if (tk === 'dia') {
       } else if (tk === 'pumpkin') {
         var tis = isleOf_(r);
         if (tis.veg.pumpkin < PUMPKIN_RATE) return { ok: false, err: 'few', p: me };
@@ -686,7 +698,7 @@ function handle_(q) {
         if (num_(r[RES[tk].col]) < TRADE_RATE) return { ok: false, err: 'few', p: me };
         r[RES[tk].col] = num_(r[RES[tk].col]) - TRADE_RATE; res.add = 1;
       } else return { ok: false, err: 'bad' };
-      r[C.trades] = num_(r[C.trades]) + 1;
+      if (tk !== 'dia') r[C.trades] = num_(r[C.trades]) + 1;
 
     /* ----- 我的小島 ----- */
     } else if (a === 'island') {

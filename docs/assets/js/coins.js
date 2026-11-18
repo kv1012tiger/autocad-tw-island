@@ -28,7 +28,7 @@
   function apply(p) {
     if (!p) return;
     P.code = p.code; P.nick = p.nick; P.bal = p.bal; P.earned = p.earned; P.streak = p.streak; P.admin = !!p.admin; P.qa = p.qa || [];
-    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'unread', 'friends', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
+    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'unread', 'friends', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
     if (p.cd !== undefined) P.cdT = Date.now();
     save(); emit({ t: 'sync' });
   }
@@ -64,7 +64,7 @@
     noinv: '封測期間要有邀請碼才能登島，請向蘋果爸索取一組', badinv: '邀請碼不正確，請再確認一次（英文字母和數字）', invfull: '這組邀請碼名額已滿（每組限 2 位），請向蘋果爸索取新的一組', bad: '資料有誤，請重新整理後再試',
     nofid: '找不到這個海島編號，請再確認一次', self: '這是你自己的海島編號喔', fmax: '好友最多 50 位',
     notfriend: '要先互加好友才行', gifted: '今天已經送過這位好友了，明天再送', few: '數量不夠喔',
-    trademax: '今天的兌換次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
+    trademax: '今天的兌換次數用完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
     msgshort: '留言至少要 2 個字', msgmax: '今天的留言次數用完了，明天再來', admin: '只有站長可以這樣做',
     tired: '今天在這座島採夠了，明天再來', closed: '這座島的資源剛消失了，每 20 分鐘會隨機換一批，到地圖上找有徽章的島吧', empty: '這座島今天的物資被採光了，明天會再長出來',
     maxed: '已經蓋到最高級了', busy: '這塊田已經種了東西', notyet: '還沒長好喔，再等等', nohouse: '要先蓋小屋才能領養寵物',
@@ -476,15 +476,15 @@
             }).join('') + '<small>每天 0 點換新的任務。去地圖上走走、採集、留言、拜訪，就會慢慢完成。</small></div>';
         }
         function paint() {
-          var b = P.bag || {}, left = Math.max(0, (P.tradeMax || 3) - (P.trades || 0));
+          var b = P.bag || {}, left = Math.max(0, (P.tradeMax || 3) - (P.trades || 0)), dleft = Math.max(0, (P.diaSellMax || 3) - (P.diaSells || 0));
           var h = questHTML() + (P.earned >= 5 ? '<div class="cw-sec"><h4>🎁 提示詞禮物包</h4><small style="margin-bottom:8px">累積拿滿 5 枚金幣就能領；<b>領取要花 5 枚金幣</b>，領一次之後可以免費重複查看。</small><button class="cw-b p" type="button" data-giftpack>🎁 領取禮物包（5 枚金幣）</button></div>' : '') + '<div class="cw-sec"><h4>🧺 我的物資</h4><div class="cw-bag">' +
             RES_KEYS.map(function (k) { return '<div><i>' + RES[k][0] + '</i><b>' + (b[k] || 0) + '</b><small>' + RES[k][1] + '</small></div>'; }).join('') +
             '<div><i>💎</i><b>' + (P.dia || 0) + '</b><small>鑽石</small></div></div>' +
             '<small style="margin-top:6px">🥕 ' + ((P.veg || {}).carrot || 0) + '　🥬 ' + ((P.veg || {}).cabbage || 0) + '　🎃 ' + ((P.veg || {}).pumpkin || 0) + '（菜園收成，用來餵寵物）</small>' +
             '<small>累計採集 ' + (P.tres || 0) + ' 個物資、撿到 ' + (P.tdia || 0) + ' 顆鑽石（排行榜用累計數字）。去地圖上的果園島、礦山島、森林島、採石島採集。</small></div>';
-          h += '<div class="cw-sec"><h4>🏪 兌換所<small style="display:inline;margin-left:6px">今天還能換 ' + left + ' 次</small></h4><div class="cw-trade">' +
+          h += '<div class="cw-sec"><h4>🏪 兌換所<small style="display:inline;margin-left:6px">物資今天還能換 ' + left + ' 次・💎 還能換 ' + dleft + ' 次</small></h4><div class="cw-trade">' +
             RES_KEYS.map(function (k) { return '<button type="button" data-trade="' + k + '"' + (left && (b[k] || 0) >= 10 ? '' : ' disabled') + '>10 ' + RES[k][0] + ' → 1 🪙</button>'; }).join('') +
-            '<button type="button" data-trade="dia"' + (left && (P.dia || 0) >= 1 ? '' : ' disabled') + '>1 💎 → 10 🪙</button>' +
+            '<button type="button" data-trade="dia"' + (dleft && (P.dia || 0) >= 1 ? '' : ' disabled') + '>1 💎 → 10 🪙</button>' +
             '<button type="button" data-trade="pumpkin"' + (left && ((P.veg || {}).pumpkin || 0) >= 5 ? '' : ' disabled') + '>5 🎃 → 1 🪙</button></div></div>';
           h += '<div class="cw-sec"><h4>🪪 我的海島編號</h4><div class="cw-fid"><b>#' + esc(P.fid || '……') + '</b>' + (P.fid ? '<button class="cw-mini" type="button" data-copyfid>複製</button>' : '') + '</div>' +
             '<small>把海島編號給朋友，對方在這裡輸入就能互加好友。登島碼是你的鑰匙，不要給別人。</small>' +
@@ -533,6 +533,7 @@
             api({ a: 'trade', k: d.trade }).then(function (j) {
               if (!j.ok) return fail(j);
               toast('🏪 換到 ' + j.add + ' 枚金幣！'); paint();
+              if (window.TRADE_FX) { var tg = d.trade === 'dia' ? ['💎', 1] : d.trade === 'pumpkin' ? ['🎃', 5] : [RES[d.trade][0], 10]; window.TRADE_FX([tg], [['🪙', j.add]], d.trade === 'dia'); }
             }).catch(function () { netFail(); paint(); });
           } else if (d.visit) { close(); window.ISLE_VISIT(d.visit); }
           else if (d.giftpack != null) { close(); if (window.COINS && window.COINS.giftOpen) window.COINS.giftOpen(function () { bag(); }); }
