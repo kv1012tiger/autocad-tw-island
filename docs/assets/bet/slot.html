@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>海盜拉霸</title>
+<style>
+:root{--h:84px;--gold:#ffd166;--gold2:#c98a16;--wood:#7a4a22;--wood2:#4a2a10}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:transparent}
+body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#fff;overflow:hidden}
+.wrap{max-width:440px;margin:0 auto;padding:30px 12px 12px;position:relative;border-radius:22px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(27,111,149,.9) 0%,rgba(11,58,90,.85) 50%,rgba(6,26,46,.9) 100%)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:24px}
+.chip{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.35);border:1.5px solid rgba(255,209,102,.5);font-weight:800;font-size:15px}
+.chip b{color:var(--gold);font-size:18px}
+.sfx{border:0;background:rgba(0,0,0,.35);color:#fff;border-radius:50%;width:40px;height:40px;font-size:19px;cursor:pointer}
+/* 機台 */
+.machine{position:relative;margin:0 26px 0 0;padding:16px 16px 18px;border-radius:30px 30px 22px 22px;
+  background:linear-gradient(180deg,#9b5f2c,#6b3c17 60%,#4a2a10);
+  box-shadow:inset 0 0 0 4px var(--gold2),inset 0 0 0 7px #3a1f0a,inset 0 0 0 9px var(--gold),0 22px 40px rgba(0,0,0,.55),0 0 60px rgba(255,190,80,.15)}
+.machine.shake{animation:mshake .5s}
+@keyframes mshake{20%{transform:translate(-4px,2px) rotate(-.6deg)}40%{transform:translate(4px,-2px) rotate(.6deg)}60%{transform:translate(-3px,1px)}80%{transform:translate(2px,0)}}
+.marquee{position:relative;margin:0 6px 14px;padding:14px 10px 12px;border-radius:18px;text-align:center;
+  background:linear-gradient(180deg,#2a0a3a,#4c1258);box-shadow:inset 0 0 0 3px var(--gold),inset 0 0 22px rgba(255,80,200,.4)}
+.marquee h1{margin:0;font-size:30px;letter-spacing:4px;line-height:1.1;font-weight:900;
+  background:linear-gradient(180deg,#fff7c2,#ffd166 45%,#ff8a2a);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 #7a2a00) drop-shadow(0 0 10px rgba(255,170,60,.6))}
+.marquee small{display:block;margin-top:2px;font-size:12px;color:#ffd6f5;letter-spacing:2px}
+.bulbs{position:absolute;inset:-7px;pointer-events:none}
+.bulbs i{position:absolute;width:11px;height:11px;margin:-5.5px;border-radius:50%;background:#ffe9a8;box-shadow:0 0 6px #ffcf4a,0 0 12px #ff9f1a;animation:chase 1.2s infinite steps(1)}
+@keyframes chase{0%,49%{opacity:1}50%,100%{opacity:.25;box-shadow:none}}
+.win .bulbs i{animation-duration:.24s;background:#fff}
+.flag{position:absolute;top:-30px;font-size:30px;animation:wave 2s ease-in-out infinite;transform-origin:20% 100%}
+.flag.l{left:6px}.flag.r{right:6px;animation-delay:-1s}
+@keyframes wave{50%{transform:rotate(-8deg)}}
+/* 滾輪窗 */
+.window{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;border-radius:18px;background:#1a0d05;box-shadow:inset 0 0 0 3px var(--gold2),inset 0 6px 14px rgba(0,0,0,.8)}
+.reel{position:relative;height:calc(var(--h)*3);overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#d9c39a,#fff8e6 30%,#fff8e6 70%,#d9c39a)}
+.reel::before,.reel::after{content:'';position:absolute;left:0;right:0;height:38%;z-index:2;pointer-events:none}
+.reel::before{top:0;background:linear-gradient(180deg,rgba(40,20,5,.75),transparent)}
+.reel::after{bottom:0;background:linear-gradient(0deg,rgba(40,20,5,.75),transparent)}
+.strip{position:absolute;left:0;right:0;top:0;will-change:transform}
+.sym{height:var(--h);display:grid;place-items:center;font-size:52px;line-height:1}
+.reel.hit .sym.c{animation:symwin .5s ease-in-out infinite alternate}
+@keyframes symwin{to{transform:scale(1.22);filter:drop-shadow(0 0 10px #ffd166)}}
+.reel.tense{box-shadow:0 0 0 3px #ff4d6d,0 0 22px #ff4d6d;animation:tense .25s infinite alternate}
+@keyframes tense{to{box-shadow:0 0 0 3px #ffd166,0 0 30px #ffd166}}
+.payline{position:absolute;left:4px;right:4px;top:50%;height:calc(var(--h) + 6px);transform:translateY(-50%);border-radius:12px;border:3px solid rgba(255,209,102,.85);box-shadow:0 0 14px rgba(255,209,102,.6);pointer-events:none;z-index:3}
+.payline::before,.payline::after{content:'';position:absolute;top:50%;margin-top:-9px;border:9px solid transparent}
+.payline::before{left:-14px;border-left-color:#ff4d6d}.payline::after{right:-14px;border-right-color:#ff4d6d}
+.near{position:absolute;left:50%;top:-14px;transform:translateX(-50%);z-index:5;padding:3px 12px;border-radius:999px;background:#ff4d6d;font-weight:900;font-size:14px;white-space:nowrap;opacity:0;transition:opacity .2s}
+.near.on{opacity:1;animation:pulse .4s infinite alternate}
+@keyframes pulse{to{transform:translateX(-50%) scale(1.12)}}
+/* 拉桿 */
+.lever{position:absolute;right:-28px;top:120px;width:30px;height:190px;touch-action:none}
+.lever .base{position:absolute;left:0;top:70px;width:24px;height:56px;border-radius:0 12px 12px 0;background:linear-gradient(90deg,#8a8f99,#e6e9ef,#8a8f99);box-shadow:0 4px 8px rgba(0,0,0,.5)}
+.lever .arm{position:absolute;left:8px;bottom:90px;width:9px;height:96px;border-radius:5px;background:linear-gradient(90deg,#9aa0ad,#f2f4f8,#9aa0ad);transform-origin:50% 100%;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.lever .knob{position:absolute;left:-10px;top:-24px;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9aa8,#e11d48 55%,#7a0a22);box-shadow:0 4px 8px rgba(0,0,0,.5);cursor:grab}
+.lever.pull .arm{transform:scaleY(-1);transition:transform .18s ease-in}
+/* 出幣口與按鈕 */
+.tray{margin:14px auto 0;width:70%;height:30px;border-radius:0 0 40px 40px;background:linear-gradient(180deg,#1a0d05,#3a1f0a);box-shadow:inset 0 0 0 3px var(--gold2),inset 0 8px 10px rgba(0,0,0,.8)}
+.spin{display:block;margin:16px auto 0;width:100%;padding:16px;border:0;border-radius:18px;font-size:22px;font-weight:900;letter-spacing:3px;color:#4a1a00;cursor:pointer;
+  background:linear-gradient(180deg,#fff2a8,#ffd166 40%,#f59e0b);box-shadow:0 6px 0 #a15c07,0 10px 20px rgba(0,0,0,.45)}
+.spin:active{transform:translateY(4px);box-shadow:0 2px 0 #a15c07}
+.spin:disabled{filter:grayscale(.6) brightness(.8);cursor:default}
+.msg{min-height:54px;margin-top:14px;text-align:center;font-size:19px;font-weight:900;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.msg small{display:block;font-size:13px;font-weight:600;opacity:.85}
+.pay{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px}
+.pay div{padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.28)}
+.pay b{color:var(--gold)}
+.note{margin-top:10px;font-size:12px;opacity:.65;text-align:center}
+/* 金幣噴發、JACKPOT */
+.coin{position:fixed;left:0;top:0;font-size:28px;pointer-events:none;z-index:50;will-change:transform}
+.jp{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;opacity:0}
+.jp.on{animation:jp 2.6s ease forwards}
+@keyframes jp{0%{opacity:0}10%,80%{opacity:1}100%{opacity:0}}
+.jp .rays{position:absolute;width:160vmax;height:160vmax;background:repeating-conic-gradient(rgba(255,209,102,.28) 0 10deg,transparent 10deg 20deg);animation:spinr 6s linear infinite}
+@keyframes spinr{to{transform:rotate(360deg)}}
+.jp b{position:relative;font-size:clamp(48px,15vw,92px);font-weight:900;letter-spacing:4px;color:#fff3b0;text-shadow:0 0 18px #ff9f1a,0 6px 0 #a15c07,0 0 40px #ff4d6d;animation:jpz .6s cubic-bezier(.3,1.8,.5,1)}
+@keyframes jpz{from{transform:scale(.2) rotate(-12deg)}}
+@media (max-width:400px){:root{--h:72px}.sym{font-size:44px}.marquee h1{font-size:25px}.lever{right:-26px}}
+@media (prefers-reduced-motion:reduce){.bulbs i,.flag,.jp .rays{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="chip">🪙 <b id="coins">20</b></div>
+    <div class="chip">今天還能玩 <b id="left">10</b> 局</div>
+    <button class="sfx" id="sfx" type="button" aria-label="音效">🔇</button>
+  </div>
+  <div class="machine" id="machine">
+    <span class="flag l">🏴‍☠️</span><span class="flag r">🏴‍☠️</span>
+    <div class="marquee"><div class="bulbs" id="bulbs"></div><h1>海盜拉霸</h1><small>★ PIRATE SLOTS ★</small></div>
+    <div class="window">
+      <div class="reel" id="r0"><div class="strip"></div></div>
+      <div class="reel" id="r1"><div class="strip"></div></div>
+      <div class="reel" id="r2"><div class="strip"></div></div>
+      <div class="payline"></div>
+      <div class="near" id="near">差一點…！</div>
+    </div>
+    <div class="lever" id="lever" aria-label="拉桿"><div class="base"></div><div class="arm"><div class="knob" id="knob"></div></div></div>
+    <div class="tray" id="tray"></div>
+  </div>
+  <button class="spin" id="spin" type="button">拉桿！下注 1 枚</button>
+  <div class="msg" id="msg">拉下右邊的拉桿，或按上面的按鈕<small>三個一樣回得 6 枚・兩個一樣回得 1 枚</small></div>
+  <div class="pay"><div>🥥🥥🥥　<b>× 6</b></div><div>🦜🦜🦜　<b>× 6</b></div><div>🏴‍☠️🏴‍☠️🏴‍☠️　<b>× 6</b></div><div>💰💰💰　<b>× 6</b></div></div>
+  
+</div>
+<div class="jp" id="jp"><div class="rays"></div><b>JACKPOT!</b></div>
+<script>
+(function(){
+'use strict';
+var SY=['🥥','🦜','🏴‍☠️','💰'];
+/* 每條滾輪的圖案順序（四種各 3 次，打散） */
+var STR=[[0,1,2,3,1,0,3,2,0,2,1,3],[2,0,3,1,0,2,1,3,2,1,0,3],[1,3,0,2,3,1,2,0,1,0,3,2]],L=12;
+var $=function(id){return document.getElementById(id)};
+var coins=20,left=10,busy=false,sfx=false,H=0;
+var reels=[0,1,2].map(function(i){
+  var el=$('r'+i),st=el.querySelector('.strip'),h='';
+  for(var k=0;k<3*L;k++)h+='<div class="sym">'+SY[STR[i][k%L]]+'</div>';
+  st.innerHTML=h;
+  return {el:el,st:st,p:Math.floor(Math.random()*L),v:0,mode:'idle'};
+});
+function measure(){H=reels[0].st.firstChild.getBoundingClientRect().height||84}
+function draw(r){
+  var p=((r.p%L)+L)%L;r.st.style.transform='translateY('+(-p*H)+'px)';
+  var b=Math.min(6,Math.abs(r.v)*.22);r.st.style.filter=b>.4?'blur('+b.toFixed(1)+'px)':'none';
+  var kids=r.st.children,c=Math.round(p)+1;for(var k=0;k<kids.length;k++)kids[k].classList.toggle('c',k===c);
+}
+/* 燈泡 */
+(function(){var b=$('bulbs'),h='',n=22;for(var i=0;i<n;i++){var t=i/n,x,y;
+  if(t<.35){x=t/.35*100;y=0}else if(t<.5){x=100;y=(t-.35)/.15*100}else if(t<.85){x=100-(t-.5)/.35*100;y=100}else{x=0;y=100-(t-.85)/.15*100}
+  h+='<i style="left:'+x+'%;top:'+y+'%;animation-delay:'+(i%2?-.6:0)+'s"></i>'}b.innerHTML=h})();
+/* 音效（預設關） */
+var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,f2,d,type,vol,delay){if(!sfx)return;var a=ac();if(!a)return;var t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(vol||.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}};
+/* 動畫迴圈 */
+var last=0,lastTick=[0,0,0];
+function loop(t){
+  var dt=last?Math.min(.05,(t-last)/1000):0;last=t;
+  reels.forEach(function(r,i){
+    if(r.mode==='spin'){r.p+=r.v*dt}
+    else if(r.mode==='stop'){var k=Math.min(1,(t-r.t0)/r.T),e=1-Math.pow(1-k,2.2);r.p=r.p0+r.D*e;r.v=r.v0*Math.pow(1-k,1.2);
+      if(k>=1){r.mode='idle';r.v=0;r.p=r.p0+r.D;r.el.classList.remove('tense');bounce(r);tone(180,90,.12,'square',.07);r.done&&r.done()}}
+    var tk=Math.floor(r.p);if(r.mode!=='idle'&&tk!==lastTick[i]){lastTick[i]=tk;if(i===0||r.v<14)tone(900+i*120,0,.025,'square',.018)}
+    draw(r);
+  });
+  requestAnimationFrame(loop);
+}
+function bounce(r){r.st.animate([{transform:r.st.style.transform+' translateY(10px)'},{transform:r.st.style.transform}],{duration:260,easing:'cubic-bezier(.3,1.8,.5,1)'})}
+/* 讓滾輪停在指定圖案（中間那一格 = p+1） */
+function stopAt(r,sym,minD,slow,done){
+  var p=r.p,i=Math.ceil(p+minD);while(STR[reels.indexOf(r)][((i+1)%L+L)%L]!==sym)i++;
+  r.p0=p;r.D=i-p;r.v0=r.v;r.T=(2.2*r.D/r.v)*1000*(slow||1);r.t0=performance.now();r.mode='stop';r.done=done;
+}
+/* 結果一律由伺服器決定（父頁面的 AIKB_BET）；單獨打開這頁時用假結果，方便測試 */
+var K='slot',API=null;try{API=parent!==window&&parent.AIKB_BET?parent.AIKB_BET:null}catch(e){}
+function fakeServer(){return new Promise(function(res){setTimeout(function(){var roll=[0,1,2].map(function(){return Math.floor(Math.random()*4)}),u=roll.filter(function(x,i){return roll.indexOf(x)===i}).length;res({ok:true,bet:{roll:roll,paid:u===1?6:u===2?1:0}})},500+Math.random()*700)})}
+var ST={login:true,coins:20,left:10,pending:false};
+function sync(){
+  if(busy)return;
+  if(API){try{ST=API.state(K)}catch(e){}}
+  $('coins').textContent=ST.coins;$('left').textContent=ST.left==null?'…':ST.left;
+  var b=$('spin');b.disabled=false;b.dataset.act='spin';
+  if(!ST.login){b.textContent='🏝️ 先登島才能玩';b.dataset.act='login'}
+  else if(ST.pending){b.textContent='🔄 確認上一局結果';b.dataset.act='retry'}
+  else if(ST.left==null){b.textContent='讀取今日次數中…';b.disabled=true}
+  else if(ST.left<=0){b.textContent='今天的 10 局玩完了，明天再來';b.disabled=true}
+  else if(ST.coins<1){b.textContent='金幣不夠囉（要 1 枚）';b.disabled=true}
+  else b.textContent='拉桿！下注 1 枚';
+}
+window.betSync=sync;
+if(API){try{sfx=!!API.state(K).sfx;$('sfx').textContent=sfx?'🔊':'🔇'}catch(e){}}
+function play(retry){
+  if(busy)return;
+  if(!retry&&(!ST.login||ST.pending||ST.left==null||ST.left<=0||ST.coins<1))return;
+  busy=true;$('spin').disabled=true;
+  if(!retry){$('coins').textContent=ST.coins-1;$('left').textContent=Math.max(0,ST.left-1)}
+  $('machine').classList.remove('win');reels.forEach(function(r){r.el.classList.remove('hit')});
+  $('msg').innerHTML=(retry?'確認上一局……':'轉轉轉……')+'<small>祝你好運，船長！</small>';
+  tone(220,880,.35,'sawtooth',.04);
+  reels.forEach(function(r,i){r.mode='spin';r.v=0;setTimeout(function(){r.v=26+i*2},i*90)});
+  var t0=performance.now();
+  (API?API.play(K,'spin',!!retry):fakeServer()).then(function(res){
+    var wait=Math.max(0,1100-(performance.now()-t0));
+    setTimeout(function(){
+      if(!res||!res.ok||!res.bet){
+        /* 失敗：滾輪隨便停下，顯示原因，不扣錢（伺服器沒有成立這一局，或要再確認） */
+        var n=0;reels.forEach(function(r,i){setTimeout(function(){stopAt(r,Math.floor(Math.random()*4),5,1,function(){if(++n===3){$('msg').innerHTML='⚠️ '+((res&&res.msg)||'發生錯誤')+'<small>金幣以錢包顯示為準</small>';busy=false;sync()}})},i*150)});
+        return;
+      }
+      var roll=res.bet.roll,near=roll[0]===roll[1];
+      stopAt(reels[0],roll[0],7,1,function(){
+        setTimeout(function(){stopAt(reels[1],roll[1],7,1,function(){
+          if(near){reels[2].el.classList.add('tense');$('near').classList.add('on');tone(330,660,.5,'triangle',.05)}
+          setTimeout(function(){stopAt(reels[2],roll[2],near?14:7,near?1.5:1,function(){$('near').classList.remove('on');finish(res.bet)})},near?150:120);
+        })},120);
+      });
+    },wait);
+  });
+}
+function finish(bet){
+  if(!API){ST.coins+=bet.paid-1;ST.left--}
+  if(bet.paid>=6){
+    reels.forEach(function(r){r.el.classList.add('hit')});$('machine').classList.add('win','shake');
+    $('jp').classList.remove('on');void $('jp').offsetWidth;$('jp').classList.add('on');
+    $('msg').innerHTML='🎉 三個一樣！回得 '+bet.paid+' 枚！<small>大豐收！寶藏都是你的</small>';
+    [523,659,784,1047,1319,1568].forEach(function(f,i){tone(f,0,.25,'triangle',.08,i*.09)});
+    burst(26);
+  }else if(bet.paid>=1){
+    var r=bet.roll,pair=r[0]===r[1]?[0,1]:r[0]===r[2]?[0,2]:[1,2];pair.forEach(function(i){reels[i].el.classList.add('hit')});
+    $('machine').classList.add('win');
+    $('msg').innerHTML='兩個一樣！回得 '+bet.paid+' 枚<small>本金拿回來了，再拉一次？</small>';
+    [659,784].forEach(function(f,i){tone(f,0,.16,'triangle',.07,i*.1)});burst(4);
+  }else{
+    $('msg').innerHTML='沒有相同… 😵<small>'+['風浪太大了，再試一次！','鸚鵡說：下一把一定中！','寶藏還在海底等你！'][Math.floor(Math.random()*3)]+'</small>';
+    tone(330,160,.35,'sine',.06);
+  }
+  setTimeout(function(){$('machine').classList.remove('shake');busy=false;sync()},bet.paid>=6?1400:bet.paid?700:300);
+}
+/* 金幣從出幣口噴出 */
+function burst(n){
+  var tr=$('tray').getBoundingClientRect(),cx=tr.left+tr.width/2,cy=tr.top+10,ps=[];
+  for(var i=0;i<n;i++){var e=document.createElement('span');e.className='coin';e.textContent='🪙';document.body.appendChild(e);
+    ps.push({e:e,x:cx+(Math.random()-.5)*tr.width*.6,y:cy,vx:(Math.random()-.5)*420,vy:-(380+Math.random()*420),r:Math.random()*360,vr:(Math.random()-.5)*720,d:i*35})}
+  var t0=performance.now(),lt=t0;
+  (function step(t){var dt=Math.min(.04,(t-lt)/1000),alive=false;lt=t;
+    ps.forEach(function(p){if(t-t0<p.d){p.e.style.opacity=0;alive=true;return}p.e.style.opacity=1;p.vy+=1300*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;
+      if(p.y<innerHeight+60){alive=true;p.e.style.transform='translate('+p.x+'px,'+p.y+'px) rotate('+p.r+'deg)'}else if(p.e.parentNode)p.e.remove()});
+    if(alive&&t-t0<4000)requestAnimationFrame(step);else ps.forEach(function(p){p.e.remove()});
+    if(Math.random()<.3)tone(1400+Math.random()*600,0,.04,'square',.02);
+  })(t0);
+}
+/* 拉桿：點一下或往下拉 */
+var lv=$('lever'),drag=null;
+function pull(){var act=$('spin').dataset.act;if(act==='login'){if(API)API.login(K);return}if(busy||$('spin').disabled)return;lv.classList.add('pull');tone(140,70,.15,'square',.06);setTimeout(function(){lv.classList.remove('pull')},260);play(act==='retry')}
+$('knob').addEventListener('pointerdown',function(e){if(busy)return;drag={y:e.clientY,moved:false};this.setPointerCapture(e.pointerId);e.preventDefault()});
+$('knob').addEventListener('pointermove',function(e){if(!drag)return;var d=e.clientY-drag.y;if(d>8)drag.moved=true;lv.querySelector('.arm').style.transform='scaleY('+Math.max(-1,1-d/45).toFixed(2)+')';lv.querySelector('.arm').style.transition='none'});
+$('knob').addEventListener('pointerup',function(e){if(!drag)return;var d=e.clientY-drag.y,arm=lv.querySelector('.arm');arm.style.transition='';arm.style.transform='';var go=!drag.moved||d>40;drag=null;if(go)pull()});
+$('spin').onclick=pull;
+function fit(){measure();if(API&&API.size)API.size(K,Math.ceil(document.body.getBoundingClientRect().height))}
+fit();addEventListener('resize',fit);addEventListener('load',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+sync();
+reels.forEach(draw);requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>海盜猜拳</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:transparent}
+body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:#fff;overflow:hidden}
+.wrap{max-width:440px;margin:0 auto;padding:12px;position:relative;border-radius:22px;
+  background:linear-gradient(180deg,rgba(255,154,90,.85) 0%,rgba(122,59,143,.8) 50%,rgba(12,26,51,.9) 100%)}
+.act{display:block;width:100%;margin-top:12px;padding:14px;border:0;border-radius:16px;font-size:18px;font-weight:900;color:#4a1a00;cursor:pointer;background:linear-gradient(180deg,#fff2a8,#ffd166 40%,#f59e0b);box-shadow:0 5px 0 #a15c07}
+.act[hidden]{display:none}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chip{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:rgba(0,0,0,.32);border:1.5px solid rgba(255,209,102,.5);font-weight:800;font-size:15px}
+.chip b{color:#ffd166;font-size:18px}
+.sfx{border:0;background:rgba(0,0,0,.32);color:#fff;border-radius:50%;width:40px;height:40px;font-size:19px;cursor:pointer}
+/* 舞台：夕陽海面＋船甲板 */
+.stage{position:relative;margin-top:12px;height:470px;border-radius:26px;overflow:hidden;
+  background:radial-gradient(circle at 50% 34%,#ffe7a3 0 46px,rgba(255,200,120,.5) 47px 80px,transparent 130px),linear-gradient(180deg,#ffb36b 0%,#ff7a59 30%,#b14a7a 46%,#2a5d8a 47%,#123a63 100%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 18px 40px rgba(0,0,0,.45)}
+.stage.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translate(-7px,3px)}40%{transform:translate(7px,-3px)}60%{transform:translate(-5px,2px)}80%{transform:translate(4px,0)}}
+.sea{position:absolute;left:-10%;right:-10%;top:47%;height:30px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 26px,transparent 26px 60px);opacity:.5;animation:sea 5s linear infinite}
+@keyframes sea{to{transform:translateX(60px)}}
+.ship{position:absolute;left:8%;top:37%;font-size:34px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-3deg)}}
+.deck{position:absolute;left:0;right:0;bottom:0;height:34%;background:repeating-linear-gradient(90deg,#8a5527 0 46px,#6b3f1c 46px 49px);box-shadow:inset 0 10px 0 #4a2a10}
+.rail{position:absolute;left:0;right:0;bottom:34%;height:16px;background:#5a3416;box-shadow:0 -22px 0 -18px #5a3416}
+/* 船長 */
+.cap{position:absolute;left:50%;top:44px;width:178px;margin-left:-89px;transform-origin:50% 90%;transition:transform .3s}
+.cap svg{display:block;width:100%;overflow:visible}
+.cap .mo{display:none}.cap.m-idle .mo.idle,.cap.m-smug .mo.smug,.cap.m-angry .mo.angry,.cap.m-shock .mo.shock,.cap.m-laugh .mo.laugh{display:inline}
+.cap .brow{transition:transform .25s}
+.cap.m-angry .brow.l{transform:rotate(18deg) translateY(4px)}.cap.m-angry .brow.r{transform:rotate(-18deg) translateY(4px)}
+.cap.m-smug .brow.l{transform:rotate(-8deg) translateY(-3px)}
+.cap.m-shock .brow{transform:translateY(-7px)}
+.cap .cheek{opacity:0;transition:opacity .3s}.cap.m-angry .cheek,.cap.m-laugh .cheek{opacity:.75}
+.cap.m-angry .face{fill:#ff9b7a}
+.cap.laugh{animation:laugh .25s 6 alternate}
+@keyframes laugh{to{transform:translateY(-8px) rotate(3deg)}}
+.cap.knock{animation:knock 1s cubic-bezier(.2,.8,.3,1)}
+@keyframes knock{30%{transform:translate(70px,-30px) rotate(28deg)}60%{transform:translate(40px,-6px) rotate(14deg)}100%{transform:none}}
+.steam{position:absolute;top:24px;font-size:26px;opacity:0}
+.cap.m-angry .steam{animation:steam 1s ease-out infinite}
+.steam.l{left:-8px}.steam.r{right:-8px;animation-delay:-.5s!important}
+@keyframes steam{0%{opacity:0;transform:translateY(10px) scale(.6)}30%{opacity:.9}100%{opacity:0;transform:translateY(-30px) scale(1.3)}}
+.stars{position:absolute;left:50%;top:6px;width:120px;height:40px;margin-left:-60px;opacity:0}
+.stars.on{opacity:1;animation:orbit 1s linear 2}
+.stars span{position:absolute;font-size:20px}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.bubble{position:absolute;left:50%;top:6px;transform:translateX(-50%) translateY(-110%);min-width:150px;max-width:86%;padding:9px 14px;border-radius:16px;background:#fff;color:#3a1f0a;font-weight:800;font-size:15px;text-align:center;box-shadow:0 6px 14px rgba(0,0,0,.3);opacity:0;transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
+.bubble.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.bubble::after{content:'';position:absolute;left:50%;bottom:-10px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:#fff}
+/* 兩隻手 */
+.hand{position:absolute;left:50%;width:108px;height:108px;margin-left:-54px;display:grid;place-items:center;font-size:76px;line-height:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,.05) 70%);transition:transform .2s}
+.hand.cpu{top:226px;transform:rotate(180deg)}
+.hand.me{bottom:22px}
+.hand.cpu.shk{animation:shkc .34s ease-in-out 3}
+.hand.me.shk{animation:shkm .34s ease-in-out 3}
+@keyframes shkc{50%{transform:rotate(180deg) translateY(22px)}}
+@keyframes shkm{50%{transform:translateY(-22px)}}
+.hand.pop{animation:pop .45s cubic-bezier(.3,1.8,.5,1)}
+.hand.cpu.pop{animation-name:popc}
+@keyframes pop{from{transform:scale(.3)}}
+@keyframes popc{from{transform:rotate(180deg) scale(.3)}to{transform:rotate(180deg)}}
+.hand.lose{filter:grayscale(.8) brightness(.7)}
+.hand.winr{box-shadow:0 0 0 4px #ffd166,0 0 30px #ffd166}
+.call{position:absolute;left:0;right:0;top:46%;text-align:center;font-size:44px;font-weight:900;color:#fff;text-shadow:0 4px 0 #7a2a00,0 0 18px rgba(255,120,60,.9);opacity:0;pointer-events:none}
+.call.on{animation:call .34s ease-out forwards}
+@keyframes call{0%{opacity:0;transform:scale(1.8)}30%{opacity:1;transform:scale(1)}100%{opacity:0}}
+.res{position:absolute;left:0;right:0;top:40%;z-index:6;text-align:center;font-size:46px;font-weight:900;opacity:0;pointer-events:none;text-shadow:0 4px 0 rgba(0,0,0,.55),0 0 16px rgba(0,0,0,.6),0 0 4px #000}
+.res.on{animation:res 1.6s ease forwards}
+@keyframes res{0%{opacity:0;transform:scale(.3) rotate(-10deg)}15%{opacity:1;transform:scale(1.15)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.spark,.coin{position:fixed;left:0;top:0;pointer-events:none;z-index:50;will-change:transform}
+.spark{font-size:22px}.coin{font-size:26px}
+/* 出拳按鈕 */
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.pick{padding:12px 4px 10px;border:0;border-radius:18px;cursor:pointer;color:#3a1f0a;font-weight:900;font-size:15px;
+  background:linear-gradient(180deg,#fff8e1,#ffd99a);box-shadow:0 6px 0 #b9772a,0 10px 18px rgba(0,0,0,.35);transition:transform .1s}
+.pick span{display:block;font-size:46px;line-height:1.15}
+.pick:active{transform:translateY(4px);box-shadow:0 2px 0 #b9772a}
+.pick:disabled{filter:grayscale(.7) brightness(.85);cursor:default}
+.info{display:flex;justify-content:space-between;margin-top:12px;font-size:14px;font-weight:700;opacity:.9}
+.streak b{color:#ffd166;font-size:18px}
+.note{margin-top:10px;font-size:12px;opacity:.65;text-align:center}
+@media (max-width:380px){.stage{height:440px}.hand.cpu{top:212px}.cap{width:160px;margin-left:-80px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="chip">🪙 <b id="coins">20</b></div>
+    <div class="chip">今天還能玩 <b id="left">10</b> 局</div>
+    <button class="sfx" id="sfx" type="button" aria-label="音效">🔇</button>
+  </div>
+  <div class="stage" id="stage">
+    <div class="sea"></div><div class="ship">⛵</div>
+    <div class="rail"></div><div class="deck"></div>
+    <div class="cap m-smug" id="cap">
+      <div class="stars" id="stars"><span style="left:0;top:10px">⭐</span><span style="right:0;top:10px">💫</span><span style="left:50px;top:-6px">⭐</span></div>
+      <span class="steam l">💨</span><span class="steam r">💨</span>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <!-- 帽子 -->
+        <path d="M18 78 Q100 6 182 78 Q140 64 100 66 Q60 64 18 78Z" fill="#1c1c24" stroke="#000" stroke-width="3"/>
+        <path d="M44 66 Q100 -2 156 66" fill="#23232d"/>
+        <path d="M30 76 Q100 58 170 76" fill="none" stroke="#ffd166" stroke-width="5"/>
+        <circle cx="100" cy="40" r="11" fill="#fff"/><rect x="94" y="47" width="12" height="7" rx="2" fill="#fff"/>
+        <circle cx="96" cy="39" r="3" fill="#1c1c24"/><circle cx="104" cy="39" r="3" fill="#1c1c24"/>
+        <path d="M82 58 L118 64 M118 58 L82 64" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <!-- 臉、鬍子 -->
+        <ellipse class="face" cx="100" cy="112" rx="56" ry="50" fill="#f2c79b" style="transition:fill .3s"/>
+        <path d="M46 118 Q50 190 100 194 Q150 190 154 118 Q140 150 100 150 Q60 150 46 118Z" fill="#6b3a1a"/>
+        <circle class="cheek" cx="66" cy="124" r="10" fill="#ff6b6b"/><circle class="cheek" cx="134" cy="124" r="10" fill="#ff6b6b"/>
+        <!-- 眉毛、眼睛、眼罩 -->
+        <rect class="brow l" x="58" y="84" width="30" height="7" rx="3" fill="#3a1f0a" style="transform-box:fill-box;transform-origin:center"/>
+        <rect class="brow r" x="112" y="84" width="30" height="7" rx="3" fill="#3a1f0a" style="transform-box:fill-box;transform-origin:center"/>
+        <circle cx="74" cy="104" r="9" fill="#fff"/><circle cx="76" cy="105" r="5" fill="#1c1c24"/>
+        <path d="M60 80 L150 112" stroke="#1c1c24" stroke-width="3"/>
+        <ellipse cx="127" cy="104" rx="14" ry="12" fill="#1c1c24"/>
+        <!-- 嘴巴（依心情） -->
+        <path class="mo idle" d="M86 138 Q100 144 114 138" fill="none" stroke="#3a1f0a" stroke-width="4" stroke-linecap="round"/>
+        <path class="mo smug" d="M84 136 Q104 146 120 132" fill="none" stroke="#3a1f0a" stroke-width="4" stroke-linecap="round"/>
+        <path class="mo angry" d="M84 144 Q100 132 116 144" fill="none" stroke="#3a1f0a" stroke-width="5" stroke-linecap="round"/>
+        <ellipse class="mo shock" cx="100" cy="142" rx="9" ry="12" fill="#3a1f0a"/>
+        <path class="mo laugh" d="M80 132 Q100 162 120 132Z" fill="#3a1f0a"/>
+        <circle cx="146" cy="130" r="5" fill="none" stroke="#ffd166" stroke-width="3"/>
+      </svg>
+    </div>
+    <div class="bubble" id="bubble"></div>
+    <div class="hand cpu" id="cpu">✊</div>
+    <div class="call" id="call"></div>
+    <div class="res" id="res"></div>
+    <div class="hand me" id="me">✊</div>
+  </div>
+  <button class="act" id="act" type="button" hidden></button>
+  <div class="picks" id="picks">
+    <button class="pick" data-h="scissors" type="button"><span>✌️</span>剪刀</button>
+    <button class="pick" data-h="rock" type="button"><span>✊</span>石頭</button>
+    <button class="pick" data-h="paper" type="button"><span>✋</span>布</button>
+  </div>
+  <div class="info"><span>每局下注 1 枚・贏回 2 枚・平手回 1 枚</span><span class="streak">連勝 <b id="streak">0</b></span></div>
+  
+</div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var HE={rock:'✊',paper:'✋',scissors:'✌️'},BEAT={rock:'scissors',paper:'rock',scissors:'paper'};
+var coins=20,left=10,streak=0,busy=false,sfx=false;
+var cap=$('cap');
+function mood(m){cap.className='cap m-'+m}
+var LINES={
+  hello:['哼，敢跟本船長猜拳？','來吧小鬼，押上你的金幣！','我可是七海猜拳王！'],
+  ready:['出什麼好呢…嘿嘿','我看穿你了！','這把我贏定了！'],
+  win0:['可、可惡！這次不算！','什麼？！我竟然輸了？','你運氣好而已！'],
+  win2:['你、你是不是偷看！','連贏兩把？不可能！','我的金幣啊啊啊！'],
+  win4:['停！你是猜拳之神嗎？！','我要回去練拳了… 😭','請收下我的寶藏…'],
+  tie:['哼，英雄所見略同！','再來！這把不算！','想得跟我一樣，不錯嘛'],
+  lose:['哈哈哈！金幣歸我啦！','太嫩了，回去練練吧！','七海猜拳王可不是叫假的！']
+};
+function pickLine(k){var a=LINES[k];return a[Math.floor(Math.random()*a.length)]}
+var bt=0;function say(t,ms){var b=$('bubble');b.textContent=t;b.classList.add('on');clearTimeout(bt);bt=setTimeout(function(){b.classList.remove('on')},ms||2200)}
+/* 音效（預設關） */
+var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
+function tone(f,f2,d,type,vol,delay){if(!sfx)return;var a=ac();if(!a)return;var t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(vol||.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}};
+function restart(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
+/* 結果一律由伺服器決定（父頁面的 AIKB_BET）；單獨打開這頁時用假結果，方便測試 */
+var K='rps',API=null;try{API=parent!==window&&parent.AIKB_BET?parent.AIKB_BET:null}catch(e){}
+function fakeServer(h){return new Promise(function(r){setTimeout(function(){var c=['rock','paper','scissors'][Math.floor(Math.random()*3)];r({ok:true,bet:{roll:[h,c],paid:h===c?1:BEAT[h]===c?2:0}})},400+Math.random()*600)})}
+var ST={login:true,coins:20,left:10,pending:false};
+function sync(){
+  if(busy)return;
+  if(API){try{ST=API.state(K)}catch(e){}}
+  $('coins').textContent=ST.coins;$('left').textContent=ST.left==null?'…':ST.left;
+  var a=$('act'),ok=ST.login&&!ST.pending&&ST.left!=null&&ST.left>0&&ST.coins>=1;
+  a.hidden=true;a.disabled=false;
+  if(!ST.login){a.hidden=false;a.textContent='🏝️ 先登島才能玩';a.dataset.act='login'}
+  else if(ST.pending){a.hidden=false;a.textContent='🔄 確認上一局結果';a.dataset.act='retry'}
+  else if(ST.left!=null&&ST.left<=0){a.hidden=false;a.disabled=true;a.textContent='今天的 10 局玩完了，明天再來'}
+  else if(ST.left!=null&&ST.coins<1){a.hidden=false;a.disabled=true;a.textContent='金幣不夠囉（要 1 枚）'}
+  setPicks(ok);
+}
+window.betSync=sync;
+if(API){try{sfx=!!API.state(K).sfx;$('sfx').textContent=sfx?'🔊':'🔇'}catch(e){}}
+$('act').onclick=function(){var t=this.dataset.act;if(t==='login'){if(API)API.login(K)}else if(t==='retry')play(ST.pendingChoice||'rock',true)};
+function play(h,retry){
+  if(busy)return;
+  if(!retry&&(!ST.login||ST.pending||ST.left==null||ST.left<=0||ST.coins<1))return;
+  busy=true;setPicks(false);$('act').hidden=true;
+  if(!retry){$('coins').textContent=ST.coins-1;$('left').textContent=Math.max(0,ST.left-1)}
+  var me=$('me'),cpu=$('cpu');me.className='hand me';cpu.className='hand cpu';me.textContent='✊';cpu.textContent='✊';
+  mood('idle');say(retry?'剛剛那把還沒算完…':pickLine('ready'),1000);
+  var srv=API?API.play(K,h,!!retry):fakeServer(h),calls=['剪刀！','石頭！','布！'];
+  setTimeout(function(){
+    restart(me,'shk');restart(cpu,'shk');
+    calls.forEach(function(c,i){setTimeout(function(){$('call').textContent=c;restart($('call'),'on');tone(300+i*120,0,.1,'square',.06)},i*340)});
+    setTimeout(function(){srv.then(function(res){
+      if(!res||!res.ok||!res.bet){me.classList.remove('shk');cpu.classList.remove('shk');mood('shock');say('⚠️ '+((res&&res.msg)||'發生錯誤'),3500);busy=false;sync();return}
+      reveal(res.bet);
+    })},1020);
+  },500);
+}
+function reveal(bet){
+  var h=bet.roll[0],c=bet.roll[1],paid=bet.paid;
+  var me=$('me'),cpu=$('cpu');me.classList.remove('shk');cpu.classList.remove('shk');
+  me.textContent=HE[h]||'✊';cpu.textContent=HE[c]||'✊';restart(me,'pop');restart(cpu,'pop');
+  tone(200,100,.08,'square',.08);
+  var r=paid>=2?'win':paid===1?'tie':'lose';
+  if(!API){ST.coins+=paid-1;ST.left--}
+  setTimeout(function(){
+    var res=$('res');
+    if(r==='win'){streak++;me.classList.add('winr');cpu.classList.add('lose');
+      res.textContent='你贏了！+'+paid;res.style.color='#ffd166';
+      mood(streak>=3?'shock':'angry');restart(cap,'knock');restart($('stars'),'on');restart($('stage'),'shake');
+      say(pickLine(streak>=4?'win4':streak>=2?'win2':'win0'),2400);
+      [523,659,784,1047].forEach(function(f,i){tone(f,0,.2,'triangle',.08,i*.08)});
+      coinsFly(10+Math.min(streak,5)*3);
+    }else if(r==='tie'){
+      res.textContent='平手！+1';res.style.color='#9be7ff';mood('shock');say(pickLine('tie'));sparks();
+      tone(880,440,.2,'sawtooth',.05);
+    }else{streak=0;me.classList.add('lose');cpu.classList.add('winr');
+      res.textContent='你輸了…';res.style.color='#ff9aa8';mood('laugh');restart(cap,'laugh');say(pickLine('lose'));
+      tone(392,196,.4,'sine',.07);[0,.12,.24].forEach(function(d){tone(300,0,.08,'square',.04,.3+d)});
+    }
+    restart(res,'on');$('streak').textContent=streak;
+    setTimeout(function(){busy=false;sync();if(ST.left===0)say('今天打烊啦！明天再來 ⚓',4000);if(r!=='lose')mood(streak>=3?'shock':'angry');setTimeout(function(){if(!busy)mood('smug')},1600)},1700);
+  },350);
+}
+function setPicks(on){document.querySelectorAll('.pick').forEach(function(b){b.disabled=!on})}
+/* 平手：兩拳中間冒火花 */
+function sparks(){
+  var s=$('stage').getBoundingClientRect(),cx=s.left+s.width/2,cy=s.top+s.height*.5,ps=[];
+  for(var i=0;i<16;i++){var e=document.createElement('span');e.className='spark';e.textContent=i%2?'✨':'💥';document.body.appendChild(e);var a=i/16*Math.PI*2,v=160+Math.random()*160;ps.push({e:e,x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v})}
+  anim(ps,0,700);
+}
+/* 贏：金幣往上面的金幣數飛 */
+function coinsFly(n){
+  var s=$('stage').getBoundingClientRect(),cx=s.left+s.width/2,cy=s.top+s.height*.55,ps=[];
+  for(var i=0;i<n;i++){var e=document.createElement('span');e.className='coin';e.textContent='🪙';document.body.appendChild(e);ps.push({e:e,x:cx,y:cy,vx:(Math.random()-.5)*500,vy:-(300+Math.random()*450)})}
+  anim(ps,1200,1500);
+}
+function anim(ps,g,life){
+  var t0=performance.now(),lt=t0;
+  (function step(t){var dt=Math.min(.04,(t-lt)/1000),k=(t-t0)/life;lt=t;
+    ps.forEach(function(p){p.vy+=g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.e.style.transform='translate('+p.x+'px,'+p.y+'px)';p.e.style.opacity=Math.max(0,1-k)});
+    if(k<1)requestAnimationFrame(step);else ps.forEach(function(p){p.e.remove()})})(t0);
+}
+document.querySelectorAll('.pick').forEach(function(b){b.onclick=function(){tone(500,0,.05,'square',.05);play(b.dataset.h)}});
+function fit(){if(API&&API.size)API.size(K,Math.ceil(document.body.getBoundingClientRect().height))}
+fit();addEventListener('resize',fit);addEventListener('load',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+sync();
+setTimeout(function(){say(pickLine('hello'),3000)},400);
+})();
+</script>
+</body>
+</html>
