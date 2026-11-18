@@ -92,7 +92,7 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
 .odds .pc{font-variant-numeric:tabular-nums;color:var(--muted)}
 .log{display:flex;flex-wrap:wrap;gap:6px;font-size:13px}
 .log span{background:rgba(255,255,255,.08);border-radius:999px;padding:3px 10px}
-.beasts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;font-size:12px}
+.beasts{display:grid;grid-template-columns:repeat(3,1fr);justify-content:center;gap:6px;text-align:center;font-size:12px}
 .beasts div{display:grid;justify-items:center;gap:2px;background:rgba(255,255,255,.05);border-radius:12px;padding:6px 2px}
 .beasts svg{width:78px;height:auto;overflow:visible}
 .bfx{animation:bfx 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
@@ -112,7 +112,7 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
     <button class="sfx" id="sfx" type="button" aria-label="音效開關">🔊</button>
   </div>
   <h1>✨ 扭蛋島 ✨</h1>
-  <p class="sub">每抽 🪙 5 枚・每天 3 次・神獸只有 3%</p>
+  <p class="sub">每抽 🪙 5 枚・每天 3 次・五行神獸只有 3%</p>
 
   <div class="stage" id="stage">
     <div class="dark" id="dark"></div>
@@ -163,9 +163,9 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
   <div class="msg" id="msg" role="status"></div>
 
   <div class="sec">
-    <h2>🐲 三隻神獸（各 1%）</h2>
+    <h2>🐲 五行神獸（合計 3%）</h2>
     <div class="beasts" id="bst"></div>
-    <p style="margin:6px 0 0;font-size:12px;color:var(--muted)">抽到會住進你的小島，不佔小屋的寵物名額；已經有的神獸再抽到，自動換成 💎 2 顆。</p>
+    <p style="margin:6px 0 0;font-size:12px;color:var(--muted)">抽到會住進你的小島，不佔小屋的寵物名額；已經有的神獸再抽到，會收進「神獸收藏」，可以送給船長好友交換，或到商店島換資源。</p>
   </div>
   <div class="sec">
     <h2>🎁 獎品與機率</h2>
@@ -187,13 +187,15 @@ function $(i){return document.getElementById(i)}
 var PV_UID=0;
 function pvEye(x,y,dark){return '<circle cx="'+x+'" cy="'+y+'" r="2.4" fill="'+(dark?'#f4f4f4':'#1d1d1d')+'"/><circle cx="'+(x+.8)+'" cy="'+(y-.8)+'" r=".8" fill="'+(dark?'#222':'#fff')+'"/>'}
 function pvCrown(x,y){return '<g><path d="M'+(x-7)+' '+y+'l2-8 3.5 4.5 1.5-6.5 1.5 6.5 3.5-4.5 2 8z" fill="#ffd54f" stroke="#b7791f" stroke-width="1"/><circle cx="'+x+'" cy="'+(y-3)+'" r="1.4" fill="#e53935"/></g>'}
-/* 神獸外觀（水靈龍、火鳳凰、木麒麟）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
+/* 神獸外觀（水靈龍、火鳳凰、木麒麟、金白虎、土靈龜）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
 function pvBeastFx(el,st){
   if(st<2)return '';
   var o='';
   if(el==='water')[[8,18,2.6],[74,10,2],[30,8,1.8],[80,48,2.2]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-c[2]*1.6)+' Q'+(c[0]+c[2])+' '+c[1]+' '+c[0]+' '+(c[1]+c[2])+' Q'+(c[0]-c[2])+' '+c[1]+' '+c[0]+' '+(c[1]-c[2]*1.6)+'Z" fill="#81d4fa"/>'});
   if(el==='fire')[[6,20],[70,6],[26,10],[82,40]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.35)+'s" d="M'+c[0]+' '+(c[1]-5)+' Q'+(c[0]+3.5)+' '+c[1]+' '+c[0]+' '+(c[1]+3)+' Q'+(c[0]-3.5)+' '+c[1]+' '+c[0]+' '+(c[1]-5)+'Z" fill="#ffb74d"/>'});
   if(el==='wood')[[8,22,'#f48fb1'],[76,8,'#a5d6a7'],[28,8,'#fff59d'],[80,46,'#f48fb1']].forEach(function(c,i){o+='<g class="bfx" style="animation-delay:'+(i*.45)+'s"><circle cx="'+c[0]+'" cy="'+c[1]+'" r="2.6" fill="'+c[2]+'"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="1" fill="#fff"/></g>'});
+  if(el==='metal')[[8,20],[76,8],[28,8],[82,44]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-4)+' L'+(c[0]+1.2)+' '+(c[1]-1.2)+' L'+(c[0]+4)+' '+c[1]+' L'+(c[0]+1.2)+' '+(c[1]+1.2)+' L'+c[0]+' '+(c[1]+4)+' L'+(c[0]-1.2)+' '+(c[1]+1.2)+' L'+(c[0]-4)+' '+c[1]+' L'+(c[0]-1.2)+' '+(c[1]-1.2)+'Z" fill="#ffe082"/>'});
+  if(el==='earth')[[6,24],[78,10],[26,10],[82,46]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.45)+'s" d="M'+(c[0]-3)+' '+(c[1]+2)+' L'+(c[0]-1)+' '+(c[1]-3)+' L'+(c[0]+3)+' '+(c[1]-2)+' L'+(c[0]+3)+' '+(c[1]+2)+'Z" fill="#bcaaa4" stroke="#6d4c41" stroke-width=".6"/>'});
   return o;
 }
 function pvDragon(st,id){
@@ -246,21 +248,53 @@ function pvQilin(st,id){
 function pvBeastDefs(k,id){
   if(k==='dragon')return '<linearGradient id="dg'+id+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4dd0e1"/><stop offset=".5" stop-color="#7c4dff"/><stop offset="1" stop-color="#29b6f6"/></linearGradient>';
   if(k==='phoenix')return '<linearGradient id="ph'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeb3b"/><stop offset=".5" stop-color="#ff9800"/><stop offset="1" stop-color="#e53935"/></linearGradient>';
+  if(k==='tiger')return '<linearGradient id="tg'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffd54f"/></linearGradient>';
+  if(k==='tortoise')return '<linearGradient id="tt'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a1887f"/><stop offset=".5" stop-color="#ffb74d"/><stop offset="1" stop-color="#6d4c41"/></linearGradient>';
   if(k==='qilin')return '<linearGradient id="ql'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ccc65"/><stop offset=".6" stop-color="#ffd54f"/><stop offset="1" stop-color="#43a047"/></linearGradient>';
   return '';
 }
-var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood'};
+function pvTiger(st,id){
+  var o='',b=st===3?'url(#tg'+id+')':'#f5f5f0',d='#37474f';
+  o+='<path class="tl" d="M21 38 Q6 36 8 22 Q9 16 14 17" stroke="'+b+'" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M9 26 l4 1 M8 21 l4 0" stroke="'+d+'" stroke-width="1.6"/>';
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="44" width="7.5" height="14" rx="3.5" fill="#eceff1"/>'});
+  o+='<ellipse cx="40" cy="42" rx="21" ry="13" fill="'+b+'"/>';
+  o+='<path d="M28 31 q3 6 0 13 M35 30 q3 7 0 14 M42 30 q3 7 0 14 M49 31 q3 6 0 12" stroke="'+d+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+  o+='<ellipse cx="44" cy="49" rx="13" ry="5.5" fill="#ffffff"/>';
+  if(st>=2)o+='<path d="M52 34 Q59 41 67 36" stroke="#ffc107" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="59" cy="40" r="2.6" fill="#ffd54f" stroke="#b7791f" stroke-width=".8"/>';
+  var hd='<circle cx="54" cy="18" r="4.6" fill="'+b+'"/><circle cx="54" cy="18" r="2.2" fill="#ffb3c1"/><circle cx="70" cy="16" r="4.6" fill="'+b+'"/><circle cx="70" cy="16" r="2.2" fill="#ffb3c1"/>'+
+    '<circle cx="62" cy="28" r="13" fill="'+b+'"/><path d="M58 17 l2 5 M62 15 v5 M66 17 l-2 5" stroke="'+d+'" stroke-width="1.8" stroke-linecap="round"/>'+
+    '<path d="M50 27 l5 1 M50 31 l5 0" stroke="'+d+'" stroke-width="1.6" stroke-linecap="round"/>'+
+    '<ellipse cx="70" cy="32" rx="7" ry="5" fill="#ffffff"/>'+pvEye(64,25)+'<path d="M74 28 l3 2 l-3 2z" fill="#f48fb1"/>'+
+    '<path d="M70 35 q3 2 6 0" stroke="#5d4037" stroke-width="1" fill="none"/><path d="M73 33 l8 -1 M73 35 l8 1" stroke="#90a4ae" stroke-width=".7"/>'+
+    (st===3?pvCrown(62,15):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvTortoise(st,id){
+  var o='',sh=st===3?'url(#tt'+id+')':'#8d6e63';
+  [[16,'a'],[27,'b'],[50,'b'],[60,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="45" width="10" height="12" rx="4" fill="#a1887f"/>'});
+  o+='<path d="M12 48 Q8 44 4 46" stroke="#a1887f" stroke-width="4.5" stroke-linecap="round" fill="none"/>';
+  var hd='<ellipse cx="70" cy="40" rx="10.5" ry="8.5" fill="#bcaaa4"/>'+pvEye(73,37)+'<path d="M76 43 q3 1 5 -1" stroke="#4e342e" stroke-width="1.2" fill="none"/>'+(st===3?pvCrown(70,31):'');
+  o+='<g class="hd">'+hd+'</g>';
+  o+='<path d="M10 48 Q12 18 40 16 Q68 18 68 48Z" fill="'+sh+'" stroke="#4e342e" stroke-width="1.6"/>';
+  o+='<path d="M22 34 L30 24 L38 32 L46 20 L56 34" fill="none" stroke="'+(st===3?'#fff59d':'#d7ccc8')+'" stroke-width="1.8" stroke-linejoin="round"/>';
+  o+='<path d="M28 18 L34 6 L40 14 L46 4 L54 18Z" fill="#78909c" stroke="#455a64" stroke-width="1.2" stroke-linejoin="round"/><path d="M40 14 L46 4 L49 9Z" fill="#eceff1"/>';
+  if(st>=2)o+='<circle cx="30" cy="16" r="2.4" fill="#66bb6a"/><circle cx="54" cy="17" r="2.4" fill="#66bb6a"/><circle cx="33" cy="14" r="1.6" fill="#81c784"/>';
+  o+='<rect x="8" y="45" width="62" height="6" rx="3" fill="#5d4037"/>';
+  return o;
+}
+var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood',tiger:'metal',tortoise:'earth'};
 
-function beastSVG(k,st){var id=++PV_UID,b=k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):pvQilin(st,id);
-  return '<svg viewBox="-4 -8 92 76" aria-hidden="true">'+(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':'')+'<g class="'+(k==='qilin'?'':'flt')+'">'+b+'</g>'+pvBeastFx(PV_BEAST[k],st)+'</svg>'}
-var BN={dragon:['水靈龍','💧 水','#4fc3f7'],phoenix:['火鳳凰','🔥 火','#ff9800'],qilin:['木麒麟','🌿 木','#9ccc65']};
-$('bst').innerHTML=['dragon','phoenix','qilin'].map(function(k){return '<div>'+beastSVG(k,2)+'<b>'+BN[k][0]+'</b><span>'+BN[k][1]+'屬性</span></div>'}).join('');
+function beastSVG(k,st){var id=++PV_UID,b=k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):k==='tiger'?pvTiger(st,id):k==='tortoise'?pvTortoise(st,id):pvQilin(st,id);
+  return '<svg viewBox="-4 -8 92 76" aria-hidden="true">'+(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':'')+'<g class="'+(k==='dragon'||k==='phoenix'?'flt':'')+'">'+b+'</g>'+pvBeastFx(PV_BEAST[k],st)+'</svg>'}
+var BN={dragon:['水靈龍','💧 水','#4fc3f7'],phoenix:['火鳳凰','🔥 火','#ff9800'],qilin:['木麒麟','🌿 木','#9ccc65'],tiger:['金白虎','✨ 金','#ffe082'],tortoise:['土靈龜','🪨 土','#bcaaa4']};
+$('bst').innerHTML=['dragon','phoenix','qilin','tiger','tortoise'].map(function(k){return '<div>'+beastSVG(k,2)+'<b>'+BN[k][0]+'</b><span>'+BN[k][1]+'屬性</span></div>'}).join('');
 
 /* ---- 獎品表（要和後台 GACHA 一致） ---- */
 var TIER={w:['#f4f1ea','安慰獎'],g:['#66bb6a','普通'],b:['#42a5f5','不錯'],p:['#ab47bc','稀有'],y:['#ffca28','超稀有'],r:['conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)','神獸']};
-var TABLE=[['fruit',3,45,'w'],['wood',8,15,'g'],['iron',6,13,'g'],['coin',8,12,'b'],['dia',1,8,'p'],['coin',20,3,'p'],['dia',3,1,'y'],['beast',1,3,'r']];
-var RN={fruit:['🍎','水果'],wood:['🪵','木材'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸']};
-$('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（三選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
+var TABLE=[['fruit',10,40,'w'],['wood',20,13,'g'],['stone',20,13,'g'],['iron',20,12,'g'],['coin',15,10,'b'],['dia',1,8,'p'],['dia',3,1,'y'],['beast',1,3,'r']];
+var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸']};
+$('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（五選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
 
 /* ---- 狀態 ---- */
 var S={coins:50,left:3,login:true,busy:false,cap:null,taps:0,res:null,sfx:true,log:[]};
@@ -278,7 +312,7 @@ function sync(){
   fit();
 }
 window.gachaSync=sync;
-function label(g){if(g.k==='beast')return (g.dup?'🐲 '+g.name+'（重複→💎'+g.n+'）':'🐲 '+g.name);return RN[g.k][0]+' '+RN[g.k][1]+' ×'+g.n}
+function label(g){if(g.k==='beast')return (g.dup?'🐲 '+g.name+'（收藏）':'🐲 '+g.name);return RN[g.k][0]+' '+RN[g.k][1]+' ×'+g.n}
 
 /* ---- 音效 ---- */
 var AC=null;function tone(f,d,type,v,delay){if(!S.sfx)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+(delay||0);o.type=type||'sine';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
@@ -297,7 +331,7 @@ function capCenter(){var r=$('cap').getBoundingClientRect();return [r.left+r.wid
 /* ---- 抽 ---- */
 function newId(){return 'g'+Math.random().toString(36).slice(2,12)+'-'+Date.now().toString(36)}
 function fake(){var tot=0,i,rv;TABLE.forEach(function(t){tot+=t[2]});rv=Math.random()*tot;for(i=0;i<TABLE.length;i++){rv-=TABLE[i][2];if(rv<0)break}var t=TABLE[Math.min(i,TABLE.length-1)],g={k:t[0],n:t[1],tier:t[3]};
-  if(g.k==='beast'){var ks=['dragon','phoenix','qilin'],b=ks[Math.floor(Math.random()*3)];g.b=b;g.name=BN[b][0];g.el=b}
+  if(g.k==='beast'){var ks=['dragon','phoenix','qilin','tiger','tortoise'],b=ks[Math.floor(Math.random()*5)];g.b=b;g.name=BN[b][0];g.el=b}
   S.coins-=5;if(g.k==='coin')S.coins+=g.n;S.left--;return Promise.resolve({ok:true,gacha:g})}
 function spin(){
   if(!S.login){if(API)API.login();return}
@@ -340,11 +374,11 @@ function openCap(g){
     $('rays').classList.add('on');
     var em=$('pem'),nm=$('pnm'),ds=$('pds'),tc=g.tier==='r'?BN[g.b][2]:TIER[g.tier][0];
     $('prize').style.setProperty('--tc',tc);
-    if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=g.dup?'你已經有 '+g.name+' 了，換成 💎 鑽石 ×'+g.n:BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）'}
+    if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=g.dup?'你已經有 '+g.name+' 了，收進神獸收藏（可送好友或到商店換資源）':BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）'}
     else{em.textContent=RN[g.k][0];nm.textContent=RN[g.k][1]+' ×'+g.n;ds.textContent=TIER[g.tier][1]+(g.tier==='w'?'・下次一定更好！':'・已放進背包')}
     $('prize').classList.add('on');
     sWin(big);
-    if(g.tier==='r')burst(c[0],c[1]-40,['✨','🌟','💫',g.b==='dragon'?'💧':g.b==='phoenix'?'🔥':'🌸'],26,180);
+    if(g.tier==='r')burst(c[0],c[1]-40,['✨','🌟','💫',{dragon:'💧',phoenix:'🔥',qilin:'🌸',tiger:'⭐',tortoise:'🪨'}[g.b]||'✨'],26,180);
     else if(big)burst(c[0],c[1]-30,[RN[g.k][0],'✨','🌟'],16,140);
     else burst(c[0],c[1]-20,[RN[g.k][0],'✨'],g.tier==='w'?5:9,100);
     S.log.unshift(g);if(S.log.length>6)S.log.pop();

@@ -175,14 +175,25 @@ var ANIMALS = {
   dog: { name: '狗狗', cost: 20 }, cat: { name: '貓貓', cost: 20 }, parrot: { name: '鸚鵡', cost: 25 },
   fox: { name: '狐狸', cost: 40 }, panda: { name: '熊貓', cost: 60 },
   // 神獸：只能從扭蛋島抽到；不佔小屋的寵物名額
-  dragon: { name: '水靈龍', cost: 0, beast: 'water' }, phoenix: { name: '火鳳凰', cost: 0, beast: 'fire' }, qilin: { name: '木麒麟', cost: 0, beast: 'wood' }
+  dragon: { name: '水靈龍', cost: 0, beast: 'water' }, phoenix: { name: '火鳳凰', cost: 0, beast: 'fire' }, qilin: { name: '木麒麟', cost: 0, beast: 'wood' },
+  tiger: { name: '金白虎', cost: 0, beast: 'metal' }, tortoise: { name: '土靈龜', cost: 0, beast: 'earth' }
 };
 function isBeast_(k) { return !!(ANIMALS[k] && ANIMALS[k].beast); }
 function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k); }).length; } // 佔名額的寵物（不含神獸）
 /* 扭蛋島：每抽 5 枚金幣、每天 3 次；[種類, 數量, 機率權重, 扭蛋顏色] */
-var GACHA_COST = 5, GACHA_DAY = 3, BEAST_DUP_DIA = 2;
-var GACHA = [['fruit', 3, 45, 'w'], ['wood', 8, 15, 'g'], ['iron', 6, 13, 'g'], ['coin', 8, 12, 'b'], ['dia', 1, 8, 'p'], ['coin', 20, 3, 'p'], ['dia', 3, 1, 'y'], ['beast', 1, 3, 'r']];
-var BEASTS = ['dragon', 'phoenix', 'qilin'];
+var GACHA_COST = 5, GACHA_DAY = 3;
+var GACHA = [['fruit', 10, 40, 'w'], ['wood', 20, 13, 'g'], ['stone', 20, 13, 'g'], ['iron', 20, 12, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 8, 'p'], ['dia', 3, 1, 'y'], ['beast', 1, 3, 'r']];
+var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
+var BEAST_SELL = { wood: 25, stone: 25, iron: 25, dia: 1 };   // 重複的神獸到商店島換資源
+/* 重複抽到的神獸先收在「神獸收藏」（isle.bbag）；可以送給好友，或到商店換資源 */
+function bbagOf_(o) { var b = o.bbag && typeof o.bbag === 'object' ? o.bbag : {}, out = {}; BEASTS.forEach(function (k) { if (num_(b[k]) > 0) out[k] = num_(b[k]); }); return out; }
+/* 收到一隻神獸：沒有就住進小島，有了就放進收藏 */
+function beastGive_(o, k) {
+  o.pets = Array.isArray(o.pets) ? o.pets : [];
+  if (o.pets.some(function (x) { return x.k === k; })) { o.bbag = bbagOf_(o); o.bbag[k] = num_(o.bbag[k]) + 1; return 'bag'; }
+  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: 0, pd: 0 });
+  return 'pet';
+}
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
@@ -362,7 +373,7 @@ function profile_(r) {
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
     trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
     swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY,
-    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
+    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',
@@ -512,8 +523,7 @@ function handle_(q) {
           if (pick[0]==='coin'){r[C.bal]=num_(r[C.bal])+pick[1];r[C.earned]=num_(r[C.earned])+Math.max(0,pick[1]-GACHA_COST);}
           else if (pick[0]==='beast'){
             var bk=BEASTS[Math.floor(Math.random()*BEASTS.length)];gr.b=bk;gr.name=ANIMALS[bk].name;gr.el=ANIMALS[bk].beast;
-            if (gIsle.pets.some(function(x){return x.k===bk})){gr.dup=1;gr.n=BEAST_DUP_DIA;r[C.dia]=num_(r[C.dia])+BEAST_DUP_DIA;}
-            else {var gnow=Date.now();gIsle.pets.push({id:'P'+gnow.toString(36).toUpperCase()+'B'+Math.floor(Math.random()*1296).toString(36).toUpperCase(),k:bk,n:ANIMALS[bk].name,full:80,ft:gnow,aff:0,pd:0});}
+            if (beastGive_(gIsle,bk)==='bag') gr.dup=1;
           }
           else r[BAG_COL[pick[0]]]=num_(r[BAG_COL[pick[0]]])+pick[1];
           ga.n=num_(ga.n)+1;res.gacha=gr;
@@ -522,6 +532,26 @@ function handle_(q) {
       }
       gIsle.gacha=ga;r[C.isle]=JSON.stringify(gIsle);res.gachaLeft=Math.max(0,GACHA_DAY-num_(ga.n));res.gachaCost=GACHA_COST;
       res.gachaLog=ga.receipts.slice(-6).reverse().map(function(x){return x.result});
+    } else if (a === 'bsell') {
+      /* 商店島：收藏裡的一隻神獸換資源 */
+      var sIsle=isleOf_(r), sk=String(q.k||''), sb=bbagOf_(sIsle);
+      if (!sb[sk]) return {ok:false,err:'nobeast',p:me};
+      sb[sk]--; if(!sb[sk]) delete sb[sk]; sIsle.bbag=sb;
+      for (var bs in BEAST_SELL) r[BAG_COL[bs]]=num_(r[BAG_COL[bs]])+BEAST_SELL[bs];
+      r[C.isle]=JSON.stringify(sIsle); res.sold={k:sk,got:BEAST_SELL};
+    } else if (a === 'bgift') {
+      /* 送一隻收藏的神獸給好友（不算每天送禮的次數；互送就是交換） */
+      var bk2=String(q.k||''), jb=findFid_(rows, q.fid);
+      if (!ANIMALS[bk2]||!ANIMALS[bk2].beast||jb<0) return {ok:false,err:'bad',p:me};
+      var bfid=String(rows[jb][C.fid]);
+      if (list_(r[C.friends]).indexOf(bfid)<0) return {ok:false,err:'notfriend',p:me};
+      var myIsle=isleOf_(r), mb=bbagOf_(myIsle);
+      if (!mb[bk2]) return {ok:false,err:'nobeast',p:me};
+      mb[bk2]--; if(!mb[bk2]) delete mb[bk2]; myIsle.bbag=mb; r[C.isle]=JSON.stringify(myIsle);
+      var fIsle=isleOf_(rows[jb]), where=beastGive_(fIsle,bk2); rows[jb][C.isle]=JSON.stringify(fIsle);
+      rows[jb][C.unread]=num_(rows[jb][C.unread])+1; touched[jb]=1;
+      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], bfid, rows[jb][C.nick], '🐲 送你一隻神獸「'+ANIMALS[bk2].name+'」'+(where==='pet'?'，已經住進你的小島了！':'，放在你的神獸收藏裡。')]);
+      res.friends=friendsOf_(rows, r); res.bgift={k:bk2,to:where};
     } else if (a === 'login' || a === 'me') {
       // 只回傳資料
     } else if (a === 'daily') {

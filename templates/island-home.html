@@ -1131,11 +1131,15 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 @keyframes pvBfx{0%,100%{opacity:.25;transform:translateY(2px) scale(.7)}50%{opacity:1;transform:translateY(-3px) scale(1.1)}}
 .mi-pet.lgd.el-water svg{filter:drop-shadow(0 0 5px rgba(79,195,247,.95)) drop-shadow(0 0 12px rgba(124,77,255,.55))}
 .mi-pet.lgd.el-fire svg{filter:drop-shadow(0 0 5px rgba(255,152,0,.95)) drop-shadow(0 0 12px rgba(229,57,53,.6))}
+.mi-pet.lgd.el-metal svg{filter:drop-shadow(0 0 5px rgba(255,224,130,.95)) drop-shadow(0 0 12px rgba(255,255,255,.6))}
+.mi-pet.lgd.el-earth svg{filter:drop-shadow(0 0 5px rgba(188,170,164,.95)) drop-shadow(0 0 12px rgba(255,183,77,.55))}
 .mi-pet.lgd.el-wood svg{filter:drop-shadow(0 0 5px rgba(156,204,101,.95)) drop-shadow(0 0 12px rgba(255,213,79,.55))}
 .mi-pet em.bst{background:linear-gradient(90deg,#fff59d,#ffffff)}
 .ptrail{position:absolute;pointer-events:none;font-size:12px;line-height:1;animation:pvTrail 1.4s ease-out forwards;z-index:1}
 @keyframes pvTrail{from{opacity:.9;transform:translate(-50%,-50%) scale(.6)}to{opacity:0;transform:translate(-50%,-90%) scale(1.1)}}
 .mi-home{font:700 12px/1 "Noto Sans TC",sans-serif;margin-top:6px}
+.mi-bbag{margin:6px 0 10px;padding:9px 12px;border-radius:14px;background:linear-gradient(90deg,rgba(171,71,188,.22),rgba(66,165,245,.18));border:1px solid rgba(255,255,255,.18);font-size:14px}
+.mi-bbag small{color:var(--muted)}
 /* 點寵物跳出的泡泡：摸摸狀態、飽足度、親密度、餵食 */
 .pbub{position:absolute;z-index:2000;width:228px;background:#fffdf5;color:#2a2112;border-radius:16px;padding:9px 11px 11px;box-shadow:0 10px 26px rgba(0,0,0,.4);font-size:13px;line-height:1.45;text-align:left}
 .pbub::after{content:"";position:absolute;left:var(--ax,50%);width:14px;height:14px;background:#fffdf5;transform:translateX(-50%) rotate(45deg)}
@@ -1711,6 +1715,7 @@ SP.splice(1,0,MINE_SPOT);SP.splice(13,0,PET_SPOT);
 SP.push({k:'castle',e:'🏰',name:'AI課程城堡',sub:'9 個單元・課程內容',c:'#7bdff2',g:['#b08aff','#4a2a9a'],dc:['🦜','🧭','💰'],res:[['🐎','w'],['🐐','w'],['🦅','f']]});
 SP.push({k:'dock',e:'⛵',name:'報名碼頭',sub:'場次・費用・報名方式',c:'#ff8a2a',g:['#ffc27a','#b8611f'],dc:['⚓','🏮','🧭'],res:[['🦀','w'],['🐢','w'],['🐦','f']]});
 SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手氣',c:'#fbbf24',g:['#fde68a','#b45309'],dc:['🪙','🍒','✨']});
+SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
 SP.forEach(function(s,i){s.si=i});
 function pad(n){return (n<10?'0':'')+n}
@@ -2291,7 +2296,7 @@ function route(){
   hideScene();
   if((m=h.match(/^qa-(\d+)$/))&&ISLES[+m[1]]){openPanel('isle',+m[1]);placeBoat(ISLES[+m[1]].si,true)}
   else if(h==='tarot'){openPanel('search',1);placeBoat(spotIdx('search'),true)}
-  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'){openPanel(h);placeBoat(spotIdx(h),true)}
+  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'){openPanel(h);placeBoat(spotIdx(h),true)}
   else if((m=h.match(/^res-(\d+)$/))&&RESI[+m[1]]){openPanel('res',+m[1]);placeBoat(RESI[+m[1]].si,true)}
   else if(!h&&panel.classList.contains('open'))closePanel();
 }
@@ -2956,6 +2961,8 @@ function paintShop(){
   o+='<div class="p-sec"><h4>我的錢包</h4><div class="rs-bag"><span>🪙 <b>'+(w.bal||0)+'</b> 金幣</span>'+RTYPE.map(function(x){return '<span>'+x.it+' <b>'+(b[x.rk]||0)+'</b> '+x.item+'</span>'}).join('')+'<span>💎 <b>'+(w.dia||0)+'</b> 鑽石</span></div></div>';
   var dleft=Math.max(0,(w.diaSellMax||3)-(w.diaSells||0)),sleft=Math.max(0,(w.swapMax||5)-(w.swaps||0));
   o+='<div class="p-sec"><h4>💎 鑽石換金幣<span class="sh-left">今天還能換 '+dleft+' 次</span></h4><div class="mi-seeds"><button class="mb-b" type="button" data-sell="dia"'+((w.dia||0)<1||!dleft?' disabled':'')+'>💎1 → 🪙10<small>'+((w.dia||0)<1?'你還沒有鑽石':'找鸚鵡商人鑑定')+'</small></button></div><p class="mi-note">每天最多 '+(w.diaSellMax||3)+' 次。鑽石可以在物資島採集、看文章時撿到。</p></div>';
+  var bbg2=w.bbag||{},bk2=Object.keys(bbg2).filter(function(k){return bbg2[k]>0}),bsl=w.bsell||{wood:25,stone:25,iron:25,dia:1};
+  if(bk2.length)o+='<div class="p-sec"><h4>🐲 神獸收藏換資源</h4><div class="mi-seeds">'+bk2.map(function(k){return '<button class="mb-b" type="button" data-bsell="'+k+'">'+(ANI[k]||['🐾'])[0]+' '+(ANI[k]||['',k])[1]+' → 🪵'+bsl.wood+' 🪨'+bsl.stone+' 🔩'+bsl.iron+' 💎'+bsl.dia+'<small>收藏 ×'+bbg2[k]+'</small></button>'}).join('')+'</div><p class="mi-note">重複抽到的神獸可以在這裡換資源，也可以送給好友。</p></div>';
   o+='<div class="p-sec"><h4>⛵ 船塢（你有 '+sh.own.length+' / '+SHIPC.length+' 艘）</h4><div class="sh-ships">'+SHIPC.map(function(c,i){
     var own=sh.own.indexOf(i)>=0,cur=sh.cur===i;
     return '<div class="sh-ship'+(cur?' cur':'')+'"><div class="sh-pv">'+shipSVG(i)+'</div><b>'+esc((sh.names&&sh.names[i])||SHIPN[i][0])+'</b><small>'+esc(SHIPN[i][1])+'</small>'+
@@ -2978,6 +2985,9 @@ pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='shop')return;
   var d=t.dataset,q=null,ok='';
   if(d.shopRetry!=null){shopSync();return}
+  if(d.bsell){var bsk=d.bsell,bnm=(ANI[bsk]||['',''])[1];t.disabled=true;
+    COINS.api({a:'bsell',k:bsk}).then(function(j){if(!j||!j.ok){toast('⚠️ '+COINS.errText(j));paintShop();return}
+      if(window.TRADE_FX)window.TRADE_FX([(ANI[bsk]||['🐲'])[0]],['🪵','🪨','🔩','💎'],true);toast('🐲 '+bnm+' 換到 🪵25 🪨25 🔩25 💎1');paintShop()}).catch(function(){toast('⚠️ 網路不穩，請重新整理確認');paintShop()});return}
   if(d.shjoin!=null){COINS.need(function(){paintShop()});return}
   if(d.buyship!=null){
     var bi=+d.buyship,w1=COINS.get();
@@ -3025,7 +3035,36 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026111802';
+var BET_V='2026111802',GACHA_V='2026111901';
+/* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
+var GA={owner:null,left:null,log:[],pend:null};
+function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
+window.AIKB_GACHA={
+  state:function(){var w=COINS.get();return {login:!!w.code,coins:w.bal||0,left:GA.left==null?3:GA.left,sfx:SFX_ON,log:GA.log}},
+  spin:function(id){
+    try{GA.pend=GA.pend||localStorage.getItem(gaKey())}catch(e){}
+    var use=GA.pend||id;GA.pend=use;try{localStorage.setItem(gaKey(),use)}catch(e){}
+    return COINS.api({a:'gacha',id:use}).then(function(j){
+      if(j&&j.gachaLeft!=null)GA.left=j.gachaLeft;if(j&&j.gachaLog)GA.log=j.gachaLog;
+      if(!j||!j.ok){if(j&&j.err!=='bad'){GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}}return {ok:false,msg:j&&j.err==='gachamax'?'今天 3 次抽完了，明天再來':COINS.errText(j)}}
+      GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}
+      if(j.gacha&&j.gacha.k==='beast'&&MI.data&&!MI.fid)MI.at=0;
+      return {ok:true,gacha:j.gacha};
+    }).catch(function(){return {ok:false,msg:'網路不穩，再按一次會確認剛才那一抽（不會重複扣）'}});
+  },
+  login:function(){COINS.need(function(){renderGacha()})},
+  size:function(h){var f=$('gaF');if(f&&V.t==='gacha'&&h>200)f.style.height=Math.ceil(h)+'px'},
+  done:function(g){if(g&&g.k==='beast')toast(g.dup?'🐲 '+g.name+' 放進神獸收藏了':'🐲 '+g.name+' 住進你的小島了！')},
+  setSfx:function(){}
+};
+function renderGacha(){
+  var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null}
+  pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
+    '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
+    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 3% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換資源。結果由伺服器決定。</p></div>';
+  $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
+  if(code)COINS.api({a:'gacha'}).then(function(j){if(j&&j.ok){GA.left=j.gachaLeft;GA.log=j.gachaLog||[]}var f=$('gaF');try{if(f&&f.contentWindow&&f.contentWindow.gachaSync)f.contentWindow.gachaSync()}catch(e){}}).catch(function(){});
+}
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={
   state:function(k){var w=COINS.get(),s=BET[k];return {login:!!w.code,coins:w.bal||0,left:s.left,pending:!!s.pending,pendingChoice:s.pending?s.pending.choice:'',sfx:SFX_ON}},
@@ -3082,7 +3121,8 @@ pBody.addEventListener('click',function(e){
 });
 /* ---------- 我的小島：蓋房子、種菜、養寵物；也可以參觀好友的小島 ---------- */
 var ANI={hamster:['🐹','倉鼠',10],rabbit:['🐰','兔兔',15],turtle:['🐢','烏龜',15],dog:['🐶','狗狗',20],cat:['🐱','貓貓',20],parrot:['🦜','鸚鵡',25],fox:['🦊','狐狸',40,1],panda:['🐼','熊貓',60,1]};
-ANI.dragon=['🐉','水靈龍',0];ANI.phoenix=['🔥','火鳳凰',0];ANI.qilin=['🦌','木麒麟',0];
+ANI.dragon=['🐉','水靈龍',0];ANI.phoenix=['🔥','火鳳凰',0];ANI.qilin=['🦌','木麒麟',0];ANI.tiger=['🐯','金白虎',0];ANI.tortoise=['🐢','土靈龜',0];
+var BEAST_EL={water:'💧 水',fire:'🔥 火',wood:'🌿 木',metal:'✨ 金',earth:'🪨 土'};
 var ANI_KEYS=['hamster','rabbit','turtle','dog','cat','parrot','fox','panda'];
 /* ---------- 寵物外觀：Lv1 寶寶（表情符號）、Lv2 長大（畫出身體）、Lv3 打扮、Lv5 傳說；跟著等級自動變 ---------- */
 var PV_UID=0,PV_STN=['寶寶','長大','打扮','傳說'];
@@ -3173,13 +3213,15 @@ function pvDefs(k,st,id){
   return '';
 }
 var PV_SIZE=[0,58,64,70];
-/* 神獸外觀（水靈龍、火鳳凰、木麒麟）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
+/* 神獸外觀（水靈龍、火鳳凰、木麒麟、金白虎、土靈龜）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
 function pvBeastFx(el,st){
   if(st<2)return '';
   var o='';
   if(el==='water')[[8,18,2.6],[74,10,2],[30,8,1.8],[80,48,2.2]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-c[2]*1.6)+' Q'+(c[0]+c[2])+' '+c[1]+' '+c[0]+' '+(c[1]+c[2])+' Q'+(c[0]-c[2])+' '+c[1]+' '+c[0]+' '+(c[1]-c[2]*1.6)+'Z" fill="#81d4fa"/>'});
   if(el==='fire')[[6,20],[70,6],[26,10],[82,40]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.35)+'s" d="M'+c[0]+' '+(c[1]-5)+' Q'+(c[0]+3.5)+' '+c[1]+' '+c[0]+' '+(c[1]+3)+' Q'+(c[0]-3.5)+' '+c[1]+' '+c[0]+' '+(c[1]-5)+'Z" fill="#ffb74d"/>'});
   if(el==='wood')[[8,22,'#f48fb1'],[76,8,'#a5d6a7'],[28,8,'#fff59d'],[80,46,'#f48fb1']].forEach(function(c,i){o+='<g class="bfx" style="animation-delay:'+(i*.45)+'s"><circle cx="'+c[0]+'" cy="'+c[1]+'" r="2.6" fill="'+c[2]+'"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="1" fill="#fff"/></g>'});
+  if(el==='metal')[[8,20],[76,8],[28,8],[82,44]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-4)+' L'+(c[0]+1.2)+' '+(c[1]-1.2)+' L'+(c[0]+4)+' '+c[1]+' L'+(c[0]+1.2)+' '+(c[1]+1.2)+' L'+c[0]+' '+(c[1]+4)+' L'+(c[0]-1.2)+' '+(c[1]+1.2)+' L'+(c[0]-4)+' '+c[1]+' L'+(c[0]-1.2)+' '+(c[1]-1.2)+'Z" fill="#ffe082"/>'});
+  if(el==='earth')[[6,24],[78,10],[26,10],[82,46]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.45)+'s" d="M'+(c[0]-3)+' '+(c[1]+2)+' L'+(c[0]-1)+' '+(c[1]-3)+' L'+(c[0]+3)+' '+(c[1]-2)+' L'+(c[0]+3)+' '+(c[1]+2)+'Z" fill="#bcaaa4" stroke="#6d4c41" stroke-width=".6"/>'});
   return o;
 }
 function pvDragon(st,id){
@@ -3232,15 +3274,47 @@ function pvQilin(st,id){
 function pvBeastDefs(k,id){
   if(k==='dragon')return '<linearGradient id="dg'+id+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4dd0e1"/><stop offset=".5" stop-color="#7c4dff"/><stop offset="1" stop-color="#29b6f6"/></linearGradient>';
   if(k==='phoenix')return '<linearGradient id="ph'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeb3b"/><stop offset=".5" stop-color="#ff9800"/><stop offset="1" stop-color="#e53935"/></linearGradient>';
+  if(k==='tiger')return '<linearGradient id="tg'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffd54f"/></linearGradient>';
+  if(k==='tortoise')return '<linearGradient id="tt'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a1887f"/><stop offset=".5" stop-color="#ffb74d"/><stop offset="1" stop-color="#6d4c41"/></linearGradient>';
   if(k==='qilin')return '<linearGradient id="ql'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ccc65"/><stop offset=".6" stop-color="#ffd54f"/><stop offset="1" stop-color="#43a047"/></linearGradient>';
   return '';
 }
-var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood'};
+function pvTiger(st,id){
+  var o='',b=st===3?'url(#tg'+id+')':'#f5f5f0',d='#37474f';
+  o+='<path class="tl" d="M21 38 Q6 36 8 22 Q9 16 14 17" stroke="'+b+'" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M9 26 l4 1 M8 21 l4 0" stroke="'+d+'" stroke-width="1.6"/>';
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="44" width="7.5" height="14" rx="3.5" fill="#eceff1"/>'});
+  o+='<ellipse cx="40" cy="42" rx="21" ry="13" fill="'+b+'"/>';
+  o+='<path d="M28 31 q3 6 0 13 M35 30 q3 7 0 14 M42 30 q3 7 0 14 M49 31 q3 6 0 12" stroke="'+d+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+  o+='<ellipse cx="44" cy="49" rx="13" ry="5.5" fill="#ffffff"/>';
+  if(st>=2)o+='<path d="M52 34 Q59 41 67 36" stroke="#ffc107" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="59" cy="40" r="2.6" fill="#ffd54f" stroke="#b7791f" stroke-width=".8"/>';
+  var hd='<circle cx="54" cy="18" r="4.6" fill="'+b+'"/><circle cx="54" cy="18" r="2.2" fill="#ffb3c1"/><circle cx="70" cy="16" r="4.6" fill="'+b+'"/><circle cx="70" cy="16" r="2.2" fill="#ffb3c1"/>'+
+    '<circle cx="62" cy="28" r="13" fill="'+b+'"/><path d="M58 17 l2 5 M62 15 v5 M66 17 l-2 5" stroke="'+d+'" stroke-width="1.8" stroke-linecap="round"/>'+
+    '<path d="M50 27 l5 1 M50 31 l5 0" stroke="'+d+'" stroke-width="1.6" stroke-linecap="round"/>'+
+    '<ellipse cx="70" cy="32" rx="7" ry="5" fill="#ffffff"/>'+pvEye(64,25)+'<path d="M74 28 l3 2 l-3 2z" fill="#f48fb1"/>'+
+    '<path d="M70 35 q3 2 6 0" stroke="#5d4037" stroke-width="1" fill="none"/><path d="M73 33 l8 -1 M73 35 l8 1" stroke="#90a4ae" stroke-width=".7"/>'+
+    (st===3?pvCrown(62,15):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvTortoise(st,id){
+  var o='',sh=st===3?'url(#tt'+id+')':'#8d6e63';
+  [[16,'a'],[27,'b'],[50,'b'],[60,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="45" width="10" height="12" rx="4" fill="#a1887f"/>'});
+  o+='<path d="M12 48 Q8 44 4 46" stroke="#a1887f" stroke-width="4.5" stroke-linecap="round" fill="none"/>';
+  var hd='<ellipse cx="70" cy="40" rx="10.5" ry="8.5" fill="#bcaaa4"/>'+pvEye(73,37)+'<path d="M76 43 q3 1 5 -1" stroke="#4e342e" stroke-width="1.2" fill="none"/>'+(st===3?pvCrown(70,31):'');
+  o+='<g class="hd">'+hd+'</g>';
+  o+='<path d="M10 48 Q12 18 40 16 Q68 18 68 48Z" fill="'+sh+'" stroke="#4e342e" stroke-width="1.6"/>';
+  o+='<path d="M22 34 L30 24 L38 32 L46 20 L56 34" fill="none" stroke="'+(st===3?'#fff59d':'#d7ccc8')+'" stroke-width="1.8" stroke-linejoin="round"/>';
+  o+='<path d="M28 18 L34 6 L40 14 L46 4 L54 18Z" fill="#78909c" stroke="#455a64" stroke-width="1.2" stroke-linejoin="round"/><path d="M40 14 L46 4 L49 9Z" fill="#eceff1"/>';
+  if(st>=2)o+='<circle cx="30" cy="16" r="2.4" fill="#66bb6a"/><circle cx="54" cy="17" r="2.4" fill="#66bb6a"/><circle cx="33" cy="14" r="1.6" fill="#81c784"/>';
+  o+='<rect x="8" y="45" width="62" height="6" rx="3" fill="#5d4037"/>';
+  return o;
+}
+var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood',tiger:'metal',tortoise:'earth'};
 function petStageP(p){if(!ANI[p.k])return 0;var s0=petStage(p.lv);return PV_BEAST[p.k]?Math.max(1,s0):s0}
 function petArt(k,st){
   if(st===0&&!PV_BEAST[k])return '<span class="baby">'+(ANI[k]||['🐾'])[0]+'</span>';
   if(PV_BEAST[k])st=Math.max(1,st);
-  var id=++PV_UID,bx=PV_BEAST[k],body=k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):k==='qilin'?pvQilin(st,id):k==='turtle'?pvTurtle(st,id):k==='parrot'?pvParrot(st,id):pvQuad(k,st,id);
+  var id=++PV_UID,bx=PV_BEAST[k],body=k==='tiger'?pvTiger(st,id):k==='tortoise'?pvTortoise(st,id):k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):k==='qilin'?pvQilin(st,id):k==='turtle'?pvTurtle(st,id):k==='parrot'?pvParrot(st,id):pvQuad(k,st,id);
   var df=bx?(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':''):pvDefs(k,st,id);
   var s='<svg width="'+PV_SIZE[st]+'" height="'+Math.round(PV_SIZE[st]*64/84)+'" viewBox="0 0 84 64" aria-hidden="true">'+df+'<g class="bob">'+body+'</g>'+(bx?pvBeastFx(bx,st):'')+'</svg>';
   if(st===3)s+='<i class="spk" style="left:-4px;top:4px">✨</i><i class="spk b" style="right:-4px;top:16px">✨</i>';
@@ -3430,7 +3504,7 @@ function miZoom(){
   ov.addEventListener('pointerup',up);ov.addEventListener('pointercancel',up);
 }
 /* 寵物在島上隨機走動：每隻挑一個陸地上的點走過去、停一下、再挑下一個；位置存在 PW.st，島每 30 秒重畫也不會跳回原點 */
-var PV_SPD={hamster:30,rabbit:40,turtle:10,dog:44,cat:30,parrot:26,fox:42,panda:20,dragon:34,phoenix:40,qilin:38},PV_TRAIL={dragon:'💧',phoenix:'🔥',qilin:'🌸'};
+var PV_SPD={hamster:30,rabbit:40,turtle:10,dog:44,cat:30,parrot:26,fox:42,panda:20,dragon:34,phoenix:40,qilin:38,tiger:46,tortoise:12},PV_TRAIL={dragon:'💧',phoenix:'🔥',qilin:'🌸',tiger:'✨',tortoise:'🪨'};
 var PW={sel:null,selId:null,st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 function pwGeom(sc,t){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect(),o=[];
@@ -3574,6 +3648,8 @@ function paintMine(){
   /* 寵物 */
   var nPet=d.pets.filter(function(p){return !PV_BEAST[p.k]}).length,nOut=d.pets.filter(function(p){return !p.home}).length;
   o+='<div class="p-sec"><h4>🐾 我的寵物（'+nPet+' / '+Math.min(d.h,8)+'）'+(d.pets.length>nPet?'＋神獸 '+(d.pets.length-nPet):'')+'</h4>';
+  var bbg=COINS.get().bbag||{},bks=Object.keys(bbg).filter(function(k){return bbg[k]>0});
+  if(bks.length)o+='<div class="mi-bbag">🐲 神獸收藏（重複抽到的）：'+bks.map(function(k){return (ANI[k]||['🐾',k])[0]+' '+(ANI[k]||['',k])[1]+' ×'+bbg[k]}).join('、')+'<br><small>可以在「👥 好友」裡送給船長好友（互送就是交換），或到 🏪 商店島換資源。</small></div>';
   if(d.pets.length)o+='<p class="mi-note">小島上現在有 '+nOut+' 隻。按「🏠 帶回家」可以先收起來，小島上就不會出現；想看的時候再「🏝️ 放出來」。</p>';
   if(!d.pets.length)o+='<p class="mi-note">'+(d.h?'小屋可以養 '+Math.min(d.h,8)+' 隻寵物，':'先蓋小屋，')+'到寵物島領養一隻吧！</p><button class="btn btn-primary btn-sm" type="button" data-open="pets">🐾 去寵物島</button>';
   o+='<div class="mi-pets">'+d.pets.map(function(p){
@@ -4415,7 +4491,7 @@ function applySync(code){
 }
 function actsHTML(){
   var s=null,h='',title='';
-  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='game'||V.t==='slot'||V.t==='rps'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='res')s=RESI[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
+  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='game'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='res')s=RESI[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
   if(V.t==='hut'&&SCN){h=spotHash(SCN)+'/'+V.i;title=SCN.name+'・'+SCN.huts[V.i].name}
   else if(s){h=spotHash(s);title=s.name}
   if(!h)return '';
@@ -4424,14 +4500,14 @@ function actsHTML(){
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
-  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='shop')renderShop();else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
+  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
   pBody.scrollTop=0;
   pBody.style.setProperty('--dir',(dir||1)*24+'px');pBody.classList.remove('swap');void pBody.offsetWidth;pBody.classList.add('swap');
 }
 function openPanel(t,i,dir){
-  var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'),isBet=t==='slot'||t==='rps';
+  var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha'),isBet=t==='slot'||t==='rps'||t==='gacha';
   V={t:t,i:i||0};render(dir);
   var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?['game','遊戲島']:t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
   if(vk){var ph=pBody.querySelector('.ph,.home-top');if(ph){var vd=document.createElement('div');ph.parentNode.insertBefore(vd,ph.nextSibling);COINS.visit(vk[0],vk[1],vd)}}
@@ -4445,7 +4521,7 @@ function openPanel(t,i,dir){
   playSfx('tap');
 }
 function closePanel(){
-  var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps');
+  var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha');
   var hh=location.hash,mm=hh.match(/^(#isle-[^/]+)\/\d+$/);
   if(/^#(qa-\d+|res-\d+|home|castle|search|tarot|dock|msg|game|slot|rps|mine|pets|shop)$/.test(hh))history.replaceState(history.state,'',location.pathname+location.search);
   else if(mm)history.replaceState(history.state,'',mm[1]);
@@ -4641,7 +4717,7 @@ function bgmTick(a){
 }
 
 function bgmStart(){
-  if(!SFX_ON||BGM.on||(!reader.hidden&&reader.classList.contains('game'))||(panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps')))return;var a=ac();if(!a)return;BGM.on=true;
+  if(!SFX_ON||BGM.on||(!reader.hidden&&reader.classList.contains('game'))||(panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha')))return;var a=ac();if(!a)return;BGM.on=true;
   BGM.master=a.createGain();BGM.master.gain.setValueAtTime(0,a.currentTime);BGM.master.gain.linearRampToValueAtTime(BGM_VOL,a.currentTime+2.5);BGM.master.connect(a.destination);
   try{bgmInit(a)}catch(e){}
   BGM.timer=setInterval(function(){if(!document.hidden)try{bgmTick(a)}catch(e){}},BGM_STEP);
@@ -4663,7 +4739,7 @@ var seen=false;try{seen=sessionStorage.getItem('aikb-intro')==='1'}catch(e){}
 var HASH=location.hash.replace(/^#/,''),HASH_SP=-1,hm;
 if((hm=HASH.match(/^isle-([^/]+)/)))SP.forEach(function(s){if(s.k==='forum'&&s.id===decodeURIComponent(hm[1]))HASH_SP=s.si});
 else if((hm=HASH.match(/^qa-(\d+)$/))&&ISLES[+hm[1]])HASH_SP=ISLES[+hm[1]].si;
-else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
+else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='gacha'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
 else if(HASH==='tarot')HASH_SP=spotIdx('search');
 else if((hm=HASH.match(/^res-(\d+)$/))&&RESI[+hm[1]])HASH_SP=RESI[+hm[1]].si;
 if(HASH_SP>=0)seen=true;
