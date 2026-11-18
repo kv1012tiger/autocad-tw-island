@@ -1081,6 +1081,68 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mi-pet u{display:block;text-decoration:none}
 .mi-pet.walk u{animation:miHop .42s ease-in-out infinite}
 @keyframes miHop{50%{transform:translateY(-5px)}}
+/* 畫出來的寵物（Lv2 起）：走路、搖尾巴、飛、睡覺、縮殼、打滾 */
+.mi-pet[data-mpet]{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.mi-pet .sv svg{display:block;overflow:visible}
+.mi-pet .psh{position:absolute;left:22%;right:22%;bottom:-3px;height:8px;border-radius:50%;background:rgba(0,0,0,.2);pointer-events:none}
+.mi-pet .zz{position:absolute;right:-8px;top:-12px;font-size:15px;opacity:0;transition:opacity .4s;pointer-events:none;font-style:normal}
+.mi-pet.sleep .zz{opacity:1;animation:pvZz 1.6s ease-in-out infinite}
+@keyframes pvZz{50%{transform:translate(4px,-6px)}}
+.mi-pet .lg{transform-box:fill-box;transform-origin:50% 0}
+.mi-pet.walk .lg.a{animation:pvLeg .32s ease-in-out infinite alternate}
+.mi-pet.walk .lg.b{animation:pvLeg .32s ease-in-out infinite alternate-reverse}
+@keyframes pvLeg{from{transform:rotate(-22deg)}to{transform:rotate(22deg)}}
+.mi-pet.walk .bob{animation:pvBob .32s ease-in-out infinite alternate}
+@keyframes pvBob{to{transform:translateY(-2px)}}
+.mi-pet[data-k=rabbit].walk .bob{animation:pvHop .5s ease-in-out infinite}
+@keyframes pvHop{0%,100%{transform:translateY(0)}45%{transform:translateY(-14px) rotate(-6deg)}}
+.mi-pet[data-k=turtle].walk .bob{animation:pvBob 1s ease-in-out infinite alternate}
+.mi-pet .tl{transform-box:fill-box;transform-origin:100% 100%}
+.mi-pet[data-k=dog] .tl{animation:pvWag .18s ease-in-out infinite alternate}
+.mi-pet[data-k=cat] .tl{animation:pvWag 1.4s ease-in-out infinite alternate}
+.mi-pet[data-k=fox] .tl{animation:pvWag .9s ease-in-out infinite alternate}
+@keyframes pvWag{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.mi-pet .wg{transform-box:fill-box;transform-origin:70% 10%}
+.mi-pet.fly .wg{animation:pvFlap .16s ease-in-out infinite alternate}
+@keyframes pvFlap{to{transform:scaleY(-.7) rotate(-20deg)}}
+.mi-pet .hd,.mi-pet .lg{transition:opacity .3s}
+.mi-pet.hide .hd,.mi-pet.hide .lg{opacity:0}
+.mi-pet.sleep .bob{transform:scaleY(.86);transform-origin:50% 100%}
+.mi-pet.roll .bob{animation:pvRoll 1.1s ease-in-out}
+@keyframes pvRoll{to{transform:rotate(360deg)}}
+.mi-pet .hd{transform-box:fill-box}
+.mi-pet.eat .hd{animation:pvChomp .18s ease-in-out 6 alternate}
+@keyframes pvChomp{to{transform:translateY(3px)}}
+.mi-pet.joy .bob,.mi-pet.joy u{animation:pvJoy .5s ease-in-out 2}
+@keyframes pvJoy{40%{transform:translateY(-16px) scale(1.08)}}
+.mi-pet.hm .bob,.mi-pet.hm u{animation:pvHm .14s ease-in-out 4 alternate}
+@keyframes pvHm{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.mi-pet .ck{transform-box:fill-box;transform-origin:50% 50%}
+.mi-pet[data-k=hamster].walk .ck{animation:pvCk .6s ease-in-out infinite alternate}
+@keyframes pvCk{to{transform:scale(1.18)}}
+.mi-pet.lgd svg{filter:drop-shadow(0 0 5px rgba(255,214,90,.95)) drop-shadow(0 0 12px rgba(255,170,40,.5))}
+.mi-pet .spk{position:absolute;font-size:12px;font-style:normal;pointer-events:none;animation:pvSpk 2s ease-in-out infinite}
+.mi-pet .spk.b{animation-delay:1s}
+@keyframes pvSpk{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1)}}
+.mi-pet .flame{animation:pvFlame .6s ease-in-out infinite alternate}
+@keyframes pvFlame{to{opacity:.75}}
+.mi-pet.psel em{background:#ffd166}
+/* 點寵物跳出的泡泡：摸摸狀態、飽足度、親密度、餵食 */
+.pbub{position:absolute;z-index:2000;width:228px;background:#fffdf5;color:#2a2112;border-radius:16px;padding:9px 11px 11px;box-shadow:0 10px 26px rgba(0,0,0,.4);font-size:13px;line-height:1.45;text-align:left}
+.pbub::after{content:"";position:absolute;left:var(--ax,50%);width:14px;height:14px;background:#fffdf5;transform:translateX(-50%) rotate(45deg)}
+.pbub.up::after{bottom:-6px}.pbub.dn::after{top:-6px}
+.pbub b{font-size:15px}
+.pbub .pbx{position:absolute;right:4px;top:2px;border:0;background:none;font-size:20px;color:#7a6a50;cursor:pointer;padding:4px 7px}
+.pbub .pbar{height:8px;border-radius:6px;background:#eadfc6;overflow:hidden;margin:2px 0 5px}
+.pbub .pbar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#f97316,#facc15)}
+.pbub .pbar.af i{background:linear-gradient(90deg,#ec4899,#f472b6)}
+.pbub .prow{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:#6b5a3a}
+.pbub .pfood{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:5px}
+.pbub .pfood button{font:800 15px/1 "Noto Sans TC",sans-serif;border:1.5px solid #e2cfa6;background:#fff6dd;border-radius:12px;padding:7px 0 5px;cursor:pointer;color:#2a2112;touch-action:manipulation}
+.pbub .pfood button small{display:block;font-size:11px;font-weight:700;margin-top:3px;color:#7a6a50}
+.pbub .pfood button:disabled{opacity:.4;cursor:default}
+.pbub .pnx{margin-top:6px;font-size:12px;color:#7a6a50}
+.pfly{position:fixed;left:0;top:0;z-index:3000;pointer-events:none;font-size:26px;line-height:1}
 .mi-pet em{position:absolute;left:50%;top:-15px;transform:translateX(-50%);font-style:normal;font-size:11px;font-weight:800;white-space:nowrap;color:#1f3d12;background:rgba(255,255,255,.85);padding:0 6px;border-radius:7px}
 .mi-empty{position:absolute;left:12%;right:12%;bottom:12%;margin:0;padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.35);color:#fff;font-size:14px;text-align:center}
 .mi-note{margin:6px 0 8px;font-size:14px;color:var(--muted)}
@@ -3012,6 +3074,103 @@ pBody.addEventListener('click',function(e){
 /* ---------- 我的小島：蓋房子、種菜、養寵物；也可以參觀好友的小島 ---------- */
 var ANI={hamster:['🐹','倉鼠',10],rabbit:['🐰','兔兔',15],turtle:['🐢','烏龜',15],dog:['🐶','狗狗',20],cat:['🐱','貓貓',20],parrot:['🦜','鸚鵡',25],fox:['🦊','狐狸',40,1],panda:['🐼','熊貓',60,1]};
 var ANI_KEYS=['hamster','rabbit','turtle','dog','cat','parrot','fox','panda'];
+/* ---------- 寵物外觀：Lv1 寶寶（表情符號）、Lv2 長大（畫出身體）、Lv3 打扮、Lv5 傳說；跟著等級自動變 ---------- */
+var PV_UID=0,PV_STN=['寶寶','長大','打扮','傳說'];
+function petStage(lv){return lv>=5?3:lv>=3?2:lv>=2?1:0}
+var PV_COL={dog:['#d9a066','#8a5a2b','#f6dcb6'],cat:['#f4a23c','#c46a12','#fde6c0'],fox:['#e8742c','#3b2a22','#fff4e6'],panda:['#f7f7f2','#222','#ffffff'],hamster:['#f2c48d','#b9824a','#fff3e0'],rabbit:['#f4f1f1','#d6cccc','#ffffff']};
+function pvEye(x,y,dark){return '<circle cx="'+x+'" cy="'+y+'" r="2.4" fill="'+(dark?'#f4f4f4':'#1d1d1d')+'"/><circle cx="'+(x+.8)+'" cy="'+(y-.8)+'" r=".8" fill="'+(dark?'#222':'#fff')+'"/>'}
+function pvCrown(x,y){return '<g><path d="M'+(x-7)+' '+y+'l2-8 3.5 4.5 1.5-6.5 1.5 6.5 3.5-4.5 2 8z" fill="#ffd54f" stroke="#b7791f" stroke-width="1"/><circle cx="'+x+'" cy="'+(y-3)+'" r="1.4" fill="#e53935"/></g>'}
+function pvQuad(k,st,id){
+  var c=PV_COL[k],b=c[0],d=c[1],w=c[2],o='',ham=k==='hamster',rab=k==='rabbit',pan=k==='panda';
+  var legY=ham?50:44,legH=ham?8:14,legC=pan||k==='fox'?d:(ham?'#e9a96b':d);
+  if(k==='dog'||k==='cat'||rab||ham)legC=k==='dog'?'#b98245':k==='cat'?'#e08a24':rab?'#e6dede':'#e9a96b';
+  var hx=ham?58:62,hy=ham?31:28,hr=ham?14:13;
+  /* 尾巴（在身體後面） */
+  if(k==='dog')o+='<path class="tl" d="M21 38 Q8 30 12 18" stroke="'+b+'" stroke-width="5.5" fill="none" stroke-linecap="round"/>';
+  if(k==='cat')o+='<path class="tl" d="M21 40 Q4 42 7 24 Q9 16 15 18" stroke="'+b+'" stroke-width="5" fill="none" stroke-linecap="round"/>';
+  if(k==='fox'){var tf=st===3?'url(#fl'+id+')':b;o+='<g class="tl'+(st===3?' flame':'')+'"><path d="M22 40 Q0 46 2 24 Q10 34 23 33Z" fill="'+tf+'"/><path d="M2 24 Q1 32 8 35 Q5 29 2 24Z" fill="'+(st===3?'#fff59d':'#fff')+'"/></g>';}
+  if(rab)o+='<circle cx="19" cy="38" r="6" fill="#fff"/>';
+  if(pan)o+='<circle cx="19" cy="37" r="3.5" fill="#fff"/>';
+  /* 腳 */
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="'+legY+'" width="7" height="'+legH+'" rx="3.5" fill="'+legC+'"/>'});
+  /* 身體 */
+  o+='<ellipse cx="40" cy="'+(ham?44:42)+'" rx="'+(ham?23:21)+'" ry="'+(ham?15:13)+'" fill="'+b+'"/>';
+  if(k==='cat')o+='<path d="M30 31 q2 6 0 12 M37 30 q2 6 0 13 M44 30 q2 6 0 12" stroke="'+d+'" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".7"/>';
+  if(pan)o+='<path d="M50 32 Q58 40 54 52 L46 52 Q48 40 44 33Z" fill="#222"/>';
+  o+='<ellipse cx="44" cy="'+(ham?50:48)+'" rx="13" ry="6" fill="'+w+'"/>';
+  /* 打扮（脖子上的東西放在頭前面畫，頭上的東西放在頭後面畫） */
+  var acc='',top='';
+  if(st>=2){
+    if(k==='dog')acc='<path d="M51 33 L67 37 L58 47Z" fill="#e53935"/><circle cx="58" cy="39" r="1.2" fill="#fff"/><circle cx="62" cy="38" r="1" fill="#fff"/>';
+    if(k==='cat')acc='<path d="M52 35 Q58 40 66 37" stroke="#e91e63" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="59" cy="40.5" r="2.8" fill="#ffca28" stroke="#b7791f" stroke-width=".8"/>';
+    if(k==='fox')acc='<path d="M51 33 Q59 41 69 36" stroke="#29b6f6" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M54 37 L50 49 L55 48 L57 38Z" fill="#0288d1"/>';
+    if(pan)acc='<path d="M66 54 L72 26" stroke="#7cb342" stroke-width="3.4" stroke-linecap="round"/><path d="M70 32 l7-3 M69 38 l-6-2" stroke="#558b2f" stroke-width="2" stroke-linecap="round"/><path d="M71 30 h3 M69.6 36 h3 M68.4 42 h3" stroke="#33691e" stroke-width="1"/>';
+    if(ham&&st===2)top='<rect x="51" y="11" width="12" height="9" rx="1.5" fill="#3e2723"/><rect x="47" y="19" width="20" height="3" rx="1.5" fill="#3e2723"/><rect x="51" y="16" width="12" height="2" fill="#e53935"/>';
+    if(rab&&st===2)top='<path d="M60 14 l-7-4 v8z M60 14 l7-4 v8z" fill="#ff4f9a"/><circle cx="60" cy="14" r="2" fill="#d81b60"/>';
+  }
+  /* 頭 */
+  var hd='';
+  if(k==='dog')hd+='<path d="M53 19 Q48 31 54 37 Q60 29 59 19Z" fill="'+d+'"/>';
+  if(k==='cat'||k==='fox'){var e1=k==='fox'?'#3b2a22':b;hd+='<path d="M52 22 L54 '+(k==='fox'?6:9)+' L62 17Z" fill="'+e1+'"/><path d="M63 16 L70 '+(k==='fox'?4:8)+' L72 20Z" fill="'+e1+'"/>';if(k==='fox')hd+='<path d="M54 19 L55 11 L60 17Z M65 16 L69 9 L70 18Z" fill="'+b+'"/>';else hd+='<path d="M55 18 L56 12 L60 17Z M66 16 L69 11 L70 18Z" fill="#ffb3c1"/>';}
+  if(pan)hd+='<circle cx="53" cy="17" r="5.5" fill="#222"/><circle cx="68" cy="15" r="5.5" fill="#222"/>';
+  if(ham)hd+='<circle cx="49" cy="20" r="4.5" fill="#e9a96b"/><circle cx="63" cy="18" r="4.5" fill="#e9a96b"/><circle cx="49" cy="20" r="2.3" fill="#ffb3c1"/><circle cx="63" cy="18" r="2.3" fill="#ffb3c1"/>';
+  if(rab)hd+='<g transform="rotate(-12 56 12)"><ellipse cx="56" cy="6" rx="4.5" ry="13" fill="'+b+'"/><ellipse cx="56" cy="6" rx="2.2" ry="9.5" fill="#ffb3c1"/></g><g transform="rotate(10 66 10)"><ellipse cx="66" cy="4" rx="4.5" ry="13" fill="'+b+'"/><ellipse cx="66" cy="4" rx="2.2" ry="9.5" fill="#ffb3c1"/></g>';
+  hd+='<circle cx="'+hx+'" cy="'+hy+'" r="'+hr+'" fill="'+b+'"/>';
+  if(k==='fox')hd+='<path d="M60 30 Q70 40 79 31 Q70 28 62 25Z" fill="#fff4e6"/>';
+  else if(ham)hd+='<circle class="ck" cx="'+(hx+4)+'" cy="'+(hy+5)+'" r="7" fill="#fff3e0"/>';
+  else hd+='<ellipse cx="'+(hx+8)+'" cy="'+(hy+4)+'" rx="7" ry="5" fill="'+w+'"/>';
+  if(pan)hd+='<ellipse cx="64" cy="26" rx="4.4" ry="5.6" fill="#222" transform="rotate(-25 64 26)"/>';
+  hd+=pvEye(hx+2,hy-3,pan);
+  hd+='<circle cx="'+(hx+(ham?12:14))+'" cy="'+(hy+(ham?2:2))+'" r="2.2" fill="#2b1d16"/>';
+  hd+='<circle cx="'+(hx-3)+'" cy="'+(hy+4)+'" r="2.6" fill="#ff8fa3" opacity=".45"/>';
+  if(k==='cat')hd+='<path d="M74 31 l7-1 M74 33 l7 1" stroke="#7a4a1a" stroke-width=".8"/>';
+  o+='<g class="hd">'+hd+top+acc+(st===3?pvCrown(hx,hy-hr-(rab?2:0)):'')+'</g>';
+  return o;
+}
+function pvTurtle(st,id){
+  var o='',g='#8bc34a';
+  [[18,'a'],[28,'b'],[50,'b'],[58,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="46" width="9" height="11" rx="4.5" fill="'+g+'"/>'});
+  o+='<path d="M14 48 Q11 42 6 44" stroke="'+g+'" stroke-width="4" stroke-linecap="round" fill="none"/>';
+  var hd='<ellipse cx="68" cy="40" rx="10" ry="8.5" fill="#9ccc65"/>'+pvEye(71,37)+'<path d="M74 43 q3 1 5 -1" stroke="#33691e" stroke-width="1.2" fill="none"/>'+(st===3?pvCrown(68,32):'');
+  o+='<g class="hd">'+hd+'</g>';
+  var sh=st===3?'url(#sh'+id+')':'#4f8f3a';
+  o+='<path d="M12 48 Q14 14 40 14 Q66 14 66 48Z" fill="'+sh+'" stroke="#2f5d22" stroke-width="1.5"/>';
+  o+='<path d="M40 18 L50 26 L46 38 L34 38 L30 26Z M22 30 L30 26 L34 38 L24 44 M58 30 L50 26 L46 38 L56 44" fill="none" stroke="'+(st===3?'#fff59d':'#c5e1a5')+'" stroke-width="1.6" stroke-linejoin="round"/>';
+  o+='<rect x="10" y="45" width="58" height="6" rx="3" fill="#3d6f2c"/>';
+  if(st>=2)o+='<g transform="translate(40 18)"><circle r="3.4" cx="0" cy="-4" fill="#f48fb1"/><circle r="3.4" cx="4" cy="-1" fill="#f48fb1"/><circle r="3.4" cx="-4" cy="-1" fill="#f48fb1"/><circle r="3.4" cx="2.5" cy="3.5" fill="#f48fb1"/><circle r="3.4" cx="-2.5" cy="3.5" fill="#f48fb1"/><circle r="2.4" fill="#ffeb3b"/></g>';
+  return o;
+}
+function pvParrot(st,id){
+  var o='',wf=st===3?'url(#rb'+id+')':'#2e7d32';
+  o+='<path d="M40 56 L37 61 M46 56 L49 61" stroke="#8d6e63" stroke-width="2.4" stroke-linecap="round"/>';
+  o+='<path d="M32 46 L14 62 L22 63 L36 50Z" fill="'+(st===3?'#ab47bc':'#1e88e5')+'"/><path d="M34 48 L20 63 L26 63Z" fill="#e53935"/>';
+  o+='<ellipse cx="42" cy="38" rx="13" ry="17" fill="#43a047" transform="rotate(-18 42 38)"/>';
+  o+='<ellipse cx="47" cy="42" rx="7" ry="11" fill="#9ccc65" transform="rotate(-18 47 42)"/>';
+  o+='<g class="wg"><path d="M32 28 Q22 44 34 54 Q44 44 40 28Z" fill="'+wf+'"/><path d="M28 44 Q30 52 34 54 Q32 48 33 42Z" fill="#e53935"/><path d="M31 36 Q34 40 38 38" stroke="#fdd835" stroke-width="2.5" fill="none"/></g>';
+  var hd='<circle cx="50" cy="20" r="11" fill="#43a047"/><path d="M42 14 Q50 4 58 12 Q52 12 46 18Z" fill="#e53935"/>'+
+    '<circle cx="53" cy="18" r="3.4" fill="#fff"/>'+pvEye(53.5,18)+
+    '<path d="M58 16 Q68 18 61 29 Q60 24 57 24Z" fill="#ffd54f" stroke="#6d4c41" stroke-width="1"/><circle cx="46" cy="23" r="2.4" fill="#ff8fa3" opacity=".45"/>';
+  if(st===2)hd+='<path d="M38 12 Q50 -2 62 12 Q50 8 38 12Z" fill="#212121"/><circle cx="50" cy="7.5" r="1.8" fill="#fff"/>';
+  if(st===3)hd+=pvCrown(50,9);
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvDefs(k,st,id){
+  if(st!==3)return '';
+  if(k==='fox')return '<defs><linearGradient id="fl'+id+'" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ff7043"/><stop offset=".6" stop-color="#ffa726"/><stop offset="1" stop-color="#ffee58"/></linearGradient></defs>';
+  if(k==='parrot')return '<defs><linearGradient id="rb'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e53935"/><stop offset=".25" stop-color="#fb8c00"/><stop offset=".5" stop-color="#fdd835"/><stop offset=".75" stop-color="#43a047"/><stop offset="1" stop-color="#1e88e5"/></linearGradient></defs>';
+  if(k==='turtle')return '<defs><linearGradient id="sh'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26a69a"/><stop offset=".5" stop-color="#ffd54f"/><stop offset="1" stop-color="#ef6c00"/></linearGradient></defs>';
+  return '';
+}
+var PV_SIZE=[0,58,64,70];
+function petArt(k,st){
+  if(st===0)return '<span class="baby">'+(ANI[k]||['🐾'])[0]+'</span>';
+  var id=++PV_UID,body=k==='turtle'?pvTurtle(st,id):k==='parrot'?pvParrot(st,id):pvQuad(k,st,id);
+  var s='<svg width="'+PV_SIZE[st]+'" height="'+Math.round(PV_SIZE[st]*64/84)+'" viewBox="0 0 84 64" aria-hidden="true">'+pvDefs(k,st,id)+'<g class="bob">'+body+'</g></svg>';
+  if(st===3)s+='<i class="spk" style="left:-4px;top:4px">✨</i><i class="spk b" style="right:-4px;top:16px">✨</i>';
+  return s;
+}
+
 var VEGI={carrot:['🥕','胡蘿蔔',1,'4 小時',2,20],cabbage:['🥬','高麗菜',2,'8 小時',3,35],pumpkin:['🎃','南瓜',3,'24 小時',2,60]};
 var VEG_KEYS=['carrot','cabbage','pumpkin'];
 var DECOI={tree:['🌳','果樹',5],fountain:['⛲','噴水池',10],tower:['🗼','瞭望塔',20]};
@@ -3149,7 +3308,9 @@ function sceneHTML(d){
   });
   (d.wild||[]).forEach(function(w){var stage=w.stage==null?2:w.stage,ready=stage===2&&(w.count||0)<2;o+='<span class="mi-wild" data-wk="'+esc(w.id)+'"'+(d.mine&&ready?' data-chop="'+esc(w.id)+'" role="button" aria-label="採收木材"':'')+' style="left:'+w.x+'%;top:'+w.y+'%;font-size:'+(stage===0?22:stage===1?30:39)+'px">'+(stage===0?'🌱':stage===1?'🌿':'🌲')+'</span>'});
   Object.keys(d.bb||{}).forEach(function(k){var pp=k==='tree'?TREE_POS[(d.trees||[]).length%TREE_POS.length]:dp[k];if(pp)o+='<span class="mi-deco bld" style="left:'+pp[0]+'%;top:'+pp[1]+'%">🚧</span>'});
-  o+=d.pets.map(function(p,i){var a=ANI[p.k]||['🐾',''];return '<span class="mi-pet" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" style="font-size:'+(32+Math.min(4,p.lv-1)*4)+'px"><i><u>'+a[0]+'</u></i><em>'+esc(p.n)+'</em></span>'}).join('');
+  o+=d.pets.map(function(p,i){var a=ANI[p.k]||['🐾',''],st=ANI[p.k]?petStage(p.lv):0,w=PV_SIZE[st],h=Math.round(w*64/84);
+    return '<span class="mi-pet'+(st===3?' lgd':'')+'" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" data-mpet="'+esc(p.id||'')+'" data-k="'+esc(p.k)+'" data-st="'+st+'" role="button" aria-label="'+esc(p.n)+'" style="'+(st?'margin:'+(-h/2)+'px 0 0 '+(-w/2)+'px':'font-size:'+(32+Math.min(4,p.lv-1)*4)+'px')+'">'+
+      '<i class="'+(st?'sv':'')+'">'+(st?petArt(p.k,st):'<u>'+a[0]+'</u>')+'</i>'+(st?'<span class="psh"></span>':'')+'<em>'+esc(p.n)+'</em><span class="zz">💤</span></span>'}).join('');
   if(!d.h&&!d.fields&&!d.deco.length&&!(d.trees||[]).length&&!d.pets.length)o+='<p class="mi-empty">'+(d.mine?'這座島還是一片空地，先用 🪵 木材和 🪨 石頭蓋一間小屋吧！':'這座島還是一片空地')+'</p>';
   var sh=(d.ships||[]).filter(function(x){return x.k===d.shipCur})[0];
   return o+'</div><div class="mi-dock" aria-hidden="true"></div><div class="mi-ship">'+shipSVG(d.shipCur||0)+'<em>'+esc(sh?sh.n:'小船')+'</em></div><button class="mi-zoom" type="button" data-mzoom aria-label="放大看小島">🔍 放大</button></div>';
@@ -3193,7 +3354,8 @@ function miZoom(){
   ov.addEventListener('pointerup',up);ov.addEventListener('pointercancel',up);
 }
 /* 寵物在島上隨機走動：每隻挑一個陸地上的點走過去、停一下、再挑下一個；位置存在 PW.st，島每 30 秒重畫也不會跳回原點 */
-var PW={st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
+var PV_SPD={hamster:30,rabbit:40,turtle:10,dog:44,cat:30,parrot:26,fox:42,panda:20};
+var PW={sel:null,selId:null,st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 function pwGeom(sc,t){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect(),o=[];
   sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
@@ -3228,23 +3390,70 @@ function pwTick(t){
     var id=el.getAttribute('data-pid'),st=PW.st[id];
     if(!st){st=PW.st[id]={x:null,y:0,wait:Math.random()*1.5,dir:1,w:G.w,h:G.h,mv:0};var p0=pwPick(G,st);st.x=p0?p0[0]:G.cx;st.y=p0?p0[1]:G.cy+G.b*.5}
     if(st.w!==G.w||st.h!==G.h){st.x*=G.w/st.w;st.y*=G.h/st.h;st.w=G.w;st.h=G.h;st.mv=0;st.wait=.3}
-    if(!PW.rm){
+    var pk=el.getAttribute('data-k'),pst=+el.getAttribute('data-st')||0,isSel=PW.sel===id;
+    if(!PW.rm&&!isSel){
       if(st.mv){
         var dx=st.tx-st.x,dy=st.ty-st.y,d=Math.hypot(dx,dy),sp=st.spd*dt;
-        if(d<=sp){st.x=st.tx;st.y=st.ty;st.mv=0;st.wait=.8+Math.random()*3.2}
+        if(d<=sp){st.x=st.tx;st.y=st.ty;st.mv=0;st.wait=.8+Math.random()*3.2;st.mood='';
+          if(pst){var rr=Math.random();   /* 長大以後：貓會睡覺、烏龜縮殼、熊貓打滾、狗狗衝刺、鸚鵡降落 */
+            if(pk==='cat'&&rr<.4){st.mood='sleep';st.wait=6}
+            else if(pk==='turtle'&&rr<.35){st.mood='hide';st.wait=3.5}
+            else if(pk==='panda'&&rr<.35)st.fx={c:'roll',u:t+1150};
+            if(pk==='parrot'&&st.fly&&rr<.5)st.fly=false}}
         else{st.x+=dx/d*sp;st.y+=dy/d*sp;if(Math.abs(dx)>2)st.dir=dx>0?1:-1}
       }else{
         st.wait-=dt;
-        if(st.wait<=0){var q=pwPick(G,st);if(q){st.tx=q[0];st.ty=q[1];st.spd=24+Math.random()*18;st.mv=1}else st.wait=1}
+        if(st.wait<=0){st.mood='';if(pk==='parrot'&&pst)st.fly=Math.random()<.6;var q=pwPick(G,st);if(q){st.tx=q[0];st.ty=q[1];st.spd=(PV_SPD[pk]||30)*(.85+Math.random()*.3)*(st.fly?2.3:1)*(pk==='dog'&&Math.random()<.3?1.8:1);st.mv=1}else st.wait=1}
       }
     }
     el.style.transform='translate('+st.x.toFixed(1)+'px,'+st.y.toFixed(1)+'px)';
     el.style.zIndex=Math.round(st.y);
-    el.classList.toggle('walk',!!st.mv);
-    el.firstChild.style.transform=st.dir>0?'scaleX(-1)':'';
+    var alt=st.alt||0,ta=st.fly&&pst?(isSel?26:42):0;alt+=(ta-alt)*Math.min(1,dt*3);st.alt=alt;
+    el.classList.toggle('walk',!!st.mv&&!isSel&&alt<10);
+    el.classList.toggle('fly',alt>4);
+    el.classList.toggle('sleep',st.mood==='sleep'&&!isSel);
+    el.classList.toggle('hide',st.mood==='hide'&&!isSel);
+    el.classList.toggle('psel',isSel);
+    ['roll','eat','joy','hm'].forEach(function(c){el.classList.toggle(c,!!(st.fx&&st.fx.c===c&&t<st.fx.u))});
+    if(pst){var fy=alt>4?Math.sin(t/260)*3:0;el.firstChild.style.transform='translateY('+(-alt+fy).toFixed(1)+'px) scaleX('+(st.dir>0?1:-1)+')';
+      var shd=el.querySelector('.psh');if(shd){var k2=1-Math.min(.5,alt/90);shd.style.transform='scale('+k2.toFixed(2)+')';shd.style.opacity=k2.toFixed(2)}
+      if(alt>4)el.style.zIndex=Math.round(st.y)+300}
+    else el.firstChild.style.transform=st.dir>0?'scaleX(-1)':'';
+    if(isSel)petBubPlace(sc,el,st);
   });
+  if(PW.sel&&!sc.querySelector('.mi-pet.psel'))petBubClose();
   PW.raf=requestAnimationFrame(pwTick);
 }
+/* 點小島上的寵物：泡泡顯示飽足度、親密度、食物按鈕（跟著寵物走；小島重畫時自動重建） */
+function petBubHTML(p){
+  var d=MI.data,w=COINS.get(),fruit=(w.bag||{}).fruit||0,st=petStage(p.lv),nx=[2,3,5].filter(function(l){return l>p.lv})[0],fa=p.fa||0;
+  var F=VEG_KEYS.map(function(k){return [k,VEGI[k][0],VEGI[k][1],d.veg[k]||0]}).concat([['fruit','🍎','水果',fruit]]);
+  return '<button class="pbx" type="button" data-pbx aria-label="關閉">×</button><b>'+(ANI[p.k]||['🐾'])[0]+' '+esc(p.n)+'</b> <span style="color:#8a6a2a">Lv'+p.lv+'・'+PV_STN[st]+'</span>'+
+    '<div class="prow"><span>飽足度 '+p.full+(p.full<50?' 😟 餓了':'')+'</span><span>'+(p.patted?'✋ 今天摸過了':'✋ 點牠摸摸')+'</span></div><div class="pbar"><i style="width:'+p.full+'%"></i></div>'+
+    '<div class="prow"><span>親密度 '+p.aff+'（'+(p.aff%10)+' / 10）</span><span>餵食加親密 '+Math.min(2,fa)+' / 2</span></div><div class="pbar af"><i style="width:'+(p.aff%10)*10+'%"></i></div>'+
+    '<div class="pfood">'+F.map(function(f){return '<button type="button" data-feed="'+f[0]+'" data-id="'+esc(p.id)+'"'+(f[3]<1||p.full>=100?' disabled':'')+' aria-label="餵'+f[2]+'">'+f[1]+'<small>×'+f[3]+'</small></button>'}).join('')+'</div>'+
+    '<div class="pnx">'+(p.full>=100?'吃飽了，晚一點再餵・':'')+(nx?'下一個形態：Lv'+nx+' '+PV_STN[petStage(nx)]:'已經是最高的傳說形態')+'</div>';
+}
+function petBubPlace(sc,el,st){
+  var p=MI.data&&MI.data.pets.filter(function(x){return x.id===PW.selId})[0];if(!p||!MI.data.mine){petBubClose();return}
+  var bub=sc.querySelector('.pbub'),sig=[p.id,p.full,p.aff,p.patted,p.fa,(MI.data.veg||{}).carrot,(MI.data.veg||{}).cabbage,(MI.data.veg||{}).pumpkin,((COINS.get().bag||{}).fruit||0),p.lv].join();
+  if(!bub){bub=document.createElement('div');bub.className='pbub';bub.setAttribute('role','dialog');sc.appendChild(bub)}
+  if(bub._sig!==sig){bub._sig=sig;bub.innerHTML=petBubHTML(p)}
+  var W=sc.clientWidth,H=sc.clientHeight,bw=228,bh=bub.offsetHeight,eh=el.offsetHeight||40,top=st.y-eh/2-(st.alt||0)-14,up=top-bh>2;
+  var left=Math.max(4,Math.min(W-bw-4,st.x-bw/2)),y=up?top-bh:st.y+eh/2+10;if(!up&&y+bh>H-2)y=Math.max(2,H-bh-2);
+  bub.className='pbub '+(up?'up':'dn');bub.style.left=left+'px';bub.style.top=y+'px';bub.style.setProperty('--ax',Math.max(16,Math.min(bw-16,st.x-left))+'px');
+}
+function petBubClose(){PW.sel=null;PW.selId=null;document.querySelectorAll('.pbub').forEach(function(b){b.remove()})}
+function petFx(pid,c,ms){var s=PW.st[(MI.fid||'me')+':'+pid];if(s)s.fx={c:c,u:performance.now()+(ms||1100)}}
+/* 食物從按鈕飛到寵物嘴裡 */
+function petFoodFly(btn,pid,em){
+  var el=document.querySelector('.mi-pet[data-mpet="'+pid+'"]');if(!btn||!el)return;
+  var r=btn.getBoundingClientRect(),c=el.getBoundingClientRect(),x0=r.left+r.width/2-13,y0=r.top,x1=c.left+c.width*.7-13,y1=c.top+c.height*.3-13,e=document.createElement('span'),t0=performance.now();
+  e.className='pfly';e.textContent=em;document.body.appendChild(e);
+  (function an(t){var k=Math.min(1,(t-t0)/550);e.style.transform='translate('+(x0+(x1-x0)*k)+'px,'+(y0+(y1-y0)*k-Math.sin(k*Math.PI)*70)+'px) rotate('+k*360+'deg) scale('+(1-k*.4)+')';
+    if(k<1)requestAnimationFrame(an);else{e.remove();petFx(pid,'eat');burst(x1+13,y1+13,['😋','💕',em])}})(t0);
+}
+pBody.addEventListener('click',function(e){if(V.t==='mine'&&PW.sel&&!e.target.closest('.pbub,[data-mpet]'))petBubClose()});
 function pwStart(){if(PW.raf)cancelAnimationFrame(PW.raf);PW.raf=0;PW.t0=0;PW.g=null;pwTick(performance.now())}
 function guideHTML(d){
   if(!d.mine||(!GUIDE.replay&&d.starterGuide!==0))return '';
@@ -3265,7 +3474,7 @@ function paintMine(){
   $('miSub').innerHTML=COINS.av(d)+' 🏝️ 島主分 <b>'+d.score+'</b>・小屋 Lv'+d.h+'・'+d.pets.length+' 隻寵物';
   var o=guideHTML(d)+sceneHTML(d)+wipHTML(d)+harborHTML(d);
   if(d.mine&&d.starterTree)o+='<p class="mi-note">🌳 第一棵果樹免費，在下方「建造」點果樹即可種植。</p>';
-  if(d.mine)o+='<p class="mi-note">👆 點果樹摘果、點成熟 🌲 採木材（每棵每天最多 2 次）。</p>';
+  if(d.mine)o+='<p class="mi-note">👆 點果樹摘果、點成熟 🌲 採木材（每棵每天最多 2 次）、點寵物摸摸和餵食。</p>';
   if(d.mine)o+=mineTop(d)+'<button class="btn btn-ghost btn-sm" type="button" data-guide-open>🧭 查看新手導引</button>';
   if(!d.mine){
     var growing=d.f.some(function(c){return c&&cropView(c).left>0});
@@ -3289,13 +3498,11 @@ function paintMine(){
   if(!d.pets.length)o+='<p class="mi-note">'+(d.h?'小屋可以養 '+Math.min(d.h,8)+' 隻寵物，':'先蓋小屋，')+'到寵物島領養一隻吧！</p><button class="btn btn-primary btn-sm" type="button" data-open="pets">🐾 去寵物島</button>';
   o+='<div class="mi-pets">'+d.pets.map(function(p){
     var a=ANI[p.k]||['🐾',''];
-    return '<div class="mi-pc"><span class="mi-pe" data-pat="'+esc(p.id)+'">'+a[0]+'</span><div class="mi-pb"><b>'+esc(p.n)+'</b><small>'+a[1]+'・Lv'+p.lv+' '+petTitle(p.lv)+'・親密度 '+p.aff+'</small>'+
+    return '<div class="mi-pc"><span class="mi-pe">'+a[0]+'</span><div class="mi-pb"><b>'+esc(p.n)+'</b><small>'+a[1]+'・Lv'+p.lv+' '+petTitle(p.lv)+'・親密度 '+p.aff+'</small>'+
       '<div class="mi-full"><span>飽足度 '+p.full+'</span><div class="bar"><i style="width:'+p.full+'%;background:'+(p.full>=50?'#4ade80':p.full>=20?'#facc15':'#f87171')+'"></i></div></div>'+
-      '<div class="mi-act"><button class="mb-b" type="button" data-pat="'+esc(p.id)+'"'+(p.patted?' disabled':'')+'>'+(p.patted?'✋ 今天摸過了':'✋ 摸摸')+'</button>'+
-      VEG_KEYS.map(function(k){return '<button class="mb-b" type="button" data-feed="'+k+'" data-id="'+esc(p.id)+'"'+((d.veg[k]||0)<1||p.full>=100?' disabled':'')+'>'+VEGI[k][0]+' '+(d.veg[k]||0)+'</button>'}).join('')+
-      '<button class="mb-b" type="button" data-feed="fruit" data-id="'+esc(p.id)+'"'+(fruit<1||p.full>=100?' disabled':'')+'>🍎 '+fruit+'</button></div></div></div>';
+      '<small>'+(p.patted?'✋ 今天摸過了':'✋ 今天還沒摸')+'・外觀：'+PV_STN[petStage(p.lv)]+(p.lv<5?'（Lv'+[2,3,5].filter(function(l){return l>p.lv})[0]+' 變身）':'')+'</small></div></div>';
   }).join('')+'</div>';
-  if(d.pets.length)o+='<p class="mi-note">飽足度每天掉 25。餵食：🥕 +20、🥬 +35、🎃 +60、🍎 +10。每天摸摸親密度 +1，飽足度 50 以上時牠會送你禮物。</p>';
+  if(d.pets.length)o+='<p class="mi-note">👆 點小島上的寵物就能摸摸（每天親密度 +1，飽足度 50 以上會送禮物），再從跳出的泡泡餵食（每天最多再 +2 親密度）。飽足度每天掉 25；🥕 +20、🥬 +35、🎃 +60、🍎 +10。親密度每 10 點升一級：Lv2 長大、Lv3 打扮、Lv5 傳說形態。</p>';
   o+='</div>';
   /* 建造 */
   var B=[];
@@ -3527,8 +3734,14 @@ function fitIslandItems(){
   }
 }
 pBody.addEventListener('click',function(e){
-  var t=e.target.closest('button,[data-pat],[data-pick],[data-harvest],[data-chop]');if(!t||V.t!=='mine')return;
-  var d=t.dataset;
+  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop]');if(!t||V.t!=='mine')return;
+  var d=t.dataset,patId=null;
+  if(d.pbx!=null){petBubClose();return}
+  if(d.mpet!=null){var mp=MI.data&&MI.data.pets.filter(function(x){return x.id===d.mpet})[0];if(!mp)return;
+    if(!MI.data.mine){petFx(d.mpet,'joy');fxAt(t,['👋','💕','✨']);toast('👋 '+mp.n+' 跟你打招呼');return}
+    PW.sel=t.getAttribute('data-pid');PW.selId=mp.id;var ms=PW.st[PW.sel];if(ms)ms.mood='';
+    if(mp.patted){petFx(mp.id,'hm',700);pwStart();fxAt(t,['💗']);toast(mp.n+' 蹭蹭你～今天已經摸過了，可以餵牠吃東西');return}
+    patId=mp.id}
   if(d.mzoom!=null){miZoom();return}
   if(d.guideOpen!=null){GUIDE.step=0;GUIDE.replay=true;paintMine();pBody.scrollTop=0;return}
   if(d.guidePrev!=null){GUIDE.step=Math.max(0,GUIDE.step-1);paintMine();return}
@@ -3547,9 +3760,9 @@ pBody.addEventListener('click',function(e){
   if(d.chop!=null){var id=d.chop;fastAct({a:'chopwood',id:id},t,function(dd,w){(dd.wild||[]).forEach(function(x){if(String(x.id)===id){x.stage=0;x.count=(x.count||0)+1}});if(w.bag)w.bag.wood=(w.bag.wood||0)+3;w.tres=(w.tres||0)+3},function(){fxAt(t,['🪵','🪵','✨']);playSfx('candy');toast('🪓 採收木材 ×3')});return}
   if(d.harvest!=null){var hi=+d.harvest,hc=MI.data&&MI.data.f[hi],hv=hc&&VEGI[hc.v];if(!hv){mineAct({a:'harvest',i:hi},t,function(j){var v=VEGI[j.got.k];fxAt(t,[v[0],v[0],'✨','🧺']);playSfx('candy');toast('🧺 收成 '+v[0]+' '+v[1]+' ×'+j.got.n)});return}
     fastAct({a:'harvest',i:hi},t,function(dd){dd.veg[hc.v]=(dd.veg[hc.v]||0)+hv[4];dd.f[hi]=null},function(){fxAt(t,[hv[0],hv[0],'✨','🧺']);playSfx('candy');toast('🧺 收成 '+hv[0]+' '+hv[1]+' ×'+hv[4])});return}
-  if(d.feed){var fd=d.feed,fid=d.id;fastAct({a:'feed',id:fid,food:fd},t,function(dd,w){var pp=dd.pets.filter(function(x){return x.id===fid})[0],plus=fd==='fruit'?10:VEGI[fd][5];MI.fedAff=false;if(pp){pp.full=Math.min(100,pp.full+plus);if((pp.fa||0)<2){pp.fa=(pp.fa||0)+1;pp.aff=(pp.aff||0)+1;pp.lv=1+Math.floor(pp.aff/10);MI.fedAff=true}}if(fd==='fruit'){if(w.bag)w.bag.fruit=Math.max(0,(w.bag.fruit||0)-1)}else dd.veg[fd]=Math.max(0,(dd.veg[fd]||0)-1)},function(){fxAt(t,['😋','💕',fd==='fruit'?'🍎':VEGI[fd][0]]);playSfx('candy');toast('😋 吃得好開心！'+(MI.fedAff?'親密度 +1 💕':''))});return}
-  if(d.pat){var pid=d.pat,pp0=MI.data&&MI.data.pets.filter(function(x){return x.id===pid})[0],pk=pp0&&(ANI[pp0.k]||[])[1];
-    fastAct({a:'pat',id:pid},t,function(dd){var q=dd.pets.filter(function(x){return x.id===pid})[0];if(q){q.patted=true;q.aff=(q.aff||0)+1;q.lv=1+Math.floor(q.aff/10)}},function(){fxAt(t,['💕','💖','✨']);playSfx(pp0&&pp0.k==='cat'?'cat':'dog');toast('💕 親密度 +1'+(pp0&&pp0.full<50?'（餵飽一點，牠就會送你禮物）':''))},function(j){
+  if(d.feed){var fd=d.feed,fid=d.id,fem=fd==='fruit'?'🍎':VEGI[fd][0];if(t.closest('.pbub'))petFoodFly(t,fid,fem);fastAct({a:'feed',id:fid,food:fd},t,function(dd,w){var pp=dd.pets.filter(function(x){return x.id===fid})[0],plus=fd==='fruit'?10:VEGI[fd][5];MI.fedAff=false;if(pp){pp.full=Math.min(100,pp.full+plus);if((pp.fa||0)<2){pp.fa=(pp.fa||0)+1;pp.aff=(pp.aff||0)+1;pp.lv=1+Math.floor(pp.aff/10);MI.fedAff=true}}if(fd==='fruit'){if(w.bag)w.bag.fruit=Math.max(0,(w.bag.fruit||0)-1)}else dd.veg[fd]=Math.max(0,(dd.veg[fd]||0)-1)},function(){fxAt(t,['😋','💕',fd==='fruit'?'🍎':VEGI[fd][0]]);playSfx('candy');toast('😋 吃得好開心！'+(MI.fedAff?'親密度 +1 💕':''))});return}
+  if(d.pat||patId){var pid=d.pat||patId,pp0=MI.data&&MI.data.pets.filter(function(x){return x.id===pid})[0],pk=pp0&&(ANI[pp0.k]||[])[1];
+    fastAct({a:'pat',id:pid},t,function(dd){var q=dd.pets.filter(function(x){return x.id===pid})[0];if(q){q.patted=true;q.aff=(q.aff||0)+1;q.lv=1+Math.floor(q.aff/10)}},function(){petFx(pid,'joy');fxAt(t,['💕','💖','✨']);playSfx(pp0&&pp0.k==='cat'?'cat':'dog');toast('💕 親密度 +1'+(pp0&&pp0.full<50?'（餵飽一點，牠就會送你禮物）':''))},function(j){
       if(j.gift){var g=GIFT_I[j.gift.k]||['🎁',''];setTimeout(function(){fxAt($('miBox')||t,[g[0],g[0],'🎁','✨'])},100);toast('💕 '+(pp0?pp0.n:'寵物')+' 送你 '+g[0]+' '+g[1]+' ×1！')}});return}
   if(d.mwater!=null){mineAct({a:'water',fid:MI.fid},t,function(j){var g=GIFT_I[j.got.k]||['🎁',''];fxAt(t,['💧','💧','🌱',g[0]]);playSfx('flip');toast('💧 澆好水了！你拿到 '+g[0]+' '+g[1]+' ×1')});return}
 });
