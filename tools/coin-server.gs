@@ -117,6 +117,8 @@ var TRADE_RATE = 10;                 // 10 個同種物資換 1 枚金幣
 var DIA_RATE = 10;                    // 1 顆鑽石換 5 枚金幣
 var TRADE_MAX = 3;                   // 物資賣金幣（含南瓜）每天最多 3 次
 var SWAP_DAY = 5;                    // 物資互換每天最多 5 次（2026-11-18 站長要求）
+var BUY_DAY = 5;                     // 金幣買物資：水果／鐵礦／木材／石頭每種每天最多 5 次（2026-11-18 站長要求）
+var DIA_BUY_DAY = 3;                 // 金幣買鑽石每天最多 3 次
 var DIA_SELL_DAY = 3;                // 鑽石換金幣每天最多 3 次（獨立計算，不再和物資賣金幣共用）
 var FRIEND_MAX = 50;
 var A_HEAD = ['編號', '時間', '標題', '內容', '發布者', '修改時間', '狀態'];
@@ -336,7 +338,7 @@ function counts_(v) {
   return o;
 }
 function countsStr_(o) { return Object.keys(o).map(function (k) { return k + ':' + o[k]; }).join(','); }
-function xd_(io) { var t = day_(); if (!io.xd || io.xd.d !== t) io.xd = { d: t, sw: 0, ds: 0 }; return io.xd; }   // 小島資料裡的「今天交易次數」
+function xd_(io) { var t = day_(); if (!io.xd || io.xd.d !== t) io.xd = { d: t, sw: 0, ds: 0, b: {} }; if (!io.xd.b || typeof io.xd.b !== 'object') io.xd.b = {}; return io.xd; }   // 小島資料裡的「今天交易次數」
 function bag_(r) { return { fruit: num_(r[C.fruit]), iron: num_(r[C.iron]), wood: num_(r[C.wood]), stone: num_(r[C.stone]) }; }
 function profile_(r) {
   var io = isleOf_(r), pd = day_(), cur = String(dropSlot_());
@@ -345,7 +347,8 @@ function profile_(r) {
     av: plain_(r[C.av]), fid: String(r[C.fid] || ''), bag: bag_(r), dia: num_(r[C.dia]),
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
     trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
-    swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
+    swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY,
+    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',
@@ -666,7 +669,10 @@ function handle_(q) {
       var xk = String(q.k || ''), xn = Math.max(1, Math.min(XCHG_MAX, Math.floor(num_(q.n) || 1)));
       var xcost = (xk === 'dia' ? DIA_BUY : BUY_COST) * xn;
       if (xk !== 'dia' && !RES[xk]) return { ok: false, err: 'bad', p: me };
+      var bxo = isleOf_(r), bxd = xd_(bxo), bxm = xk === 'dia' ? DIA_BUY_DAY : BUY_DAY;
+      if (num_(bxd.b[xk]) + xn > bxm) return { ok: false, err: 'buymax', p: me };
       if (num_(r[C.bal]) < xcost) return { ok: false, err: 'nocoin', p: me };
+      bxd.b[xk] = num_(bxd.b[xk]) + xn; r[C.isle] = JSON.stringify(bxo);
       r[C.bal] = num_(r[C.bal]) - xcost;
       if (xk === 'dia') r[C.dia] = num_(r[C.dia]) + xn;
       else r[RES[xk].col] = num_(r[RES[xk].col]) + BUY_N * xn;

@@ -1427,7 +1427,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
         <li>每座島每天的總量隨機 60～160 份，大家一起採，採光了要等明天重新長出來。</li>
         <li>每人每座島每天最多採 <b>5 次</b>；<b>每座島的數量和冷卻都不一樣</b>：每次採 1～8 個不等，採完要等 30～120 秒才能再採同一座島。</li>
         <li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li>
-        <li>🏪 兌換所：10 個同種物資換 1 枚 🪙、5 顆 🎃 換 1 枚，每天最多 3 次；1 顆 💎 換 10 枚，另外每天最多 3 次。<br>🏪 <b>商店島</b>：用金幣買物資（1 枚 🪙 = 6 個，不限次數）、物資互換（3 換 2，每天 5 次）、20 枚 🪙 買 1 顆 💎，還能買 5 艘不同的船。</li>
+        <li>🏪 兌換所：10 個同種物資換 1 枚 🪙、5 顆 🎃 換 1 枚，每天最多 3 次；1 顆 💎 換 10 枚，另外每天最多 3 次。<br>🏪 <b>商店島</b>：用金幣買物資（1 枚 🪙 = 6 個，每種每天 5 次）、物資互換（3 換 2，每天 5 次）、20 枚 🪙 買 1 顆 💎（每天 3 次），還能買 5 艘不同的船。</li>
         <li>🔊 打開上方喇叭，點擊會有音效和特效。</li>
       </ul></section>
       <section class="hp" data-p="2" hidden><ul>
@@ -2812,7 +2812,7 @@ function shopShadow(){var w=COINS.get();SH.q.forEach(function(p){var v=shopPrevi
 function shopTicket(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function shopPreview(q,w){
   var v=JSON.parse(JSON.stringify(w)),b=v.bag||{},n=Number(v.bal)||0;v.bag=b;
-  if(q.a==='xbuy'){var cost=q.k==='dia'?20:1;if(n<cost)return null;v.bal=n-cost;if(q.k==='dia')v.dia=(+v.dia||0)+1;else b[q.k]=(+b[q.k]||0)+6}
+  if(q.a==='xbuy'){var cost=q.k==='dia'?20:1,bys=v.buys=Object.assign({},v.buys||{});if(n<cost||(+bys[q.k]||0)>=(q.k==='dia'?(+v.diaBuyMax||3):(+v.buyMax||5)))return null;bys[q.k]=(+bys[q.k]||0)+1;v.bal=n-cost;if(q.k==='dia')v.dia=(+v.dia||0)+1;else b[q.k]=(+b[q.k]||0)+6}
   else if(q.a==='xswap'){if((+b[q.f]||0)<3||(+v.swaps||0)>=(+v.swapMax||5))return null;b[q.f]-=3;b[q.t]=(+b[q.t]||0)+2;v.swaps=(+v.swaps||0)+1}
   else if(q.a==='trade'){if(q.k==='dia'){if((+v.diaSells||0)>=(+v.diaSellMax||3)||(+v.dia||0)<1)return null;v.dia--;v.bal=n+10;v.diaSells=(+v.diaSells||0)+1}else{if((+v.trades||0)>=(+v.tradeMax||3)||(+b[q.k]||0)<10)return null;b[q.k]-=10;v.bal=n+1;v.trades=(+v.trades||0)+1}v.earned=(+v.earned||0)+(q.k==='dia'?10:1)}
   return v;
@@ -2824,7 +2824,7 @@ function shopSync(){
   COINS.api(p.q).then(function(j){
     SH.busy=false;if(COINS.get().code!==p.owner)return;
     if(!j.ok){
-      if(j.err==='expired'||j.err==='bad'||j.err==='few'||j.err==='nocoin'||j.err==='trademax'||j.err==='swapmax'||j.err==='diamax'){SH.q.shift();shopStore(owner,SH.q);toast('⚠️ '+(j.err==='expired'?'有一筆交易已逾時，請重新確認餘額':COINS.errText(j)));paintShop();shopSync();return}
+      if(j.err==='expired'||j.err==='bad'||j.err==='few'||j.err==='nocoin'||j.err==='trademax'||j.err==='swapmax'||j.err==='diamax'||j.err==='buymax'){SH.q.shift();shopStore(owner,SH.q);toast('⚠️ '+(j.err==='expired'?'有一筆交易已逾時，請重新確認餘額':COINS.errText(j)));paintShop();shopSync();return}
       toast('⚠️ '+COINS.errText(j));paintShop();return;
     }
     SH.q.shift();shopStore(owner,SH.q);toast(p.ok+' ✅');paintShop();shopSync();
@@ -2876,14 +2876,15 @@ function paintShop(){
       (own?'<button class="btn btn-ghost btn-sm" type="button" data-shipname="'+i+'">✏️ 取名</button>':'')+
       (cur?'<span class="sh-tag">✅ 使用中</span>':own?'<button class="btn btn-ghost btn-sm" type="button" data-useship="'+i+'">換乘這艘</button>':'<button class="btn btn-primary btn-sm'+((w.bal||0)<c?' need':'')+'" type="button" data-buyship="'+i+'">🪙 '+c+' 買下</button>')+'</div>';
   }).join('')+'</div><p class="mi-note">買下後就能隨時換乘，地圖上航行的就是你選的那艘船。</p></div>';
-  o+='<div class="p-sec"><h4>🪙 金幣買東西</h4><div class="mi-seeds">'+RTYPE.map(function(x){return '<button class="mb-b" type="button" data-xbuy="'+x.rk+'"'+((w.bal||0)<1?' disabled':'')+'>🪙1 → '+x.it+'×6<small>'+x.item+'</small></button>'}).join('')+
-    '<button class="mb-b" type="button" data-xbuy="dia"'+((w.bal||0)<20?' disabled':'')+'>🪙20 → 💎1<small>鑽石</small></button></div></div>';
+  var bys=w.buys||{},bmx=w.buyMax||5,dbmx=w.diaBuyMax||3,bl=function(k){return Math.max(0,(k==='dia'?dbmx:bmx)-(+bys[k]||0))};
+  o+='<div class="p-sec"><h4>🪙 金幣買東西</h4><div class="mi-seeds">'+RTYPE.map(function(x){var l=bl(x.rk);return '<button class="mb-b" type="button" data-xbuy="'+x.rk+'"'+((w.bal||0)<1||!l?' disabled':'')+'>🪙1 → '+x.it+'×6<small>'+x.item+'・今天剩 '+l+' 次</small></button>'}).join('')+
+    '<button class="mb-b" type="button" data-xbuy="dia"'+((w.bal||0)<20||!bl('dia')?' disabled':'')+'>🪙20 → 💎1<small>鑽石・今天剩 '+bl('dia')+' 次</small></button></div><p class="mi-note">水果、鐵礦、木材、石頭每種每天最多買 '+bmx+' 次；鑽石每天最多買 '+dbmx+' 次。</p></div>';
   var opt=RTYPE.map(function(x){return '<option value="'+x.rk+'">'+x.it+' '+x.item+'</option>'}).join('');
   o+='<div class="p-sec"><h4>🔁 物資互換<span class="sh-left">今天還能換 '+sleft+' 次</span></h4><div class="sh-swap">3 個 <select id="shFrom">'+opt+'</select> 換 2 個 <select id="shTo">'+opt+'</select> <button class="btn btn-primary btn-sm" type="button" data-xswap'+(sleft?'':' disabled')+'>換</button></div><p class="mi-note">每天最多 '+(w.swapMax||5)+' 次。</p></div>';
   var left=Math.max(0,(w.tradeMax||3)-(w.trades||0));
   o+='<div class="p-sec"><h4>🪙 物資賣金幣<span class="sh-left">今天還能換 '+left+' 次</span></h4><div class="mi-seeds">'+
     RTYPE.map(function(x){return '<button class="mb-b" type="button" data-sell="'+x.rk+'"'+((b[x.rk]||0)<10||!left?' disabled':'')+'>'+x.it+'×10 → 🪙1<small>'+x.item+'</small></button>'}).join('')+'</div>'+
-    '<p class="mi-note">物資賣金幣每天最多 '+(w.tradeMax||3)+' 次（和背包兌換所共用）。金幣買東西不限次數。買 1 枚金幣只能換 6 個物資，賣出要 10 個才換 1 枚，所以不能無限賺。</p></div>';
+    '<p class="mi-note">物資賣金幣每天最多 '+(w.tradeMax||3)+' 次（和背包兌換所共用）。買 1 枚金幣只能換 6 個物資，賣出要 10 個才換 1 枚，所以不能無限賺。</p></div>';
   box.innerHTML=o;
   var f=$('shFrom'),t=$('shTo');if(f&&t){f.value=fromVal;t.value=toVal}
 }
