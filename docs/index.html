@@ -1379,9 +1379,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 <nav class="quest mini" id="quest" aria-label="快速功能">
   <button class="qtog" type="button" id="questTog" aria-label="展開選單" aria-expanded="false"><i>⛵</i>選單</button>
   <button class="qfold" type="button" id="questFold" aria-label="收起選單">⌄</button>
-  <button class="qbtn hot" type="button" id="startBtn"><i>⛵</i>探險</button>
   <button class="qbtn" type="button" data-open="mine"><i>🏝️</i>我的小島</button>
-  <button class="qbtn" type="button" id="randBtn"><i>🎲</i>隨機</button>
   <button class="qbtn" type="button" id="searchBtn2"><i>🔮</i>搜尋</button>
   <button class="qbtn" type="button" data-open="castle"><i>🏰</i>城堡</button>
   <button class="qbtn" type="button" id="favBtn"><i>⭐</i>收藏</button>
@@ -2611,7 +2609,7 @@ pBody.addEventListener('click',function(e){
     rp.className='qa-a mb-r mb-pend';rp.innerHTML='<span class="mb-av">'+COINS.av(rw)+'</span><div><small>'+esc(rw.nick)+'・⏳ 送出中…</small><p>'+COINS.linkify(value)+'</p></div>';
     if(art){var kk=art.querySelectorAll('.mb-k');if(kk.length)art.insertBefore(rp,kk[0]);else art.appendChild(rp)}toast('💬 回覆已送出');
     function rback(msg){rp.remove();MB.thread=parentId;redrawMsg(parentId);var f2=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]');if(f2)f2.value=value;toast(msg)}
-    COINS.api({a:'msgreply',id:parentId,text:value},true).then(function(j){if(!j.ok){rback('⚠️ 回覆沒有送出：'+COINS.errText(j));return}loadMsgs(MB.page,1)}).catch(function(){rback('⚠️ 暫時連不上，回覆沒有送出，文字已放回去')});return}
+    COINS.api({a:'msgreply',id:parentId,text:value},true).then(function(j){if(!j.ok){rback('⚠️ 回覆沒有送出：'+COINS.errText(j));return}rp.classList.remove('mb-pend');var sm=rp.querySelector('small');if(sm)sm.textContent=rw.nick+'・'+msgNow();loadMsgs(MB.page,1)}).catch(function(){rback('⚠️ 暫時連不上，回覆沒有送出，文字已放回去')});return}
   if(d.mpg){MB.thread=null;loadMsgs(+d.mpg);var b=$('mbList');if(b)b.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});return}
   if(d.mrep){MB.edit=d.mrep;redrawMsg(d.mrep);var r=pBody.querySelector('[data-rta]');if(r)r.focus();return}
   if(d.mcancel!=null){var id=MB.edit;MB.edit=null;redrawMsg(id);return}
@@ -2620,12 +2618,23 @@ pBody.addEventListener('click',function(e){
   if(act==='reply'){q.text=(pBody.querySelector('[data-rta]')||{}).value||'';if(!q.text.trim()&&!confirm('回覆是空的，要刪除這則回覆嗎？'))return}
   if(act==='hide')q.h=+d.h;
   if(act==='mdel'&&!confirm('要刪除這則留言嗎？'))return;
+  if(act==='reply'&&q.text.trim()){
+    var om=MB.list.filter(function(x){return x.id===mid})[0];
+    if(om){var bak={reply:om.reply,rt:om.rt,re:om.re},hadReply=!!om.reply,txt=q.text;
+      om.reply=txt;if(hadReply)om.re=msgNow();else om.rt=msgNow();MB.edit=null;redrawMsg(mid);
+      var ael=pBody.querySelector('.mb[data-mid="'+mid+'"] .tav'),ab=ael&&ael.closest('.qa-a');if(ab)ab.classList.add('mb-pend');
+      toast('💬 回覆已儲存');
+      var aback=function(msg){om.reply=bak.reply;om.rt=bak.rt;om.re=bak.re;MB.edit=mid;redrawMsg(mid);var r2=pBody.querySelector('[data-rta]');if(r2)r2.value=txt;toast(msg)};
+      COINS.api(q,true).then(function(j){if(!j.ok){aback('⚠️ 回覆沒有儲存：'+COINS.errText(j));return}if(ab)ab.classList.remove('mb-pend');loadMsgs(MB.page,1)}).catch(function(){aback('⚠️ 暫時連不上，回覆沒有儲存，文字已放回去')});
+      return}
+  }
   t.disabled=true;
   COINS.api(q,act==='reply').then(function(j){
     if(!j.ok){t.disabled=false;toast('⚠️ '+COINS.errText(j));return}
     MB.edit=null;toast(act==='reply'?'💬 回覆已儲存':act==='hide'?(q.h?'🙈 已隱藏這則留言':'👁️ 已取消隱藏'):'🗑️ 已刪除留言');loadMsgs(MB.page,1);
   }).catch(function(){t.disabled=false;toast('⚠️ 暫時連不上，請稍後再試')});
 });
+function msgNow(){var d=new Date(),z=function(n){return (n<10?'0':'')+n};return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())}
 function redrawMsg(id){var m=MB.list.filter(function(x){return x.id===id})[0],el=pBody.querySelector('.mb[data-mid="'+id+'"]');if(m&&el)el.outerHTML=msgHTML(m)}
 
 /* ---------- 物資島：連續點擊採集（每座島手感、音效、特效不同），每天隨機總量、偶爾撿到鑽石 ---------- */
@@ -4639,17 +4648,6 @@ document.addEventListener('click',function(e){
   var t=e.target.closest('[data-open]');if(!t)return;
   var k=t.dataset.open;$('chest').hidden=true;
   if(panel.classList.contains('open')){openPanel(k);if(k==='mine'||k==='pets')placeBoat(spotIdx(k))}else visit(spotIdx(k));
-});
-function randomQ(){
-  var keys=Object.keys(QA),r=keys[Math.floor(Math.random()*keys.length)],n=ISLE_OF[r];
-  var show=function(){var c=pBody.querySelector('.qa[data-r="'+r+'"]');if(c){c.classList.add('pick');c.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'})}toast('🎲 抽到「'+QA[r][0]+'」的問題，翻開看看！')};
-  if(panel.classList.contains('open')){openPanel('isle',n);placeBoat(ISLES[n].si);setTimeout(show,120)}
-  else visit(ISLES[n].si,function(){setTimeout(show,500)});
-}
-$('randBtn').addEventListener('click',randomQ);
-$('startBtn').addEventListener('click',function(){
-  var first=0;for(var i=0;i<ISLES.length;i++){if(!ST.c[i]){first=i;break}}
-  visit(ISLES[first].si);
 });
 function openSearch(){openPanel('search');setTimeout(function(){var i=$('qIn');if(i)i.focus({preventScroll:true})},380)}
 $('searchBtn').addEventListener('click',openSearch);
