@@ -81,7 +81,8 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
 .btn{font:900 17px/1 inherit;font-family:inherit;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;color:#3a1600;
   background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 5px 0 #b26a00,0 10px 18px rgba(0,0,0,.4);touch-action:manipulation}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b26a00}
-.btn:disabled{filter:grayscale(.8);opacity:.6;cursor:default}
+/* 不能按的狀態（抽完了、讀取中、金幣不夠）：深底金字、字放大，不再變灰變淡 */
+.btn:disabled{cursor:default;font-size:20px;line-height:1.25;padding:14px 24px;color:#ffe082;background:linear-gradient(180deg,#2a1450,#1a0b36);border:2px solid #ffd54f;box-shadow:0 4px 14px rgba(0,0,0,.45);text-shadow:0 1px 2px rgba(0,0,0,.6);transform:none}
 .btn.ghost{background:rgba(255,255,255,.12);color:#fff;box-shadow:none;border:1.5px solid rgba(255,255,255,.4)}
 .msg{text-align:center;font-size:13px;color:var(--muted);min-height:20px;margin-top:8px;position:relative}
 /* 獎品表與紀錄 */
@@ -306,7 +307,7 @@ function sync(){
   else if(S.cap){go.textContent='👆 先打開扭蛋';go.disabled=true}
   else if(S.left==null&&S.err){go.textContent='⚠️ 暫時讀不到次數，點我重試';go.disabled=false}
   else if(S.left==null){go.textContent='⏳ 讀取今日次數…';go.disabled=true}
-  else if(S.left<=0){go.textContent='今天抽完了，明天再來';go.disabled=true}
+  else if(S.left<=0){go.textContent='🌙 今天抽完了，明天再來';go.disabled=true}
   else if(S.coins<5){go.textContent='🪙 金幣不夠（要 5 枚）';go.disabled=true}
   else{go.textContent=S.res?'🎰 再轉一次（🪙 5）':'🎰 轉一次（🪙 5）';go.disabled=S.busy}
   $('hint').hidden=S.busy||!!S.cap||S.left==null||S.left<=0||!S.login;
