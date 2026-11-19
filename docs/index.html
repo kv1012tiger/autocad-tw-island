@@ -967,6 +967,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mb-h b{font-size:16px}.mb-h em{font-style:normal;font-size:12px;padding:1px 8px;border-radius:999px;background:#ff5e62;color:#fff}
 .mb-t{margin-top:8px;font-size:16px;line-height:1.7;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
 .mb-t a,.mb-r a{color:var(--cyan);text-decoration:underline;word-break:break-all}
+.mb-pend{opacity:.72;border-style:dashed!important}.mb-pend small{color:#ffd166}
 .mb-r{margin-top:10px}.mb-r p{margin:2px 0 0;word-break:break-word;overflow-wrap:anywhere}
 .mb-k{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .mb-b{padding:5px 12px;border-radius:999px;border:1.5px solid rgba(255,209,102,.55);background:transparent;color:var(--ink);font-size:13.5px;font-weight:700;cursor:pointer}
@@ -2592,17 +2593,25 @@ pBody.addEventListener('click',function(e){
   if(d.mjoin!=null){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
   if(t.id==='mbSend'){
     var ta=$('mbText'),v=ta.value.trim();if(v.length<2){toast('留言至少要 2 個字');ta.focus();return}
-    t.disabled=true;t.textContent='送出中…';
+    /* 先在畫面上送出：輸入框馬上清空、留言先放到最上面（送出中…），後台確認後再換成正式的；失敗就把字放回去 */
+    var mw=COINS.get(),pe=document.createElement('article');
+    pe.className='mb mb-pend';pe.innerHTML='<div class="mb-h"><span class="mb-av">'+COINS.av(mw)+'</span><b>'+esc(mw.nick)+'</b><small>⏳ 送出中…</small></div><div class="mb-t">'+COINS.linkify(v)+'</div>';
+    var lb=$('mbList'),cp=lb&&lb.querySelector('.s-count');if(lb){var em=lb.querySelector('.t-empty');if(em)em.remove();if(cp)cp.after(pe);else lb.prepend(pe)}
+    ta.value='';$('mbCnt').textContent='0 / 300';t.disabled=true;toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');
+    function back(msg){pe.remove();t.disabled=false;var ta2=$('mbText');if(ta2&&!ta2.value){ta2.value=v;$('mbCnt').textContent=v.length+' / 300'}toast(msg)}
     COINS.api({a:'msg',text:v},true).then(function(j){
-      t.disabled=false;t.textContent='📮 送出留言';
-      if(!j.ok){toast('⚠️ '+COINS.errText(j));return}
-      ta.value='';$('mbCnt').textContent='0 / 300';toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');if(MSGA.cur!=null){MSGA.cur+=1;msgSeenSet(MSGA.cur)}loadMsgs(MB.page=1,1);
-    }).catch(function(){t.disabled=false;t.textContent='📮 送出留言';toast('⚠️ 暫時連不上，請稍後再試')});
+      if(!j.ok){back('⚠️ 留言沒有送出：'+COINS.errText(j));return}
+      t.disabled=false;if(MSGA.cur!=null){MSGA.cur+=1;msgSeenSet(MSGA.cur)}loadMsgs(MB.page=1,1);
+    }).catch(function(){back('⚠️ 暫時連不上，留言沒有送出，文字已放回去')});
     return;
   }
   if(d.thread){if(!COINS.get().code){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}var old=MB.thread;MB.thread=d.thread;if(old&&old!==MB.thread)redrawMsg(old);redrawMsg(MB.thread);var rt=pBody.querySelector('[data-thread-text]');if(rt)rt.focus();return}
   if(d.threadCancel!=null){var oldThread=MB.thread;MB.thread=null;redrawMsg(oldThread);return}
-  if(d.threadSend){var parentId=d.threadSend,field=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]'),value=field?field.value.trim():'';if(value.length<2){toast('回覆至少要 2 個字');if(field)field.focus();return}t.disabled=true;COINS.api({a:'msgreply',id:parentId,text:value},true).then(function(j){if(!j.ok){t.disabled=false;toast('⚠️ '+COINS.errText(j));return}MB.thread=null;toast('💬 回覆已送出');loadMsgs(MB.page,1)}).catch(function(){t.disabled=false;toast('⚠️ 暫時連不上，請稍後再試')});return}
+  if(d.threadSend){var parentId=d.threadSend,field=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]'),value=field?field.value.trim():'';if(value.length<2){toast('回覆至少要 2 個字');if(field)field.focus();return}MB.thread=null;redrawMsg(parentId);var rw=COINS.get(),art=pBody.querySelector('.mb[data-mid="'+parentId+'"]'),rp=document.createElement('div');
+    rp.className='qa-a mb-r mb-pend';rp.innerHTML='<span class="mb-av">'+COINS.av(rw)+'</span><div><small>'+esc(rw.nick)+'・⏳ 送出中…</small><p>'+COINS.linkify(value)+'</p></div>';
+    if(art){var kk=art.querySelectorAll('.mb-k');if(kk.length)art.insertBefore(rp,kk[0]);else art.appendChild(rp)}toast('💬 回覆已送出');
+    function rback(msg){rp.remove();MB.thread=parentId;redrawMsg(parentId);var f2=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]');if(f2)f2.value=value;toast(msg)}
+    COINS.api({a:'msgreply',id:parentId,text:value},true).then(function(j){if(!j.ok){rback('⚠️ 回覆沒有送出：'+COINS.errText(j));return}loadMsgs(MB.page,1)}).catch(function(){rback('⚠️ 暫時連不上，回覆沒有送出，文字已放回去')});return}
   if(d.mpg){MB.thread=null;loadMsgs(+d.mpg);var b=$('mbList');if(b)b.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});return}
   if(d.mrep){MB.edit=d.mrep;redrawMsg(d.mrep);var r=pBody.querySelector('[data-rta]');if(r)r.focus();return}
   if(d.mcancel!=null){var id=MB.edit;MB.edit=null;redrawMsg(id);return}
@@ -3986,17 +3995,20 @@ function renderPets(){
     '<div class="p-sec"><h4>領養須知</h4><ul class="notes"><li>要先在 🏝️ 我的小島蓋小屋：小屋 Lv1 可以養 1 隻，Lv2 養 2 隻，Lv3 養 3 隻，Lv8 養 8 隻；小屋可升到 Lv10，最多養 8 隻。</li><li>每種動物只能領養一隻；領養要付金幣，還可以幫牠取名字（8 個字以內）。</li><li>寵物飽足度每天掉 25，用菜園種的菜或水果餵牠；每天摸摸親密度 +1，親密度每 10 點升一級。</li><li>飽足度 50 以上時摸摸，寵物會送你 1 個物資，偶爾送 1 枚金幣。餓了不會跑掉，只是不開心、不送禮。</li></ul></div>';
   $('pStep').textContent='🐾 寵物島';
   footSimple('← 回地圖','🏝️ 我的小島 →');
+  if(w.code&&!(MI.data&&MI.data.mine&&!MI.fid)){var pc=miCacheGet();if(pc){MI.fid=null;MI.data=pc.d;MI.at=pc.t}}   /* 先用這台裝置存的小島資料，按領養不用等 */
   MI.adopt=null;paintPets();
-  if(w.code){var my=++MI.seq;COINS.api({a:'island'}).then(function(j){if(my===MI.seq&&j.ok){MI.data=j.island;MI.at=Date.now();if(V.t==='pets')paintPets()}}).catch(function(){})}
+  if(w.code){var my=++MI.seq;COINS.api({a:'island'}).then(function(j){if(my===MI.seq&&j.ok){MI.fid=null;MI.data=j.island;MI.at=Date.now();miCachePut(j.island);if(V.t==='pets')paintPets()}}).catch(function(){})}
 }
 function paintPets(){
   var g=$('ptGrid'),cap=$('ptCap');if(!g)return;
   var w=COINS.get(),d=MI.data&&MI.data.mine?MI.data:null,nP=d?d.pets.filter(function(p){return !PV_BEAST[p.k]}).length:0,room=d?Math.min(d.h,8)-nP:0;
   if(w.code&&d)cap.innerHTML=d.h?'🏠 你的小屋 Lv'+d.h+' 可以養 <b>'+Math.min(d.h,8)+'</b> 隻，已經有 <b>'+nP+'</b> 隻'+(room>0?'，還可以領養 '+room+' 隻！':(d.h<8?'；升級小屋就能多養一隻。':'；寵物名額已滿。'))+'・你有 🪙 <b>'+w.bal+'</b> 枚'+(w.admin?'（管理員免費）':''):'🚧 你還沒有小屋，先到 <button class="mb-b" type="button" data-open="mine">🏝️ 我的小島</button> 用 🪵 10・🪨 5 蓋一間。';
+  /* 正在幫寵物取名字：背景資料更新時不要重畫格子（不然打的字會被清掉、鍵盤會跳） */
+  if(MI.adopt&&$('ptName')&&!(d&&d.pets.some(function(p){return p.k===MI.adopt})))return;
   g.innerHTML=ANI_KEYS.map(function(k){
     var a=ANI[k],owned=!!(d&&d.pets.some(function(p){return p.k===k})),ad=MI.adopt===k&&!owned,can=w.code&&d&&room>0&&!owned&&(w.admin||w.bal>=a[2]);
     return '<div class="pt-c'+(a[3]?' rare':'')+'"><span class="pt-e">'+a[0]+'</span><b>'+a[1]+(a[3]?'<em>稀有</em>':'')+'</b><span class="pt-p">🪙 '+a[2]+'</span>'+
-      (ad?'<input class="pt-in" maxlength="8" placeholder="幫牠取名字" id="ptName"><button class="btn btn-primary btn-sm" type="button" data-adopt="'+k+'">確定領養</button><button class="mb-b" type="button" data-acancel>取消</button>'
+      (ad?'<input class="pt-in" maxlength="8" placeholder="幫牠取名字" id="ptName" enterkeyhint="done" autocomplete="off"><button class="btn btn-primary btn-sm" type="button" data-adopt="'+k+'">確定領養</button><button class="mb-b" type="button" data-acancel>取消</button>'
         :(owned?'<button class="btn btn-ghost btn-sm" type="button" disabled>✓ 已領養</button>':'<button class="btn '+(can?'btn-primary':'btn-ghost')+' btn-sm" type="button" data-pick="'+k+'">🏡 領養</button>'))+'</div>';
   }).join('');
   var inp=$('ptName');if(inp)inp.focus();
@@ -4029,6 +4041,10 @@ pBody.addEventListener('click',function(e){
       if(V.t==='pets')paintPets();else if(V.t==='mine')paintMine();
     }).catch(function(){MI.busy=false;toast('⚠️ 網路不穩，剛才的領養可能沒有記上，請重新整理確認');if(MI.data)MI.data.pets=MI.data.pets.filter(function(x){return String(x.id).indexOf('tmp')!==0});var w3=COINS.get();w3.bal=(w3.bal||0)+cost;if(V.t==='pets')paintPets();if(typeof resBag==='function')resBag()});
     return}
+});
+pBody.addEventListener('keydown',function(e){
+  if(V.t!=='pets'||e.target.id!=='ptName'||(e.key!=='Enter'&&e.keyCode!==13)||e.isComposing)return;
+  e.preventDefault();var b=pBody.querySelector('[data-adopt]');if(b)b.click();
 });
 var SEARCH_KW=['圖塊','LISP','出圖','標註','圖層','3D','外掛','配置','文字','數量','手稿','線上課程'];
 /* 全文搜尋：文章索引 assets/search.json 第一次打開搜尋才載入 */
