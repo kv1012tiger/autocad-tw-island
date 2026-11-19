@@ -3066,17 +3066,27 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026111802',GACHA_V='2026111901';
+var BET_V='2026111802',GACHA_V='2026111902';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
-var GA={owner:null,left:null,log:[],pend:null};
+var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
+/* 今天還能抽幾次：這台裝置記住上次後台給的數字（台灣日期），打開時先顯示，不再預設 3 次 */
+function gaDay(){return new Date(Date.now()+8*3600000).toISOString().slice(0,10)}
+function gaLeftKey(){return 'aikb-gacha-left-'+(COINS.get().code||'')}
+function gaLeftSet(n){GA.left=n;GA.err=false;try{localStorage.setItem(gaLeftKey(),JSON.stringify({d:gaDay(),n:n}))}catch(e){}}
+function gaLeftCached(){try{var c=JSON.parse(localStorage.getItem(gaLeftKey())||'null');if(c&&c.d===gaDay()&&typeof c.n==='number')return c.n}catch(e){}return null}
+function gaSyncF(){var f=$('gaF');try{if(f&&f.contentWindow&&f.contentWindow.gachaSync)f.contentWindow.gachaSync()}catch(e){}}
+function gaLoad(){var code=COINS.get().code;if(!code)return;GA.err=false;
+  COINS.api({a:'gacha'}).then(function(j){if(COINS.get().code!==code)return;if(j&&j.ok){gaLeftSet(j.gachaLeft);GA.log=j.gachaLog||[];if(j.bn)bnSet(j.bn)}else if(GA.left==null)GA.err=true;gaSyncF()})
+    .catch(function(){if(GA.left==null){GA.err=true;gaSyncF()}})}
 window.AIKB_GACHA={
-  state:function(){var w=COINS.get();return {login:!!w.code,coins:w.bal||0,left:GA.left==null?3:GA.left,sfx:SFX_ON,log:GA.log}},
+  state:function(){var w=COINS.get();return {login:!!w.code,coins:w.bal||0,left:GA.left,err:GA.err,sfx:SFX_ON,log:GA.log}},
+  reload:function(){gaLoad();gaSyncF()},
   spin:function(id){
     try{GA.pend=GA.pend||localStorage.getItem(gaKey())}catch(e){}
     var use=GA.pend||id;GA.pend=use;try{localStorage.setItem(gaKey(),use)}catch(e){}
     return COINS.api({a:'gacha',id:use}).then(function(j){
-      if(j&&j.gachaLeft!=null)GA.left=j.gachaLeft;if(j&&j.gachaLog)GA.log=j.gachaLog;if(j&&j.bn)bnSet(j.bn);
+      if(j&&j.gachaLeft!=null)gaLeftSet(j.gachaLeft);else if(j&&j.err==='gachamax')gaLeftSet(0);if(j&&j.gachaLog)GA.log=j.gachaLog;if(j&&j.bn)bnSet(j.bn);
       if(!j||!j.ok){if(j&&j.err!=='bad'){GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}}return {ok:false,msg:j&&j.err==='gachamax'?'今天 3 次抽完了，明天再來':COINS.errText(j)}}
       GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}
       if(j.gacha&&j.gacha.k==='beast'&&MI.data&&!MI.fid)MI.at=0;
@@ -3092,13 +3102,14 @@ window.AIKB_GACHA={
 function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
 (function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(){location.hash='gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
-  var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null}
+  var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null;GA.err=false}
+  if(GA.left==null&&code)GA.left=gaLeftCached();
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
     '<div class="p-sec"><h4>🎉 最近喜報</h4><div class="bn-list" id="bnList">'+bnListHTML()+'</div></div>'+
     '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 3% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
   $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
-  if(code)COINS.api({a:'gacha'}).then(function(j){if(j&&j.ok){GA.left=j.gachaLeft;GA.log=j.gachaLog||[];if(j.bn)bnSet(j.bn)}var f=$('gaF');try{if(f&&f.contentWindow&&f.contentWindow.gachaSync)f.contentWindow.gachaSync()}catch(e){}}).catch(function(){});
+  if(code)gaLoad();
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={

@@ -108,7 +108,7 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
 <div class="wrap" id="wrap">
   <div class="top">
     <div class="chip">🪙 <b id="coins">0</b></div>
-    <div class="chip">今天還能抽 <b id="left">3</b> 次</div>
+    <div class="chip">今天還能抽 <b id="left">…</b> 次</div>
     <button class="sfx" id="sfx" type="button" aria-label="音效開關">🔊</button>
   </div>
   <h1>✨ 扭蛋島 ✨</h1>
@@ -297,17 +297,19 @@ var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],i
 $('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（五選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
 
 /* ---- 狀態 ---- */
-var S={coins:50,left:3,login:true,busy:false,cap:null,taps:0,res:null,sfx:true,log:[]};
+var S={coins:50,left:3,login:true,busy:false,cap:null,taps:0,res:null,sfx:true,log:[],err:false};
 function sync(){
-  if(API){var st=API.state();S.coins=st.coins;S.left=st.left;S.login=st.login;S.sfx=st.sfx!==false;if(st.log)S.log=st.log}
-  $('coins').textContent=S.coins;$('left').textContent=S.left;$('sfx').textContent=S.sfx?'🔊':'🔇';
+  if(API){var st=API.state();S.coins=st.coins;S.left=st.left;S.err=!!st.err;S.login=st.login;S.sfx=st.sfx!==false;if(st.log)S.log=st.log}
+  $('coins').textContent=S.coins;$('left').textContent=S.left==null?'…':S.left;$('sfx').textContent=S.sfx?'🔊':'🔇';
   var go=$('go');
   if(!S.login){go.textContent='🔑 登島後才能抽';go.disabled=false}
   else if(S.cap){go.textContent='👆 先打開扭蛋';go.disabled=true}
+  else if(S.left==null&&S.err){go.textContent='⚠️ 暫時讀不到次數，點我重試';go.disabled=false}
+  else if(S.left==null){go.textContent='⏳ 讀取今日次數…';go.disabled=true}
   else if(S.left<=0){go.textContent='今天抽完了，明天再來';go.disabled=true}
   else if(S.coins<5){go.textContent='🪙 金幣不夠（要 5 枚）';go.disabled=true}
   else{go.textContent=S.res?'🎰 再轉一次（🪙 5）':'🎰 轉一次（🪙 5）';go.disabled=S.busy}
-  $('hint').hidden=S.busy||!!S.cap||S.left<=0||!S.login;
+  $('hint').hidden=S.busy||!!S.cap||S.left==null||S.left<=0||!S.login;
   if(S.log.length){$('logsec').hidden=false;$('log').innerHTML=S.log.slice(0,6).map(function(g){return '<span>'+label(g)+'</span>'}).join('')}
   fit();
 }
@@ -335,6 +337,7 @@ function fake(){var tot=0,i,rv;TABLE.forEach(function(t){tot+=t[2]});rv=Math.ran
   S.coins-=5;if(g.k==='coin')S.coins+=g.n;S.left--;return Promise.resolve({ok:true,gacha:g})}
 function spin(){
   if(!S.login){if(API)API.login();return}
+  if(S.left==null){if(S.err&&API&&API.reload){S.err=false;API.reload()}return}
   if(S.busy||S.cap||S.left<=0||S.coins<5)return;
   S.busy=true;S.res=null;$('prize').className='prize';$('rays').className='rays';$('dark').className='dark';$('beam').className='beam';$('msg').textContent='';
   var cap=$('cap');cap.className='cap';cap.style.removeProperty('--gl');
