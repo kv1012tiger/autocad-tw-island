@@ -184,7 +184,27 @@ function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k
 var GACHA_COST = 5, GACHA_DAY = 3;
 var GACHA = [['fruit', 10, 40, 'w'], ['wood', 20, 13, 'g'], ['stone', 20, 13, 'g'], ['iron', 20, 12, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 8, 'p'], ['dia', 3, 1, 'y'], ['beast', 1, 3, 'r']];
 var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
-var BEAST_SELL = { wood: 25, stone: 25, iron: 25, dia: 1 };   // 重複的神獸到商店島換資源
+var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸到商店島換資源
+/* 喜報跑馬燈：船長抽到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則 */
+var BN_HEAD = ['時間', '暱稱', '神獸', '收藏'], BN_KEEP = 10, BN_HOURS = 24;
+function bnews_() {
+  var hit = cget_('bnews'); if (hit) return hit;
+  var sh = sheet_('喜報', BN_HEAD), n = sh.getLastRow() - 1, out = [], since = Date.now() - BN_HOURS * 3600000;
+  if (n > 0) {
+    var v = sh.getRange(Math.max(2, n + 2 - 30), 1, Math.min(n, 30), BN_HEAD.length).getValues();
+    for (var x = v.length - 1; x >= 0 && out.length < BN_KEEP; x--) {
+      var t = +new Date(v[x][0]), b = String(v[x][2]);
+      if (!t || t < since || !ANIMALS[b]) continue;
+      out.push({ t: t, nick: plain_(v[x][1]), b: b, name: ANIMALS[b].name, dup: v[x][3] === '是' ? 1 : 0 });
+    }
+  }
+  cput_('bnews', out, 300);
+  return out;
+}
+function bnewsAdd_(nick, b, dup) {
+  sheet_('喜報', BN_HEAD).appendRow([new Date(), String(nick || '船長'), b, dup ? '是' : '']);
+  CacheService.getScriptCache().remove('bnews');
+}
 /* 重複抽到的神獸先收在「神獸收藏」（isle.bbag）；可以送給好友，或到商店換資源 */
 function bbagOf_(o) { var b = o.bbag && typeof o.bbag === 'object' ? o.bbag : {}, out = {}; BEASTS.forEach(function (k) { if (num_(b[k]) > 0) out[k] = num_(b[k]); }); return out; }
 /* 收到一隻神獸：沒有就住進小島，有了就放進收藏 */
@@ -524,6 +544,7 @@ function handle_(q) {
           else if (pick[0]==='beast'){
             var bk=BEASTS[Math.floor(Math.random()*BEASTS.length)];gr.b=bk;gr.name=ANIMALS[bk].name;gr.el=ANIMALS[bk].beast;
             if (beastGive_(gIsle,bk)==='bag') gr.dup=1;
+            bnewsAdd_(r[C.nick],bk,gr.dup);
           }
           else r[BAG_COL[pick[0]]]=num_(r[BAG_COL[pick[0]]])+pick[1];
           ga.n=num_(ga.n)+1;res.gacha=gr;
@@ -531,7 +552,7 @@ function handle_(q) {
         }
       }
       gIsle.gacha=ga;r[C.isle]=JSON.stringify(gIsle);res.gachaLeft=Math.max(0,GACHA_DAY-num_(ga.n));res.gachaCost=GACHA_COST;
-      res.gachaLog=ga.receipts.slice(-6).reverse().map(function(x){return x.result});
+      res.gachaLog=ga.receipts.slice(-6).reverse().map(function(x){return x.result});res.bn=bnews_();
     } else if (a === 'bsell') {
       /* 商店島：收藏裡的一隻神獸換資源 */
       var sIsle=isleOf_(r), sk=String(q.k||''), sb=bbagOf_(sIsle);
@@ -1158,7 +1179,8 @@ function islLite_() {
 function withOpen_(o) {
   var op = {};
   ISL.forEach(function (il) { var x = islLv_(il); op[il.id] = [x.lv, x.w]; });
-  return { ok: o.ok, left: o.left, ma: o.ma, op: op };
+  var bn = []; try { bn = bnews_(); } catch (e) {}
+  return { ok: o.ok, left: o.left, ma: o.ma, op: op, bn: bn };
 }
 function islesPub_(st, r) {
   var o = {}, tc = r ? counts_(r[C.gToday]) : {};

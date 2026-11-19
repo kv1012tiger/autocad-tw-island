@@ -514,6 +514,18 @@ html,body{height:100%}
 body{overflow:hidden;background:#1581bd}
 .world{position:fixed;left:0;right:0;top:var(--hud,60px);bottom:0;display:flex;touch-action:pan-x pan-y;overflow:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;cursor:grab;background:#0f6fb4;overscroll-behavior:contain}
 .world::-webkit-scrollbar{display:none}
+/* 喜報跑馬燈：船長抽到神獸 */
+.bnt{position:fixed;left:50%;top:calc(var(--hud,60px) + 8px);z-index:60;transform:translateX(-50%);width:min(92vw,520px);display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;background:linear-gradient(90deg,rgba(76,29,149,.92),rgba(124,45,18,.9));border:1px solid rgba(255,215,0,.75);box-shadow:0 4px 16px rgba(0,0,0,.35),0 0 14px rgba(255,200,60,.35);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;overflow:hidden}
+.bnt[hidden]{display:none}
+.bnt-h{flex:none;padding:2px 8px;border-radius:999px;background:#ffd54f;color:#5b2100;font-size:12px;font-weight:900;animation:bntGlow 1.6s ease-in-out infinite}
+.bnt-w{flex:1;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+.bnt-t{display:inline-block;padding-left:100%;animation:bntRun var(--d,14s) linear infinite}
+.bnt-t i{font-style:normal;margin-right:36px}
+.bnt-t b{color:#ffe082}
+@keyframes bntRun{to{transform:translateX(-100%)}}
+@keyframes bntGlow{50%{box-shadow:0 0 10px #ffd54f}}
+.bn-list{display:grid;gap:6px}.bn-list div{padding:8px 12px;border-radius:12px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.35);font-size:14px}.bn-list small{opacity:.7;margin-left:6px}
+@media (prefers-reduced-motion:reduce){.bnt-t{animation-duration:calc(var(--d,14s) * 2)}}
 .world.drag{cursor:grabbing;user-select:none}
 .map{margin:0;max-width:none;border:0;border-radius:0;box-shadow:none;background:radial-gradient(38% 30% at 30% 30%,rgba(86,205,235,.55),transparent 70%),radial-gradient(42% 34% at 72% 62%,rgba(86,205,235,.5),transparent 70%),radial-gradient(34% 26% at 62% 18%,rgba(40,130,205,.6),transparent 70%),linear-gradient(160deg,#1b8fd0,#0f6fb4 55%,#1b86c6)}
 .map-size{position:relative;flex:none;margin:auto;overflow:hidden;transform-origin:0 0}
@@ -1353,6 +1365,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 </header>
 
 <main>
+<button class="bnt" id="bnTick" type="button" hidden aria-label="喜報：船長抽到神獸，點我去扭蛋島"><span class="bnt-h">🎉 喜報</span><span class="bnt-w"><span class="bnt-t" id="bnText"></span></span></button>
 <section class="world" id="world" aria-label="論壇資源島地圖">
   <div class="map-size" id="mapSize"><div class="map" id="map">
     <svg class="islets" id="islets" aria-hidden="true"></svg>
@@ -2961,7 +2974,7 @@ function paintShop(){
   o+='<div class="p-sec"><h4>我的錢包</h4><div class="rs-bag"><span>🪙 <b>'+(w.bal||0)+'</b> 金幣</span>'+RTYPE.map(function(x){return '<span>'+x.it+' <b>'+(b[x.rk]||0)+'</b> '+x.item+'</span>'}).join('')+'<span>💎 <b>'+(w.dia||0)+'</b> 鑽石</span></div></div>';
   var dleft=Math.max(0,(w.diaSellMax||3)-(w.diaSells||0)),sleft=Math.max(0,(w.swapMax||5)-(w.swaps||0));
   o+='<div class="p-sec"><h4>💎 鑽石換金幣<span class="sh-left">今天還能換 '+dleft+' 次</span></h4><div class="mi-seeds"><button class="mb-b" type="button" data-sell="dia"'+((w.dia||0)<1||!dleft?' disabled':'')+'>💎1 → 🪙10<small>'+((w.dia||0)<1?'你還沒有鑽石':'找鸚鵡商人鑑定')+'</small></button></div><p class="mi-note">每天最多 '+(w.diaSellMax||3)+' 次。鑽石可以在物資島採集、看文章時撿到。</p></div>';
-  var bbg2=w.bbag||{},bk2=Object.keys(bbg2).filter(function(k){return bbg2[k]>0}),bsl=w.bsell||{wood:25,stone:25,iron:25,dia:1};
+  var bbg2=w.bbag||{},bk2=Object.keys(bbg2).filter(function(k){return bbg2[k]>0}),bsl=w.bsell||{wood:66,stone:66,iron:66,dia:6};
   if(bk2.length)o+='<div class="p-sec"><h4>🐲 神獸收藏換資源</h4><div class="mi-seeds">'+bk2.map(function(k){return '<button class="mb-b" type="button" data-bsell="'+k+'">'+(ANI[k]||['🐾'])[0]+' '+(ANI[k]||['',k])[1]+' → 🪵'+bsl.wood+' 🪨'+bsl.stone+' 🔩'+bsl.iron+' 💎'+bsl.dia+'<small>收藏 ×'+bbg2[k]+'</small></button>'}).join('')+'</div><p class="mi-note">重複抽到的神獸可以在這裡換資源，也可以送給好友。</p></div>';
   o+='<div class="p-sec"><h4>⛵ 船塢（你有 '+sh.own.length+' / '+SHIPC.length+' 艘）</h4><div class="sh-ships">'+SHIPC.map(function(c,i){
     var own=sh.own.indexOf(i)>=0,cur=sh.cur===i;
@@ -3045,7 +3058,7 @@ window.AIKB_GACHA={
     try{GA.pend=GA.pend||localStorage.getItem(gaKey())}catch(e){}
     var use=GA.pend||id;GA.pend=use;try{localStorage.setItem(gaKey(),use)}catch(e){}
     return COINS.api({a:'gacha',id:use}).then(function(j){
-      if(j&&j.gachaLeft!=null)GA.left=j.gachaLeft;if(j&&j.gachaLog)GA.log=j.gachaLog;
+      if(j&&j.gachaLeft!=null)GA.left=j.gachaLeft;if(j&&j.gachaLog)GA.log=j.gachaLog;if(j&&j.bn)bnSet(j.bn);
       if(!j||!j.ok){if(j&&j.err!=='bad'){GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}}return {ok:false,msg:j&&j.err==='gachamax'?'今天 3 次抽完了，明天再來':COINS.errText(j)}}
       GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}
       if(j.gacha&&j.gacha.k==='beast'&&MI.data&&!MI.fid)MI.at=0;
@@ -3057,13 +3070,17 @@ window.AIKB_GACHA={
   done:function(g){if(g&&g.k==='beast')toast(g.dup?'🐲 '+g.name+' 放進神獸收藏了':'🐲 '+g.name+' 住進你的小島了！')},
   setSfx:function(){}
 };
+/* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
+function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
+(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(){location.hash='gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
   var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null}
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 3% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換資源。結果由伺服器決定。</p></div>';
+    '<div class="p-sec"><h4>🎉 最近喜報</h4><div class="bn-list" id="bnList">'+bnListHTML()+'</div></div>'+
+    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 3% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
   $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
-  if(code)COINS.api({a:'gacha'}).then(function(j){if(j&&j.ok){GA.left=j.gachaLeft;GA.log=j.gachaLog||[]}var f=$('gaF');try{if(f&&f.contentWindow&&f.contentWindow.gachaSync)f.contentWindow.gachaSync()}catch(e){}}).catch(function(){});
+  if(code)COINS.api({a:'gacha'}).then(function(j){if(j&&j.ok){GA.left=j.gachaLeft;GA.log=j.gachaLog||[];if(j.bn)bnSet(j.bn)}var f=$('gaF');try{if(f&&f.contentWindow&&f.contentWindow.gachaSync)f.contentWindow.gachaSync()}catch(e){}}).catch(function(){});
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={
@@ -4342,10 +4359,30 @@ function msgNote(ma){
   msgPaint(ma>seen);
   if(ma>seen&&MSGA.toasted!==ma){MSGA.toasted=ma;toast('📮 留言碼頭有新留言，到地圖上點紅色「新留言」去看看')}
 }
+/* 喜報跑馬燈：船長在扭蛋島抽到神獸（後台給最近 24 小時、最多 10 則） */
+var BN={list:[],sig:''},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
+function bnAgo(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前'}
+function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> 在扭蛋島抽到 '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
+function bnSet(list){
+  if(!Array.isArray(list))return;
+  var sig=list.map(function(x){return x.t+x.b}).join('|');
+  if(sig===BN.sig)return;BN.sig=sig;BN.list=list;
+  var el=$('bnTick'),tx=$('bnText');if(!el)return;
+  if(!list.length){el.hidden=true;return}
+  tx.innerHTML=list.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
+  tx.style.setProperty('--d',Math.max(10,Math.min(60,list.length*9))+'s');
+  el.hidden=false;bnPos();
+  /* 有新的喜報（不是自己抽的）就跳一次提示 */
+  var top=list[0],seen=0;try{seen=+localStorage.getItem('aikb-bn-seen')||0}catch(e){}
+  if(top.t>seen){try{localStorage.setItem('aikb-bn-seen',top.t)}catch(e){}
+    if(seen&&top.nick!==COINS.get().nick)toast('🎉 船長 '+top.nick+' 抽到 '+(BN_IC[top.b]||'🐲')+top.name+'！')}
+  if(V&&V.t==='gacha'&&$('bnList'))$('bnList').innerHTML=bnListHTML();
+}
+function bnListHTML(){return BN.list.length?BN.list.map(function(x){return '<div>🎉 '+bnLine(x)+'<small>'+bnAgo(x.t)+'</small></div>'}).join(''):'<p>最近 24 小時還沒有人抽到神獸，搶第一個！</p>'}
 function resLoad(){
   clearTimeout(RSV.timer);
   if(!document.hidden&&COINS.get().code)COINS.api({a:'me'}).catch(function(){}); /* 定期同步個人未讀通知 */
-  COINS.call({a:'isl'}).then(function(j){if(j&&j.ok&&j.left){RSV.left=j.left;if(j.op)RSV.op=j.op;RSV.t=Date.now();resPaint()}if(j&&j.ok&&j.ma!=null)msgNote(j.ma);resPre()}).catch(function(){}).then(function(){
+  COINS.call({a:'isl'}).then(function(j){if(j&&j.ok&&j.left){RSV.left=j.left;if(j.op)RSV.op=j.op;RSV.t=Date.now();resPaint()}if(j&&j.ok&&j.ma!=null)msgNote(j.ma);if(j&&j.ok&&j.bn)bnSet(j.bn);resPre()}).catch(function(){}).then(function(){
     RSV.timer=setTimeout(function(){if(document.hidden)RSV.timer=setTimeout(resLoad,60000);else resLoad()},45000);
   });
 }
