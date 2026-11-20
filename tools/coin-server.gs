@@ -1064,7 +1064,7 @@ var TOP_TTL = 60;
 function topLists_() {
   var cache = CacheService.getScriptCache(), hit = cache.get('top5');
   if (hit) return JSON.parse(hit);
-  var rows = rows_(players_()), out = {}, isl = rows.map(isleOf_), scoreOf = {};
+  var rows = rows_(players_()), out = {}, isl = rows.map(isleOf_), scoreOf = {}; var nowT = Date.now();
   rows.forEach(function (r, x) { scoreOf[x] = isleScore_(isl[x]); });
   [['coin', C.bal], ['res', C.tres], ['dia', C.tdia], ['isle', -1]].forEach(function (kc) {
     var k = kc[0], col = kc[1];
@@ -1075,6 +1075,7 @@ function topLists_() {
       .slice(0, 20)
       .map(function (r) {
         var o = { c: String(r[C.code]).toUpperCase(), nick: plain_(r[C.nick]), av: plain_(r[C.av]), v: val(r), bal: num_(r[C.bal]), fid: String(r[C.fid] || '') };
+        if (r[C.seen] && nowT - new Date(r[C.seen]).getTime() < ONLINE_WIN) o.on = 1;   // 在線（跟上面「現在 X 位在線」同一個判斷）
         if (k === 'res') o.bag = bag_(r);
         return o;
       });
@@ -1088,7 +1089,6 @@ function topLists_() {
   out.voy = voy.sort(function (p, q) { return q.score - p.score; }).slice(0, VOY_KEEP);
   // 登島船長總人數：所有有暱稱的一般玩家（不含站長帳號），不是只算排行榜前 20 名
   out.n = rows.filter(function (r) { return r[C.nick] && r[C.admin] !== '是'; }).length;
-  var nowT = Date.now();
   out.on = rows.filter(function (r) { return r[C.nick] && r[C.admin] !== '是' && r[C.seen] && nowT - new Date(r[C.seen]).getTime() < ONLINE_WIN; }).length;
   try { cache.put('top5', JSON.stringify(out), TOP_TTL); } catch (e) {}
   return out;

@@ -168,6 +168,7 @@
     '.cw-tabs{display:flex;gap:6px;justify-content:center;margin:6px 0 2px;flex-wrap:wrap}' +
     '.cw-tabs button{padding:7px 14px;border-radius:999px;border:1.5px solid rgba(255,209,102,.5);background:transparent;color:#fff8e7;font:800 14.5px "Noto Sans TC",sans-serif;cursor:pointer}' +
     '.cw-tabs button.on{background:#ffd166;color:#3a1a08;border-color:#ffd166}' +
+    '.cw-lb .on{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(74,222,128,.18);color:#86efac;font-size:12px;font-weight:700;vertical-align:2px}' +
     '.cw-lb .a{flex:none;font-size:22px;width:28px;text-align:center}.cw-lb .s{display:block;font-size:12px;color:#b9d8e4;font-weight:400}' +
     '.cw-sec{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,209,102,.25);text-align:left}' +
     '.cw-sec h4{margin:0 0 8px;font-size:16px;color:#ffd166}' +
@@ -410,7 +411,7 @@
           body.innerHTML = '<ol class="cw-lb">' + rows.map(function (r, i) {
             var v = k === 'res' ? '🧺 ' + r.v : k === 'dia' ? '💎 ' + r.v : k === 'isle' ? '🏝️ ' + r.v : '🪙 ' + r.v;
             var sail = (k === 'isle' && r.fid && r.fid !== P.fid && window.ISLE_VISIT) ? '<button class="cw-mini" type="button" data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '">⛵</button>' : '';
-            return '<li class="' + (r.nick === P.nick ? 'me' : '') + '"><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) +
+            return '<li class="' + (r.nick === P.nick ? 'me' : '') + '"><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (r.on ? '<span class="on">🟢 在線</span>' : '') +
               (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
