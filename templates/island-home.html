@@ -3682,9 +3682,26 @@ function paintMine(){
     box.innerHTML=o;fitIslandItems();pwStart();return;
   }
   var R=d.rules,w=COINS.get(),fruit=(w.bag||{}).fruit||0;
+  /* 建造 */
+  var B=[];
+  B.push(d.hb?{e:'🚧',n:'小屋 Lv'+d.hb.t+' 施工中',t:'還要 <b class="mi-hbt" data-k="house">'+hbText(d)+'</b> 才會完工',done:1}:d.h<10?{k:'house',e:HOUSEI[d.h+1],n:'小屋 Lv'+(d.h+1),t:'可以養 '+Math.min(d.h+1,8)+' 隻寵物・施工要 '+Math.round((R.houseMs[d.h+1])/60000)+' 分鐘',cost:R.house[d.h+1]}:{e:HOUSEI[10],n:'小屋 Lv10',t:'已經蓋到最高級・最多養 8 隻寵物',done:1});
+  var FMS=R.fieldMs||[60000,120000,240000],DMS=R.decoMs||{tree:120000,fountain:300000,tower:600000};
+  B.push(d.bb&&d.bb.field!=null?{e:'🚧',n:'菜田 第 '+(d.fields+1)+' 塊 施工中',t:'還要 <b class="mi-hbt" data-k="field">'+bText(d,'field')+'</b> 才會完工',done:1}:d.fields<R.field.length?{k:'field',e:'🟫',n:'菜田 第 '+(d.fields+1)+' 塊',t:'可以多種一種菜・施工要 '+bmin(FMS[d.fields])+' 分鐘',cost:R.field[d.fields]}:{e:'🟫',n:'菜田 3 塊',t:'菜田已經蓋滿了',done:1});
+  /* 果樹：可以種很多棵（會自己長大、結果） */
+  var nT=(d.trees||[]).length,TM=R.treeMax||6;
+  B.push(d.bb&&d.bb.tree!=null?{e:'🚧',n:'果樹 第 '+(nT+1)+' 棵 施工中',t:'還要 <b class="mi-hbt" data-k="tree">'+bText(d,'tree')+'</b> 才會完工',done:1}:nT<TM?{k:'tree',e:'🌳',n:'果樹 第 '+(nT+1)+' 棵',t:'會自己長大、長出水果・島主分 +3～8・施工要 '+bmin(DMS.tree)+' 分鐘',cost:(R.treeCost||[])[nT]||R.deco.tree.cost}:{e:'🌳',n:'果樹 '+TM+' 棵',t:'果樹園已經種滿了',done:1});
+  /* 噴水池、瞭望塔：蓋好之後可以升到 Lv8（最高級數看後台給的升級表） */
+  ['fountain','tower'].forEach(function(k){
+    var x=R.deco[k],lv=decoLv(d,k),UP=R.up&&R.up[k],PT=(R.upPts&&R.upPts[k])||[0,x.pts],MU=R.upMult||[1,1.6,3],tg=lv+1,MX=UP?UP.length-1:3;
+    if(d.bb&&d.bb[k]!=null){var tt=(d.bt&&d.bt[k])||tg;B.push({e:'🚧',n:x.name+' Lv'+tt+(lv?' 升級':'')+' 施工中',t:'還要 <b class="mi-hbt" data-k="'+k+'">'+bText(d,k)+'</b> 才會完工',done:1});return}
+    if(lv>=MX){B.push({e:DECOI[k][0],n:x.name+' Lv'+MX,t:'已經升到最高級・島主分 +'+PT[MX],done:1});return}
+    B.push({k:k,e:DECOI[k][0],n:lv?x.name+' Lv'+lv+' → Lv'+tg:x.name,t:(lv?'升級':'裝飾')+'・島主分 +'+PT[tg]+(lv?'（現在 +'+PT[lv]+'）':'')+'・施工要 '+bmin(Math.round(DMS[k]*MU[tg-1]))+' 分鐘',cost:UP?UP[tg]:x.cost,bt:lv?'⬆️ 升級':'🔨 建造'});
+  });
+  o+='<div class="p-sec"><h4>🏗️ 建造</h4><div class="mi-build">'+B.map(function(b){
+    return '<div class="mi-bd'+(b.done?' done':'')+'"><span class="mi-be">'+b.e+'</span><div><b>'+b.n+'</b><small>'+b.t+'</small>'+(b.cost?'<div class="mi-cost">'+costHTML(b.cost)+'</div>'+(costOK(b.cost)?'':'<div class="mi-miss">還缺：'+missText(missOf(b.cost))+'</div>')+'<button class="btn btn-primary btn-sm'+(costOK(b.cost)?'':' need')+'" type="button" data-build="'+b.k+'">'+(b.bt||'🔨 建造')+'</button>':'')+'</div></div>'}).join('')+'</div></div>';
   /* 菜園 */
   o+='<div class="p-sec"><h4>🥕 菜園</h4>';
-  if(!d.fields)o+='<p class="mi-note">還沒有菜田，到下面「建造」蓋第一塊田（🪵 5・🪨 5）。</p>';
+  if(!d.fields)o+='<p class="mi-note">還沒有菜田，到上面「建造」蓋第一塊田（🪵 5・🪨 5）。</p>';
   o+='<div class="mi-farm">'+d.f.map(function(c,i){
     if(!c)return '<div class="mi-fd"><b>第 '+(i+1)+' 塊田・空的</b><div class="mi-seeds">'+VEG_KEYS.map(function(k){var v=VEGI[k];return '<button class="mb-b" type="button" data-plant="'+k+'" data-i="'+i+'"'+(fruit<v[2]?' disabled':'')+'>'+v[0]+' 種'+v[1]+'<small>🍎'+v[2]+'・'+v[3]+'</small></button>'}).join('')+'</div></div>';
     var cv=cropView(c),v=VEGI[c.v];
@@ -3707,21 +3724,6 @@ function paintMine(){
   }).join('')+'</div>';
   if(d.pets.length)o+='<p class="mi-note">👆 點小島上的寵物就能摸摸（每天親密度 +1，飽足度 50 以上會送禮物），再從跳出的泡泡餵食（每天最多再 +2 親密度）。飽足度每天掉 25；🥕 +20、🥬 +35、🎃 +60、🍎 +10。親密度每 10 點升一級：Lv2 長大、Lv3 打扮、Lv5 傳說形態。</p>';
   o+='</div>';
-  /* 建造 */
-  var B=[];
-  B.push(d.hb?{e:'🚧',n:'小屋 Lv'+d.hb.t+' 施工中',t:'還要 <b class="mi-hbt" data-k="house">'+hbText(d)+'</b> 才會完工',done:1}:d.h<10?{k:'house',e:HOUSEI[d.h+1],n:'小屋 Lv'+(d.h+1),t:'可以養 '+Math.min(d.h+1,8)+' 隻寵物・施工要 '+Math.round((R.houseMs[d.h+1])/60000)+' 分鐘',cost:R.house[d.h+1]}:{e:HOUSEI[10],n:'小屋 Lv10',t:'已經蓋到最高級・最多養 8 隻寵物',done:1});
-  var FMS=R.fieldMs||[60000,120000,240000],DMS=R.decoMs||{tree:120000,fountain:300000,tower:600000};
-  B.push(d.bb&&d.bb.field!=null?{e:'🚧',n:'菜田 第 '+(d.fields+1)+' 塊 施工中',t:'還要 <b class="mi-hbt" data-k="field">'+bText(d,'field')+'</b> 才會完工',done:1}:d.fields<R.field.length?{k:'field',e:'🟫',n:'菜田 第 '+(d.fields+1)+' 塊',t:'可以多種一種菜・施工要 '+bmin(FMS[d.fields])+' 分鐘',cost:R.field[d.fields]}:{e:'🟫',n:'菜田 3 塊',t:'菜田已經蓋滿了',done:1});
-  /* 果樹：可以種很多棵（會自己長大、結果） */
-  var nT=(d.trees||[]).length,TM=R.treeMax||6;
-  B.push(d.bb&&d.bb.tree!=null?{e:'🚧',n:'果樹 第 '+(nT+1)+' 棵 施工中',t:'還要 <b class="mi-hbt" data-k="tree">'+bText(d,'tree')+'</b> 才會完工',done:1}:nT<TM?{k:'tree',e:'🌳',n:'果樹 第 '+(nT+1)+' 棵',t:'會自己長大、長出水果・島主分 +3～8・施工要 '+bmin(DMS.tree)+' 分鐘',cost:(R.treeCost||[])[nT]||R.deco.tree.cost}:{e:'🌳',n:'果樹 '+TM+' 棵',t:'果樹園已經種滿了',done:1});
-  /* 噴水池、瞭望塔：蓋好之後可以升到 Lv8（最高級數看後台給的升級表） */
-  ['fountain','tower'].forEach(function(k){
-    var x=R.deco[k],lv=decoLv(d,k),UP=R.up&&R.up[k],PT=(R.upPts&&R.upPts[k])||[0,x.pts],MU=R.upMult||[1,1.6,3],tg=lv+1,MX=UP?UP.length-1:3;
-    if(d.bb&&d.bb[k]!=null){var tt=(d.bt&&d.bt[k])||tg;B.push({e:'🚧',n:x.name+' Lv'+tt+(lv?' 升級':'')+' 施工中',t:'還要 <b class="mi-hbt" data-k="'+k+'">'+bText(d,k)+'</b> 才會完工',done:1});return}
-    if(lv>=MX){B.push({e:DECOI[k][0],n:x.name+' Lv'+MX,t:'已經升到最高級・島主分 +'+PT[MX],done:1});return}
-    B.push({k:k,e:DECOI[k][0],n:lv?x.name+' Lv'+lv+' → Lv'+tg:x.name,t:(lv?'升級':'裝飾')+'・島主分 +'+PT[tg]+(lv?'（現在 +'+PT[lv]+'）':'')+'・施工要 '+bmin(Math.round(DMS[k]*MU[tg-1]))+' 分鐘',cost:UP?UP[tg]:x.cost,bt:lv?'⬆️ 升級':'🔨 建造'});
-  });
   if(nT){
     var tv=d.trees.map(function(t){return treeView(t,d)}),tot=tv.reduce(function(a,v){return a+v.ripe},0);
     o+='<div class="p-sec"><h4>🌳 我的果樹園（'+nT+' / '+TM+'）</h4><div class="mi-orch">'+tv.map(function(v,i){
@@ -3729,8 +3731,6 @@ function paintMine(){
       return '<div class="mi-tr"><span>'+(st===0?'🌱':'🌳')+(v.ripe>0?'🍎':'')+'</span><div><b>第 '+(i+1)+' 棵・'+TREEN[st]+(v.ripe?'・🍎×'+v.ripe:'')+'</b><small>'+msg+'</small></div></div>';
     }).join('')+'</div><p class="mi-note">點島上的每棵果樹個別摘果。 果樹會自己長大：幼苗 → 小樹 → 結果樹；結果樹每約 '+Math.round((R.treeEvery||1200000)/60000)+' 分鐘長 1 顆水果，每棵最多存 '+(R.treeCap||3)+' 顆，摘下來變成背包裡的 🍎 水果（可換種子、餵寵物）。</p></div>';
   }
-  o+='<div class="p-sec"><h4>🏗️ 建造</h4><div class="mi-build">'+B.map(function(b){
-    return '<div class="mi-bd'+(b.done?' done':'')+'"><span class="mi-be">'+b.e+'</span><div><b>'+b.n+'</b><small>'+b.t+'</small>'+(b.cost?'<div class="mi-cost">'+costHTML(b.cost)+'</div>'+(costOK(b.cost)?'':'<div class="mi-miss">還缺：'+missText(missOf(b.cost))+'</div>')+'<button class="btn btn-primary btn-sm'+(costOK(b.cost)?'':' need')+'" type="button" data-build="'+b.k+'">'+(b.bt||'🔨 建造')+'</button>':'')+'</div></div>'}).join('')+'</div></div>';
   o+='<div class="p-sec"><h4>👣 最近訪客</h4>'+(d.vis&&d.vis.length?'<div class="mi-vis">'+d.vis.map(function(v){return '<span class="mi-v"><i>'+esc(v.a||'🙂')+'</i>'+esc(v.n)+'<small>'+ago(v.t)+'</small></span>'}).join('')+'</div>':'<p class="mi-note">還沒有人來拜訪。開放參觀後，別人就能航向你的島。</p>')+'</div>';
   box.innerHTML=o;fitIslandItems();pwStart();
 }
