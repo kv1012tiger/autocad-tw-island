@@ -3496,7 +3496,7 @@ function sceneHTML(d){
   if(t>=3)o+='<span class="mi-sc" style="left:73%;top:42%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
   o+='<div class="mi-house lv'+d.h+'"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
-  var dp={fountain:[62,60],tower:[66,20]},dl=d.dl||{};
+  var dp={tower:[52,8],fountain:[14,54]},dl=d.dl||{};   /* 瞭望塔在小屋右上、噴水池在小屋正下方，都緊靠小屋 */
   d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(8,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,lv-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
   (d.trees||[]).forEach(function(t,i){
     var v=treeView(t,d),pp=TREE_POS[i%TREE_POS.length];
@@ -3865,6 +3865,8 @@ function fitIslandItems(){
   function overlap(a,c,pad){return a[0]<c[2]+pad&&a[2]>c[0]-pad&&a[1]<c[3]+pad&&a[3]>c[1]-pad}
   var farm=sc.querySelector('.mi-fields'),farmBox=farm?rect(farm):null;
   var trees=Array.from(sc.querySelectorAll('.mi-fruit')),house=sc.querySelector('.mi-house'),houseBox=house?rect(house):null;
+  /* 噴水池、瞭望塔（含等級徽章、施工中）：果樹一定要讓開，不可蓋住 */
+  var decoBoxes=Array.from(sc.querySelectorAll('.mi-deco:not(.mi-fruit),.mi-deco:not(.mi-fruit) .mi-lv')).map(rect);
   var base=trees.map(function(el){return {x:parseFloat(el.style.left),y:parseFloat(el.style.top),size:parseFloat(el.style.fontSize)}});
   /* 位置記憶：只要「結構」沒變（島、版面寬度、田／設施／房子、果樹的棵數與大小），重畫時就沿用上次排好的位置。
      摘果、果實長出、倒數文字、每 30 秒重畫都不會讓樹跑掉；蓋新東西或樹長大才重新排。 */
@@ -3877,7 +3879,7 @@ function fitIslandItems(){
   if(fruitCached)trees.forEach(function(el){var c=FIT.t[el.dataset.ti];el.style.left=c[0]+'%';el.style.top=c[1]+'%';el.style.fontSize=c[2]+'px'});
   for(var phase=0;phase<2&&!fruitCached;phase++){
     var success=false;
-    for(var scale=1;scale>=0.699&&!success;scale-=0.1){
+    for(var scale=1;scale>=(phase===0?0.499:0.699)&&!success;scale-=0.1){   /* 先試著把果樹縮小、讓開小屋；真的放不下才允許壓到小屋 */
       var used=[],okAll=true;
       trees.forEach(function(el,i){el.style.fontSize=(base[i].size*scale)+'px';el.style.left=base[i].x+'%';el.style.top=base[i].y+'%'});
       trees.forEach(function(el,i){
@@ -3887,7 +3889,7 @@ function fitIslandItems(){
         for(var x=0;x<=100;x+=2.5)for(var y=0;y<=100;y+=2.5){
           var px=x*b.width/100+ox,py=y*b.height/100+oy,box=[px,py,px+w,py+h],inside=true;
           [[box[0],box[1]],[box[2],box[1]],[box[0],box[3]],[box[2],box[3]]].forEach(function(c){if(!inLand((c[0]-cx)/rx,(c[1]-cy)/ry))inside=false});
-          if(!inside||(farmBox&&overlap(box,farmBox,4))||(phase===0&&houseBox&&overlap(box,houseBox,2))||used.some(function(v){return overlap(box,v,3)}))continue;
+          if(!inside||(farmBox&&overlap(box,farmBox,4))||(phase===0&&houseBox&&overlap(box,houseBox,2))||decoBoxes.some(function(v){return overlap(box,v,4)})||used.some(function(v){return overlap(box,v,3)}))continue;
           var dist=Math.pow((x-base[i].x)*b.width/100,2)+Math.pow((y-base[i].y)*b.height/100,2);
           if(dist<score){score=dist;best=[x,y,box]}
         }
