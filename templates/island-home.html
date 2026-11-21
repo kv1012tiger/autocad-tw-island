@@ -818,6 +818,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .spot .rlv[hidden]{display:none}
 .spot .rdone{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3;padding:3px 12px;border-radius:999px;background:rgba(30,41,59,.9);color:#f1f5f9;font:900 15px/1.5 "Noto Sans TC",sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
 .spot .rdone[hidden]{display:none}
+.mi-bback{display:inline-flex;margin:2px 0 12px}
 .rs-lv{margin:6px 0 2px;padding:5px 10px;border-radius:12px;font:800 13px/1.5 "Noto Sans TC",sans-serif;color:#fff;text-align:center}
 .rs-lv.l0{background:#d97706}
 .rs-lv.l1{background:#0284c7}
@@ -3452,8 +3453,9 @@ function costOK(cost){var w=COINS.get(),b=w.bag||{};for(var k in cost){var have=
 function renderMine(fid){
   MI.fid=fid||null;MI.data=null;MI.fit=null;clearInterval(MI.timer);clearInterval(MI.hbT);
   var w=COINS.get();
-  pBody.innerHTML='<div class="ph" style="--c:#fde047"><span class="ph-e">🏝️</span><div><div class="p-kicker">'+(fid?'VISIT・參觀小島':'MY ISLAND・我的小島')+'</div><h3 id="pTitle">'+(fid?'船長的小島':(w.nick?esc(w.nick)+' 的小島':'我的小島'))+'</h3><p id="miSub">'+(fid?'看看他蓋了什麼，好友還能幫忙澆水':'用採集到的物資蓋房子、種菜、養寵物')+'</p></div></div><div id="miBox"><p class="s-count">登上小島中…</p></div>';
+  pBody.innerHTML='<div class="ph" style="--c:#fde047"><span class="ph-e">🏝️</span><div><div class="p-kicker">'+(fid?'VISIT・參觀小島':'MY ISLAND・我的小島')+'</div><h3 id="pTitle">'+(fid?'船長的小島':(w.nick?esc(w.nick)+' 的小島':'我的小島'))+'</h3><p id="miSub">'+(fid?'看看他蓋了什麼，好友還能幫忙澆水':'用採集到的物資蓋房子、種菜、養寵物')+'</p></div></div>'+(fid&&MI.backBoard?'<button class="btn btn-primary btn-sm mi-bback" type="button" id="miBack">🏆 返回排行榜</button>':'')+'<div id="miBox"><p class="s-count">登上小島中…</p></div>';
   $('pStep').textContent=fid?'🏝️ 參觀小島':'🏝️ 我的小島';
+  if($('miBack'))$('miBack').addEventListener('click',function(){var k=MI.backBoard;closePanel();COINS.board(k)});
   footSimple(fid?'← 航行清單':'← 回地圖',fid?'🏝️ 回我的小島':'🐾 寵物島 →');
   if(!w.code){$('miBox').innerHTML='<div class="mb-login"><p>取個暱稱，就能擁有自己的小島。</p><button class="btn btn-primary btn-sm" type="button" data-mjoin2>🏝️ 取暱稱・登島</button></div>';return}
   var mc=!fid&&miCacheGet();
@@ -3979,7 +3981,8 @@ pBody.addEventListener('click',function(e){
       if(j.gift){var g=GIFT_I[j.gift.k]||['🎁',''];setTimeout(function(){fxAt($('miBox')||t,[g[0],g[0],'🎁','✨'])},100);toast('💕 '+(pp0?pp0.n:'寵物')+' 送你 '+g[0]+' '+g[1]+' ×1！')}});return}
   if(d.mwater!=null){mineAct({a:'water',fid:MI.fid},t,function(j){var g=GIFT_I[j.got.k]||['🎁',''];fxAt(t,['💧','💧','🌱',g[0]]);playSfx('flip');toast('💧 澆好水了！你拿到 '+g[0]+' '+g[1]+' ×1')});return}
 });
-window.ISLE_VISIT=function(fid,nick){MI.visitFid=fid;MI.sailNick=nick||'';openPanel('sail',0);placeBoat(MINE_SPOT.si)};
+window.ISLE_VISIT=function(fid,nick,back){MI.visitFid=fid;MI.sailNick=nick||'';MI.backBoard=back||null;   /* back：從排行榜哪一頁來的，參觀頁會出現「返回排行榜」 */
+  openPanel('sail',0);placeBoat(MINE_SPOT.si)};
 function renderSail(){
   pBody.innerHTML='<div class="sail"><div class="sail-sea"><span class="sail-boat">⛵</span><i class="sail-wave"></i></div><h3>航向 '+(MI.sailNick?esc(MI.sailNick)+' 的小島':'別人的小島')+'…</h3><p>風平浪靜，馬上就到！</p></div>';
   $('pStep').textContent='⛵ 航行中';pFoot.hidden=true;playSfx('row');

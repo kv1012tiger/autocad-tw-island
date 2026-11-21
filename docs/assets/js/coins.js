@@ -156,6 +156,7 @@
     '.cw-lb{list-style:none;margin:12px 0 0;padding:0;text-align:left}' +
     '.cw-lb li{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:6px;border-radius:12px;background:rgba(255,255,255,.06)}' +
     '.cw-lb li.me{background:rgba(255,209,102,.2);outline:1.5px solid #ffd166}' +
+    '.cw-lb li[data-sail]{cursor:pointer;transition:background .15s}.cw-lb li[data-sail]:hover{background:rgba(255,255,255,.13)}.cw-lb .go{flex:none;font-size:15px;opacity:.75}' +
     '.cw-lb .r{flex:none;width:30px;font-weight:900;text-align:center}.cw-lb .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cw-lb .c{flex:none;font-weight:900;color:#ffd166}' +
     '.cw-me{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15);font-size:15px;color:#ffe2a8}' +
     '.cw-vis{margin:8px 0 12px;padding:9px 12px;border-radius:14px;background:rgba(3,42,60,.55);border:1px solid rgba(255,209,102,.35);color:#fff8e7;font:15px/1.6 "Noto Sans TC",sans-serif}' +
@@ -410,8 +411,8 @@
           if (!rows.length) { body.innerHTML = '<p>' + (k === 'coin' ? '還沒有人上榜，你來當第一名！' : k === 'isle' ? '還沒有人蓋小島，去我的小島蓋一間小屋吧！' : '還沒有人上榜，去物資島採集吧！') + '</p>'; return; }
           body.innerHTML = '<ol class="cw-lb">' + rows.map(function (r, i) {
             var v = k === 'res' ? '🧺 ' + r.v : k === 'dia' ? '💎 ' + r.v : k === 'isle' ? '🏝️ ' + r.v : '🪙 ' + r.v;
-            var sail = (k === 'isle' && r.fid && r.fid !== P.fid && window.ISLE_VISIT) ? '<button class="cw-mini" type="button" data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '">⛵</button>' : '';
-            return '<li class="' + (r.nick === P.nick ? 'me' : '') + '"><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (r.on ? '<span class="on">🟢 在線</span>' : '') +
+            var go = r.fid && window.ISLE_VISIT, sail = go ? '<span class="go" aria-hidden="true">⛵</span>' : '';   // 整列可點：航向他的小島參觀
+            return '<li class="' + (r.nick === P.nick ? 'me' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (r.on ? '<span class="on">🟢 在線</span>' : '') +
               (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
@@ -423,7 +424,7 @@
         }
         ov.addEventListener('click', function (e) {
           var b = e.target.closest('[data-tab]'); if (b) { show(b.dataset.tab); return; }
-          var sl = e.target.closest('[data-sail]'); if (sl) { close(); window.ISLE_VISIT(sl.dataset.sail, sl.dataset.n); }
+          var sl = e.target.closest('[data-sail]'); if (sl) { close(); if (sl.dataset.sail === P.fid) location.hash = '#mine'; else window.ISLE_VISIT(sl.dataset.sail, sl.dataset.n, cur); }
         });
         show(tab);
         // 先顯示上次存的名單，背景再更新成最新的
