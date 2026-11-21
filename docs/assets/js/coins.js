@@ -150,6 +150,7 @@
     '.cw-in.code{letter-spacing:.3em;text-transform:uppercase;font-size:22px}' +
     '.cw-err{color:#ffb4b4;font-size:14px;min-height:20px}' +
     '.cw-row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}' +
+    '.cw-row.cw-fl{position:sticky;bottom:-8px;z-index:6;justify-content:flex-start;margin:12px -6px -8px;padding:0 0 8px;pointer-events:none}.cw-row.cw-fl .cw-b{pointer-events:auto;min-width:0;padding:8px 18px;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.55)}' +   // 背包、排行榜的關閉：一直浮在左下角
     '.cw-b{min-width:110px;padding:11px 18px;border-radius:999px;border:2px solid #ffd166;background:transparent;color:#fff8e7;font:900 16px "Noto Sans TC",sans-serif;cursor:pointer}' +
     '.cw-b.p{border-color:transparent;background:linear-gradient(135deg,#ffb347,#ff5e62);color:#fff}.cw-b[disabled]{opacity:.6}' +
     '.cw-code{display:inline-block;margin:8px 0;padding:8px 18px;border-radius:14px;background:#06344a;border:2px dashed #ffd166;font:900 30px/1.3 Consolas,monospace;letter-spacing:.25em;color:#ffd166}' +
@@ -386,7 +387,7 @@
       '<small class="cw-tn" style="margin-top:4px"></small><div class="cw-body"><p>載入中…</p></div>' +
       '<div class="cw-me">' + av(P) + ' 你是 <b>' + esc(P.nick) + '</b>' + (P.admin ? '（管理員，不列入排行）' : '') + '<br>現有：🪙 <b>' + P.bal + '</b>・🧺 ' + bagTotal() + '・💎 ' + (P.dia || 0) + '・連續登島 ' + (P.streak || 0) + ' 天<br>排行榜累計：🧺 ' + (P.tres || 0) + ' 個物資・💎 ' + (P.tdia || 0) + ' 顆鑽石<br>' +
       '<button class="cw-link" type="button" data-bag>🎒 背包與好友</button>・<button class="cw-link" type="button" data-av>換頭像</button>・<button class="cw-link" type="button" data-open>' + openLabel() + '</button>・<button class="cw-link" type="button" data-code>看登島碼</button>・<button class="cw-link" type="button" data-nick>改暱稱</button>・<button class="cw-link" type="button" data-sw>換帳號</button></div>' +
-      '<div class="cw-row"><button class="cw-b p" type="button" data-x>關閉</button></div>',
+      '<div class="cw-row cw-fl"><button class="cw-b p" type="button" data-x>✕ 關閉</button></div>',
       function (ov, close) {
         ov.querySelector('[data-x]').addEventListener('click', close);
         ov.querySelector('[data-bag]').addEventListener('click', function () { close(); bag(); });
@@ -461,12 +462,17 @@
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(s).then(function () { toast(msg); }, fb); else fb();
   }
   var INBOX_MEM = null;   /* 上次抓到的悄悄話：再開背包時先秀這份，背景再更新 */
+  /* 好友清單：記在這台裝置（依登島碼），打開背包先秀出來，背景再更新；登島後也會先在背景抓一次 */
+  var FR_MEM = null;
+  function frLoad() { if (FR_MEM && FR_MEM.c === P.code) return FR_MEM.l; try { var o = JSON.parse(localStorage.getItem('cw-fr') || 'null'); return o && P.code && o.c === P.code && Array.isArray(o.l) ? (FR_MEM = o).l : null; } catch (e) { return null; } }
+  function frSave(l) { if (!Array.isArray(l) || !P.code) return; FR_MEM = { c: P.code, l: l }; try { localStorage.setItem('cw-fr', JSON.stringify(FR_MEM)); } catch (e) {} }
+  function frFetch() { var c0 = P.code; return api({ a: 'friends' }).then(function (j) { if (j && j.ok && j.friends && P.code === c0) frSave(j.friends); return j; }); }
   function bag(focus) {
     if (!P.code) { welcome(function (ok) { if (ok) bag(focus); }); return; }
     modal('<div class="cw-ic">🎒</div><h3>' + av(P) + ' ' + esc(P.nick) + ' 的背包</h3><div data-box></div>' +
-      '<div class="cw-row"><button class="cw-b p" type="button" data-x>關閉</button></div>',
+      '<div class="cw-row cw-fl"><button class="cw-b p" type="button" data-x>✕ 關閉</button></div>',
       function (ov, close) {
-        var box = ov.querySelector('[data-box]'), FR = null, INBOX = INBOX_MEM, inboxFail = false, open = {};
+        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {};
         ov.querySelector('[data-x]').addEventListener('click', close);
         function questHTML() {
           var qs = P.qs || [];
@@ -554,20 +560,20 @@
             busy(t);
             api({ a: 'fadd', fid: v }).then(function (j) {
               if (!j.ok) { paint(); ov.querySelector('[data-ferr]').textContent = errText(j); return; }
-              FR = j.friends || FR; ov.querySelector('[data-fidin]').value = ''; paint();
+              FR = j.friends || FR; frSave(FR); ov.querySelector('[data-fidin]').value = ''; paint();
               toast('👥 和 ' + j.added.nick + ' 成為好友了！');
             }).catch(function () { netFail(); paint(); });
           } else if (d.fdel) {
             if (!confirm('要把「' + d.n + '」從好友移除嗎？')) return;
             busy(t);
-            api({ a: 'fdel', fid: d.fdel }).then(function (j) { if (j.ok) FR = j.friends; paint(); }).catch(function () { netFail(); paint(); });
+            api({ a: 'fdel', fid: d.fdel }).then(function (j) { if (j.ok) { FR = j.friends; frSave(FR); } paint(); }).catch(function () { netFail(); paint(); });
           } else if (d.op) { open[d.f] = open[d.f] === d.op ? '' : d.op; paint(); var ta = ov.querySelector('[data-nt="' + d.f + '"]'); if (ta) ta.focus(); }
           else if (d.bgift) {
             var bk = d.bgift, bf = d.f, bn = BNAME[bk] || ['🐲', ''];
             busy(t);
             api({ a: 'bgift', fid: bf, k: bk }).then(function (j) {
               if (!j.ok) return fail(j);
-              FR = j.friends || FR; open[bf] = ''; paint();
+              FR = j.friends || FR; frSave(FR); open[bf] = ''; paint();
               toast('🐲 把' + bn[1] + '送出去了！' + (j.bgift && j.bgift.to === 'pet' ? '牠住進好友的小島了' : '放進好友的神獸收藏了'));
             }).catch(function () { netFail(); paint(); });
           }
@@ -581,7 +587,7 @@
             function undo(msg) { if (bagBak) P.bag = bagBak; if (fo) fo.gifted = gBak; paint(); toast(msg); }
             api({ a: 'gift', fid: gf, k: gk }).then(function (j) {
               if (!j.ok) return undo('⚠️ 送禮沒成功：' + errText(j));
-              FR = j.friends || FR; paint();
+              FR = j.friends || FR; frSave(FR); paint();
             }).catch(function () { undo('⚠️ 暫時連不上金幣小島，這次送禮沒有送出，請再試一次'); });
           } else if (d.send) {
             var tx = ov.querySelector('[data-nt="' + d.send + '"]'), msg = tx ? tx.value.trim() : '';
@@ -594,7 +600,10 @@
           } else if (d.inbox != null) { busy(t); inboxFail = false; loadInbox(); }
         });
         paint();
-        api({ a: 'friends' }).then(function (j) { FR = (j && j.friends) || []; paint(); if (focus === 'friends') { var s = [].filter.call(ov.querySelectorAll('.cw-sec'), function (x) { var h = x.querySelector('h4'); return h && h.textContent.indexOf('好友') >= 0; })[0]; if (s) s.scrollIntoView(); } }).catch(function () { FR = []; paint(); });
+        var frScrolled = false;
+        function frScroll() { if (focus !== 'friends' || frScrolled || !FR) return; var s = [].filter.call(ov.querySelectorAll('.cw-sec'), function (x) { var h = x.querySelector('h4'); return h && h.textContent.indexOf('好友') >= 0; })[0]; if (s) { s.scrollIntoView(); frScrolled = true; } }
+        frScroll();
+        frFetch().then(function (j) { if (j && j.friends) FR = j.friends; else if (!FR) FR = []; if (!ov.parentNode) return; var bx = ov.querySelector('.cw-box'), y = bx ? bx.scrollTop : 0; paint(); if (bx && frScrolled) bx.scrollTop = y; frScroll(); }).catch(function () { FR = FR || []; if (ov.parentNode) paint(); });
         loadInbox();   /* 一打開背包就在背景抓悄悄話，不用再按「打開收件匣」等它 */
       }, false, 'wide');
   }
@@ -797,6 +806,7 @@
         // 首頁：先在背景把排行榜抓好，按 🏆 時就不用等
         if (opt.ask !== false) setTimeout(function () { fetchTop().catch(function () {}); }, 2500);
         if (opt.ask !== false) setTimeout(function () { loadVisAll().catch(function () {}); }, 1800);
+        if (opt.ask !== false) setTimeout(function () { if (P.code) frFetch().catch(function () {}); }, 3200);   // 好友清單先在背景抓好，打開背包不用等
         if (opt.ask !== false && d) d.then(annCheck).catch(function () {});
         // 老玩家還沒選頭像：這次瀏覽提醒一次
         if (opt.ask !== false && d) d.then(function () {

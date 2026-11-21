@@ -443,6 +443,12 @@ function handle_(q) {
   if (a === 'drops') return dropsPub_();
   if (a === 'isl') return islLite_();
   if (a === 'island' && !q.fid) return islandOwn_(q); // 看自己的小島：只讀、不排隊等鎖，快很多
+  if (a === 'friends') { // 好友清單：只讀、不排隊等鎖
+    var fRows = rows_(players_()), fi = find_(fRows, q.code);
+    if (fi < 0) return { ok: false, err: 'nocode' };
+    var fr0 = fRows[fi]; resetDay_(fr0);
+    return { ok: true, add: 0, friends: friendsOf_(fRows, fr0), p: profile_(fr0) };
+  }
   if (a === 'island' && q.fid) { var fv = islandVisit_(q); if (fv) return fv; } // 參觀別人的島：同樣只讀（訪客紀錄由前台另外送 a:'isvisit'）
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
