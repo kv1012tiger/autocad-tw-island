@@ -815,6 +815,8 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .spot .rbadge[hidden]{display:none}
 .spot .rlv{position:absolute;left:4%;top:calc(2% + 38px);z-index:4;padding:1px 8px;border-radius:999px;font:900 12px/1.5 "Noto Sans TC",sans-serif;color:#fff;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px rgba(4,46,64,.85)}
 .spot .rlv[hidden]{display:none}
+.spot .rdone{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3;padding:3px 12px;border-radius:999px;background:rgba(30,41,59,.9);color:#f1f5f9;font:900 15px/1.5 "Noto Sans TC",sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.spot .rdone[hidden]{display:none}
 .rs-lv{margin:6px 0 2px;padding:5px 10px;border-radius:12px;font:800 13px/1.5 "Noto Sans TC",sans-serif;color:#fff;text-align:center}
 .rs-lv.l0{background:#d97706}
 .rs-lv.l1{background:#0284c7}
@@ -4424,10 +4426,17 @@ function resLoad(){
     RSV.timer=setTimeout(function(){if(document.hidden)RSV.timer=setTimeout(resLoad,60000);else resLoad()},45000);
   });
 }
-function resReady(s){
+function resMax(s){var x=RS.st&&RS.st[s.id];return x&&x.max?x.max:(s.rk==='gold'?2:5)}
+/* 今天在這座島已經不能採：'mine'＝我今天採滿了、'empty'＝島上今天被採光了；還能採就回 '' */
+function resDone(s){
   var w=COINS.get(),left=RSV.left&&RSV.left[s.id];
-  if(left!=null&&left<=0)return false;
-  if(w.code){if(((w.today||{})[s.id]||0)>=(s.rk==='gold'?2:5))return false;if(cdLeft(s)>0)return false}
+  if(w.code&&((w.today||{})[s.id]||0)>=resMax(s))return 'mine';
+  if(left!=null&&left<=0)return 'empty';
+  return '';
+}
+function resReady(s){
+  if(resDone(s))return false;
+  if(COINS.get().code&&cdLeft(s)>0)return false;
   return true;
 }
 function resPaint(){
@@ -4440,6 +4449,9 @@ function resPaint(){
     var lv=lvOf(s),t=s.el.querySelector('.rlv');
     if(!t){t=document.createElement('span');t.setAttribute('aria-hidden','true');s.el.appendChild(t)}
     t.className='rlv l'+lv.lv;t.textContent=STARS[lv.lv];t.hidden=b.hidden;
+    var dn=resDone(s),dt=s.el.querySelector('.rdone');   /* 今天採不到了：在島上標「明天再來」 */
+    if(!dt){dt=document.createElement('span');dt.className='rdone';dt.setAttribute('aria-hidden','true');s.el.appendChild(dt)}
+    dt.hidden=!dn;dt.textContent=dn==='mine'?'✅ 明天再來':dn==='empty'?'🈳 今天採光了':'';
   });
   /* 每座島的「這一輪」1～3 分鐘一換：到時間就在網頁上自己重畫星星（不用問後台） */
   clearTimeout(RSV.tm2);
