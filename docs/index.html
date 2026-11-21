@@ -2194,8 +2194,11 @@ function closeLog(){logEl.hidden=true;hudSync()}
 $('logBtn').addEventListener('click',openLog);
 $('logClose').addEventListener('click',closeLog);
 var gb=$('guideBox'),gbT;
-function showGuide(){gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(function(){gb.hidden=true},9000)}
-gb.addEventListener('click',function(){gb.hidden=true});
+/* 進場第一則泡泡：扭蛋島介紹（點了直接去扭蛋島）；收起後恢復原本的金幣提示 */
+var GB_ANN='🎉 扭蛋島開張！5 枚金幣抽物資、💎 鑽石，6% 抽到五行神獸 🐲 點我去扭蛋 👉',gbAnn=false;
+function gbClose(){gb.hidden=true;if(gbAnn){gbAnn=false;refresh()}}
+function showGuide(ann){gbAnn=!!ann;if(gbAnn)$('guideTxt').textContent=GB_ANN;gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(gbClose,gbAnn?12000:9000)}
+gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#gacha'});
 
 /* ---------- 島上場景：每間小屋是一個子版區 ---------- */
 var scene=$('scene'),land=$('land'),SCN=null;
@@ -2402,7 +2405,7 @@ function refresh(){
     var nx=!done&&!nextSet;if(nx)nextSet=true;s.el.classList.toggle('next',nx);
     s.li.classList.toggle('done',done);s.li.querySelector('.st').textContent=done?'🪙 已拿到':'翻開 '+flippedIn(i)+'/'+need(i);
   });
-  $('guideTxt').textContent=candyCount()===ISLES.length?'太厲害了！所有問答島的金幣都拿到了，可以到背包花 5 枚金幣領 🎁 提示詞禮物包！':gf?'你有 '+n+' 枚金幣，🎁 可以到背包花 5 枚金幣領提示詞禮物包！爬文、翻問答卡還能再賺！':n?'你有 '+n+' 枚金幣 🪙，爬文、翻問答卡還能再賺，下載資源每次 1 枚。':'嗨！我是蘋果爸。點下面的 ⛵ 展開選單，或直接點一座島出發吧 👇';
+  if(!gbAnn)$('guideTxt').textContent=candyCount()===ISLES.length?'太厲害了！所有問答島的金幣都拿到了，可以到背包花 5 枚金幣領 🎁 提示詞禮物包！':gf?'你有 '+n+' 枚金幣，🎁 可以到背包花 5 枚金幣領提示詞禮物包！爬文、翻問答卡還能再賺！':n?'你有 '+n+' 枚金幣 🪙，爬文、翻問答卡還能再賺，下載資源每次 1 枚。':'嗨！我是蘋果爸。點下面的 ⛵ 展開選單，或直接點一座島出發吧 👇';
   tdPaint();dropPaint();resPaint();
 }
 $('stQ').textContent=TOTAL;$('stI').textContent=ISLES.length;$('stF').textContent=FORUM.length;
@@ -4958,7 +4961,7 @@ function minePrefetchForce(){var w=COINS.get();if(!w.code)return;COINS.api({a:'i
 setInterval(mapBuild,1000);
 if(window.IntersectionObserver&&MINE_SPOT&&MINE_SPOT.el)new IntersectionObserver(function(es){if(es.some(function(e){return e.isIntersecting}))minePrefetch()},{rootMargin:'300px'}).observe(MINE_SPOT.el);
 setTimeout(msgPrefetch,6000); /* 不管看不看得到留言碼頭，閒下來就先抓一份，打開時才不用等 */
-guideMaybe(COINS.get());layout();refresh();favPaint();route();centerOn(HASH_SP>=0?HASH_SP:0,false);showGuide();
+guideMaybe(COINS.get());layout();refresh();favPaint();route();centerOn(HASH_SP>=0?HASH_SP:0,false);showGuide(true);
 })();
 </script>
 <script>
