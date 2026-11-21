@@ -158,9 +158,10 @@ h1,h2,h3,h4{margin:0;line-height:1.25}
 .spot.home .isle .ico{display:none}
 .mini-orbit{position:absolute;left:50%;bottom:26%;width:72%;aspect-ratio:1;transform:translateX(-50%)}
 .mini-orbit .tav{position:absolute;left:24%;top:24%;width:52%;height:52%;border:3px solid var(--gold);box-shadow:0 0 18px rgba(255,209,102,.5)}
-.ring{position:absolute;inset:0;animation:spin 26s linear infinite}
+.ring{position:absolute;inset:0}   /* 不再整圈旋轉（部分手機瀏覽器會畫不完整），改成每隻各自輕輕浮動 */
 .ring .pet{position:absolute;left:50%;top:50%;width:26%;margin:-13% 0 0 -13%}
-.ring .pet svg{display:block;width:100%;height:auto;animation:spinR 26s linear infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.ring .pet svg{display:block;width:100%;height:auto;animation:ringBob 2.6s ease-in-out var(--bd,0s) infinite;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+@keyframes ringBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6%)}}
 .boat{position:absolute;left:0;top:0;z-index:3;font-size:34px;line-height:1;pointer-events:none;transform:translate(-50%,-50%);transition:left .8s cubic-bezier(.45,.05,.3,1),top .8s cubic-bezier(.45,.05,.3,1);filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
 .boat span{display:block;animation:float 2.4s ease-in-out infinite}
 
@@ -1843,8 +1844,9 @@ var petUid=0;
 function petSVG(p){return PPL.pet(p,true)}
 function ringHTML(btn){
   return '<div class="ring">'+PETS.map(function(p,k){var a=k/PETS.length*Math.PI*2-Math.PI/2,x=50+Math.cos(a)*41,y=50+Math.sin(a)*41;
-    return btn?'<button class="pet" type="button" data-pet="'+k+'" aria-label="'+p.n+'" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%">'+petSVG(p)+'</button>'
-              :'<span class="pet" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%">'+petSVG(p)+'</span>'}).join('')+'</div>';
+    var bd=';--bd:-'+(k*.43).toFixed(2)+'s';
+    return btn?'<button class="pet" type="button" data-pet="'+k+'" aria-label="'+p.n+'" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%'+bd+'">'+petSVG(p)+'</button>'
+              :'<span class="pet" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%'+bd+'">'+petSVG(p)+'</span>'}).join('')+'</div>';
 }
 
 
@@ -2497,7 +2499,7 @@ function renderHome(){
     '<div class="ph" style="--c:#ffd166"><div><div class="p-kicker">CAPTAIN・講師介紹</div><h3 id="pTitle">我是<span class="grad-fire">蘋果爸</span></h3></div></div>'+
     '<p class="bio">AutoCAD 實務 30 年以上，長期經營 AutoCAD 顧問論壇。把繪圖經驗與 AI 協作流程，帶到實體課一起練習。</p>'+
     '<p class="bio">我喜歡知識分享、騎腳踏車、球類活動(籃球/撞球)、健行及爬山，家裡有三喵咪&amp;三狗勾(六畜興旺)😁</p>'+
-    '<div class="p-sec" style="--pc:#ffd166"><h4>家裡的三貓三狗</h4><div class="pet-walk">'+PETS.map(function(p,k){var tp=[22,126,60,164,94,186][k],t=[13,10,16,11,14,19][k];return '<button class="pw" type="button" data-pet="'+k+'" aria-label="'+p.n+'" style="top:'+tp+'px;--t:'+t+'s;--d:-'+(k*3.3).toFixed(1)+'s"><span class="pwf">'+PPL.pet(p)+'</span><em>'+p.n+'</em></button>'}).join('')+'</div><div class="pets">'+PETS.map(function(p,k){return '<button class="pc" type="button" data-pet="'+k+'">'+petSVG(p)+'<b>'+p.n+'</b><small>'+p.k+'</small></button>'}).join('')+'</div></div>'+
+    '<div class="p-sec" style="--pc:#ffd166"><h4>家裡的三貓三狗</h4><div class="pet-walk">'+PETS.map(function(p,k){var tp=[22,126,60,164,94,186][k],t=15;   /* 同樣的速度、錯開起點：草地上不會全部擠在同一邊 */return '<button class="pw" type="button" data-pet="'+k+'" aria-label="'+p.n+'" style="top:'+tp+'px;--t:'+t+'s;--d:-'+([0,7.5,2.5,10,5,12.5][k]).toFixed(1)+'s"><span class="pwf">'+PPL.pet(p)+'</span><em>'+p.n+'</em></button>'}).join('')+'</div><div class="pets">'+PETS.map(function(p,k){return '<button class="pc" type="button" data-pet="'+k+'">'+petSVG(p)+'<b>'+p.n+'</b><small>'+p.k+'</small></button>'}).join('')+'</div></div>'+
     '<div class="p-sec"><h4>找到蘋果爸</h4><div class="links">'+
       '<a class="lk" href="https://www.youtube.com/user/kv1012tiger" target="_blank" rel="noopener"><i>🍄</i><span><b>蘋果爸愛分享頻道</b><small>免費教學影片看到飽</small></span></a>'+
       '<a class="lk" href="http://www.autocad-tw.com/" target="_blank" rel="noopener"><i>🚀</i><span><b>AutoCAD 顧問基地</b><small>問題、範例、程式都在這</small></span></a>'+
