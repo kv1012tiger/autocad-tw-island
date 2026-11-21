@@ -60,13 +60,19 @@
       s += '<g class="ppR" style="transform-origin:42px 12px"><path d="M38 14l2-13 10 8z" fill="' + ec + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40.5 11.5l1.2-7 5.3 4.4z" fill="#f6a5b6"/></g>' +
         '<path d="M62 14l-1-13-10 7z" fill="' + c + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M59.8 11.5l-.7-7-5.4 3.8z" fill="#f6a5b6"/>';
     }
+    if (!cat && p.prick) {   // 狗的立耳：畫在頭後面，尖端圓圓的，內耳淡一點；左耳會抖
+      var pe = p.ear || c, pin = dark ? mix(c, '#ffffff', .22) : '#f3c6c6';
+      s += '<g class="ppR" style="transform-origin:42px 12px"><path d="M37.5 15C36 8 37 2 40 .5c3 1.5 8 6 10 9.5z" fill="' + pe + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40 11.5c-.6-4 0-7 1-8 2 1.4 4.6 4 5.6 6z" fill="' + pin + '"/></g>' +
+        '<path d="M62.5 15c1.4-7 .6-13-2.3-14.6-3.2 1.4-8 5.6-10.2 9z" fill="' + pe + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M60 11.5c.6-4 .2-7-.9-8-2 1.3-4.6 3.8-5.6 5.8z" fill="' + pin + '"/>';
+    }
     s += '<circle cx="50" cy="22" r="14" fill="url(#' + gH + ')"/><g clip-path="url(#' + cH + ')">';
     if (cat && p.hp) s += '<path d="M34 22a16 16 0 0 1 16-16v15z" fill="' + p.hp + '"/>';   // 頭頂花色
     if (p.stripe) s += '<path d="M46 9v5M50 8v6M54 9v5" stroke="' + p.stripe + '" stroke-width="2.2" stroke-linecap="round"/>';
     s += '<ellipse cx="57" cy="29" rx="9" ry="6.5" fill="' + (cat ? mix(c, '#ffffff', .55) : (p.snout || mix(c, '#ffffff', .3))) + '" opacity="' + (cat ? .7 : 1) + '"/>';   // 嘴邊
     s += '</g><circle cx="50" cy="22" r="14" fill="none" stroke="' + line + '" stroke-width="' + sw + '"/>';
-    if (!cat) {   // 狗：垂耳、項圈（老狗紅、黑狗藍、白狗紅）＋金色名牌
-      s += '<path d="M41 11c-7 1-9 13-5 19 3 2 6-1 7-5 1-5 1-10-2-14z" fill="' + (p.ear || mix(c, '#000000', .15)) + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/>';
+    if (!cat) {   // 狗：立耳（prick）或垂耳、項圈（老狗紅、黑狗藍、白狗紅）＋金色名牌
+      var ecol = p.ear || mix(c, '#000000', .15);
+      if (!p.prick) s += '<path d="M41 11c-7 1-9 13-5 19 3 2 6-1 7-5 1-5 1-10-2-14z" fill="' + ecol + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/>';
       var col = p.old ? '#e2453c' : dark ? '#3b82f6' : '#ef4444';
       s += '<path d="M39 32q9 6 20 2" stroke="' + col + '" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="50" cy="36.4" r="2" fill="#ffd166" stroke="#b8860b" stroke-width=".6"/>';
     }
