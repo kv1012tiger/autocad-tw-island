@@ -3458,9 +3458,9 @@ function renderMine(fid){
   if($('miBack'))$('miBack').addEventListener('click',function(){var k=MI.backBoard;closePanel();COINS.board(k)});
   footSimple(fid?'← 航行清單':'← 回地圖',fid?'🏝️ 回我的小島':'🐾 寵物島 →');
   if(!w.code){$('miBox').innerHTML='<div class="mb-login"><p>取個暱稱，就能擁有自己的小島。</p><button class="btn btn-primary btn-sm" type="button" data-mjoin2>🏝️ 取暱稱・登島</button></div>';return}
-  var mc=!fid&&miCacheGet();
+  var mc=fid?visCacheGet(fid):miCacheGet();   /* 去過的島先顯示這台裝置記住的，背景再更新 */
   if(mc){MI.data=mc.d;MI.at=mc.t;paintMine()}
-  loadMine(!!mc);
+  loadMine(!fid&&!!mc);
   MI.timer=setInterval(function(){if(V.t!=='mine'){clearInterval(MI.timer);return}if(MI.data&&!MI.drag&&!MI.busy&&MI.data.wildNext!=null&&Date.now()-MI.at>=MI.data.wildNext){loadMine(true);return}paintMine()},30000);
   MI.hbT=setInterval(hbTick,1000);
 }
@@ -3475,6 +3475,16 @@ function miCachePut(d){
     localStorage.setItem(MIC_KEY,JSON.stringify({c:w.code,t:Date.now(),d:c}));
   }catch(e){}
 }
+/* 參觀過的小島：記在這台裝置（最近 20 座），再去時先直接顯示 */
+var VIC_KEY='aikb-visit';
+function visCacheAll(){var w=COINS.get();try{var o=JSON.parse(localStorage.getItem(VIC_KEY)||'null');return o&&o.c===w.code&&o.m?o:{c:w.code,m:{}}}catch(e){return {c:w.code,m:{}}}}
+function visCacheGet(fid){if(!COINS.get().code)return null;var e=visCacheAll().m[String(fid).toUpperCase()];return e&&e.d?e:null}
+function visCachePut(fid,d){
+  var w=COINS.get();if(!w.code||!d)return;
+  try{var o=visCacheAll();o.m[String(fid).toUpperCase()]={t:Date.now(),d:d};
+    var ks=Object.keys(o.m).sort(function(a,b){return o.m[b].t-o.m[a].t});ks.slice(20).forEach(function(k){delete o.m[k]});
+    localStorage.setItem(VIC_KEY,JSON.stringify(o))}catch(e){}
+}
 function minePrefetch(){
   var w=COINS.get();if(!w.code||MI.busy)return;
   var c=miCacheGet();if(c&&Date.now()-c.t<120000)return;
@@ -3482,11 +3492,12 @@ function minePrefetch(){
 }
 function loadMine(quiet){
   if(MI_FAST.queue.length&&!MI.fid)return;
-  var my=++MI.seq;
-  COINS.api(MI.fid?{a:'island',fid:MI.fid}:{a:'island'}).then(function(j){
+  var my=++MI.seq,pre=MI.fid&&MI.pre&&MI.pre.fid===MI.fid?MI.pre.p:null;MI.pre=null;
+  (pre||COINS.api(MI.fid?{a:'island',fid:MI.fid}:{a:'island'})).then(function(j){
     if(my!==MI.seq||V.t!=='mine')return;
     if(!j.ok){if(!quiet)$('miBox').innerHTML='<p class="s-count">⚠️ '+esc(COINS.errText(j))+'</p>';return}
-    MI.data=j.island;MI.at=Date.now();if(!MI.fid)miCachePut(j.island);paintMine();
+    MI.data=j.island;MI.at=Date.now();if(!MI.fid)miCachePut(j.island);else visCachePut(MI.fid,j.island);paintMine();
+    if(MI.fid&&MI.visLog!==MI.fid&&!j.island.mine){MI.visLog=MI.fid;COINS.api({a:'isvisit',fid:MI.fid}).catch(function(){})}   /* 訪客紀錄畫面出來後才補送，不擋畫面 */
   }).catch(function(e){if(window.console)console.error(e);if(!quiet&&my===MI.seq&&$('miBox'))$('miBox').innerHTML='<p class="s-count">⚠️ 暫時連不上小島，請稍後再試</p>'});
 }
 function cropView(c){
@@ -3981,12 +3992,13 @@ pBody.addEventListener('click',function(e){
       if(j.gift){var g=GIFT_I[j.gift.k]||['🎁',''];setTimeout(function(){fxAt($('miBox')||t,[g[0],g[0],'🎁','✨'])},100);toast('💕 '+(pp0?pp0.n:'寵物')+' 送你 '+g[0]+' '+g[1]+' ×1！')}});return}
   if(d.mwater!=null){mineAct({a:'water',fid:MI.fid},t,function(j){var g=GIFT_I[j.got.k]||['🎁',''];fxAt(t,['💧','💧','🌱',g[0]]);playSfx('flip');toast('💧 澆好水了！你拿到 '+g[0]+' '+g[1]+' ×1')});return}
 });
-window.ISLE_VISIT=function(fid,nick,back){MI.visitFid=fid;MI.sailNick=nick||'';MI.backBoard=back||null;   /* back：從排行榜哪一頁來的，參觀頁會出現「返回排行榜」 */
+window.ISLE_VISIT=function(fid,nick,back){MI.visitFid=fid;MI.sailNick=nick||'';MI.backBoard=back||null;MI.visLog=null;   /* back：從排行榜哪一頁來的，參觀頁會出現「返回排行榜」 */
+  if(fid&&COINS.get().code)MI.pre={fid:fid,p:COINS.api({a:'island',fid:fid})};   /* 一點下去就開始載入，和航行動畫同時進行 */
   openPanel('sail',0);placeBoat(MINE_SPOT.si)};
 function renderSail(){
   pBody.innerHTML='<div class="sail"><div class="sail-sea"><span class="sail-boat">⛵</span><i class="sail-wave"></i></div><h3>航向 '+(MI.sailNick?esc(MI.sailNick)+' 的小島':'別人的小島')+'…</h3><p>風平浪靜，馬上就到！</p></div>';
   $('pStep').textContent='⛵ 航行中';pFoot.hidden=true;playSfx('row');
-  setTimeout(function(){if(V.t==='sail')openPanel('mine',1)},reduce?200:1300);
+  setTimeout(function(){if(V.t==='sail')openPanel('mine',1)},reduce||visCacheGet(MI.visitFid)?150:500);   /* 去過的島幾乎直接到 */
 }
 /* 航向別人的島：開放參觀、蓋了東西的島都會出現在清單裡 */
 var VY={list:null,sort:'score',seq:0};

@@ -443,6 +443,7 @@ function handle_(q) {
   if (a === 'drops') return dropsPub_();
   if (a === 'isl') return islLite_();
   if (a === 'island' && !q.fid) return islandOwn_(q); // 看自己的小島：只讀、不排隊等鎖，快很多
+  if (a === 'island' && q.fid) { var fv = islandVisit_(q); if (fv) return fv; } // 參觀別人的島：同樣只讀（訪客紀錄由前台另外送 a:'isvisit'）
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -821,6 +822,16 @@ function handle_(q) {
         res.island = islePub_(rows[jv], false, isleOf_(r));
         res.island.friend = vFriend;
       } else res.island = islePub_(r, true);
+    } else if (a === 'isvisit') { // 參觀後補記訪客紀錄（前台先顯示小島，再送這個，不擋畫面）
+      var jw = findFid_(rows, q.fid);
+      if (jw >= 0 && jw !== i && !me.admin && (rows[jw][C.open] !== '否' || list_(r[C.friends]).indexOf(String(rows[jw][C.fid])) >= 0)) {
+        var tw = isleOf_(rows[jw]), nowW = Date.now(), prevW = null;
+        tw.vis.forEach(function (x) { if (x.f === me.fid) prevW = x; });
+        if (!prevW || nowW - prevW.t > VISIT_GAP) {
+          tw.vis = [{ f: me.fid, n: me.nick, a: me.av, t: nowW }].concat(tw.vis.filter(function (x) { return x.f !== me.fid; })).slice(0, VISIT_KEEP);
+          rows[jw][C.isle] = JSON.stringify(tw); touched[jw] = 1;
+        }
+      }
     } else if (a === 'setopen') {
       r[C.open] = q.o ? '' : '否';
       res.island = islePub_(r, true);
@@ -1269,6 +1280,23 @@ function islandOwn_(q) {
   var r = rows[i];
   resetDay_(r); // 只改記憶體裡的這一列（跨日的今日計數歸零），不存回去
   return { ok: true, add: 0, island: islePub_(r, true), p: profile_(r) };
+}
+/* 參觀別人的小島：只讀、不排隊等鎖。回 null 表示要走原本（有鎖）的路線 */
+function islandVisit_(q) {
+  var rows = rows_(players_()), i = find_(rows, q.code);
+  if (i < 0) return { ok: false, err: 'nocode' };
+  var r = rows[i];
+  if (!r[C.fid]) return null; // 還沒有好友碼的舊帳號：走有鎖的路線補上
+  resetDay_(r);
+  var me = profile_(r);
+  if (String(q.fid).toUpperCase() === String(r[C.fid])) return { ok: true, add: 0, island: islePub_(r, true), p: me };
+  var jv = findFid_(rows, q.fid);
+  if (jv < 0) return { ok: false, err: 'nofid', p: me };
+  var vFriend = list_(r[C.friends]).indexOf(String(rows[jv][C.fid])) >= 0;
+  if (rows[jv][C.open] === '否' && !vFriend && !me.admin) return { ok: false, err: 'closed', p: me };
+  var isl = islePub_(rows[jv], false, isleOf_(r));
+  isl.friend = vFriend;
+  return { ok: true, add: 0, island: isl, p: me };
 }
 /* 還缺多少：{ wood: 3, stone: 2 }（只列不夠的） */
 function missCost_(r, cost) {
