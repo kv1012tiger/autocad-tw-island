@@ -1286,6 +1286,8 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mz-ov .mz-in{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 .mz-ov .mz-in .mi-sea{margin:0}
 .mz-ov .mz-in .mi-zoom{display:none}
+html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時，提示與動畫顯示在放大畫面上面 */
+.mz-ov .mz-in [data-mpet],.mz-ov .mz-in [data-pick],.mz-ov .mz-in [data-harvest],.mz-ov .mz-in [data-chop],.mz-ov .mz-in .pbub button{cursor:pointer}
 .mz-x{position:absolute;right:12px;top:calc(12px + env(safe-area-inset-top));width:46px;height:46px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:rgba(0,0,0,.55);color:#fff;font-size:26px;line-height:1;cursor:pointer;z-index:2}
 .mz-bar{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:10px;z-index:2}
 .mz-bar button{min-width:48px;height:48px;border-radius:999px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.55);color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 12px}
@@ -3530,11 +3532,16 @@ function sceneHTML(d){
   var sh=(d.ships||[]).filter(function(x){return x.k===d.shipCur})[0];
   return o+'</div><div class="mi-dock" aria-hidden="true"></div><div class="mi-ship">'+shipSVG(d.shipCur||0)+'<em>'+esc(sh?sh.n:'小船')+'</em></div><button class="mi-zoom" type="button" data-mzoom aria-label="放大看小島">🔍 放大</button></div>';
 }
-/* 🔍 放大：把小島畫面複製一份，用全螢幕看；雙指縮放、拖曳、點兩下放大／還原（不靠瀏覽器本身的縮放，每次都能用） */
+/* 🔍 放大：把小島畫面複製一份，用全螢幕看；雙指縮放、拖曳、點兩下放大／還原（不靠瀏覽器本身的縮放，每次都能用）
+   放大畫面是「活的」：寵物位置每一格同步、小島重畫就重新複製；點寵物／果樹／菜田／木材／泡泡按鈕，會轉給下面真正的小島處理 */
+var MZ=null,MZ_SYNC='.mi-pet,.mi-pet *,.pbub,.mi-wb';
+function mzPath(root,el){var p=[];while(el&&el!==root){if(!el.parentNode)return null;p.unshift(Array.prototype.indexOf.call(el.parentNode.children,el));el=el.parentNode}return el===root?p:null}
+function mzAt(root,p){var el=root;for(var i=0;el&&p&&i<p.length;i++)el=el.children[p[i]];return el}
+function mzRect(el){if(MZ&&el&&MZ.src.contains(el)){var c=mzAt(MZ.cl,mzPath(MZ.src,el));if(c)return c.getBoundingClientRect()}return el.getBoundingClientRect()}   /* 放大時，動畫從放大畫面上的位置冒出來 */
+function mzClone(src){var c=src.cloneNode(true);c.querySelectorAll('[id]').forEach(function(e){e.removeAttribute('id')});c.querySelectorAll('.ptrail').forEach(function(e){e.remove()});return c}
 function miZoom(){
   var src=document.querySelector('#miBox .mi-sea');if(!src||document.querySelector('.mz-ov'))return;
-  var W=src.offsetWidth,Hh=src.offsetHeight,ov=document.createElement('div'),inn=document.createElement('div'),cl=src.cloneNode(true);
-  cl.querySelectorAll('[id]').forEach(function(e){e.removeAttribute('id')});
+  var W=src.offsetWidth,Hh=src.offsetHeight,ov=document.createElement('div'),inn=document.createElement('div'),cl=mzClone(src);
   ov.className='mz-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','放大看小島');
   inn.className='mz-in';inn.style.width=W+'px';inn.style.height=Hh+'px';inn.appendChild(cl);ov.appendChild(inn);
   var st={s:1,x:0,y:0},base=1,ptrs={},pinch=null,drag=null,moved=false,lastTap=0;
@@ -3549,9 +3556,19 @@ function miZoom(){
   [['－',function(){zoomAt(st.s/1.5,innerWidth/2,innerHeight/2)}],['還原',function(){zoomAt(1,innerWidth/2,innerHeight/2)}],['＋',function(){zoomAt(st.s*1.5,innerWidth/2,innerHeight/2)}]].forEach(function(b){
     var bt=document.createElement('button');bt.type='button';bt.textContent=b[0];if(b[0]==='還原')bt.style.fontSize='15px';
     bt.addEventListener('click',function(e){e.stopPropagation();b[1]()});bt.addEventListener('pointerdown',function(e){e.stopPropagation()});bar.appendChild(bt)});
-  var tip=document.createElement('div');tip.className='mz-tip';tip.textContent='雙指放大・拖曳移動・點兩下放大／還原';setTimeout(function(){tip.style.opacity='0'},3500);
+  var tip=document.createElement('div');tip.className='mz-tip';tip.textContent='雙指放大・拖曳移動・點寵物摸摸餵食';setTimeout(function(){tip.style.opacity='0'},3500);
   ov.appendChild(tip);ov.appendChild(bar);ov.appendChild(x);document.body.appendChild(ov);fit();
-  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);removeEventListener('resize',fit);removeEventListener('keydown',key)}
+  MZ={src:src,cl:cl,dirty:false};document.documentElement.classList.add('mz-on');
+  function reclone(){var s2=document.querySelector('#miBox .mi-sea');if(!s2||V.t!=='mine'){close();return}var c2=mzClone(s2);inn.replaceChild(c2,MZ.cl);MZ.cl=c2;MZ.src=s2;MZ.dirty=false}
+  var mo=new MutationObserver(function(ms){if(ms.some(function(m){return [].concat([].slice.call(m.addedNodes),[].slice.call(m.removedNodes)).some(function(n){return !(n.classList&&(n.classList.contains('ptrail')||n.classList.contains('fxe')))})||m.type==='characterData'}))MZ.dirty=true});
+  mo.observe($('miBox'),{childList:true,subtree:true,characterData:true});
+  (function sync(){if(!MZ)return;
+    if(MZ.dirty||!MZ.src.isConnected)reclone();if(!MZ)return;
+    var a=MZ.src.querySelectorAll(MZ_SYNC),b=MZ.cl.querySelectorAll(MZ_SYNC);
+    if(a.length!==b.length)reclone();
+    else for(var i=0;i<a.length;i++){var sa=a[i].getAttribute('style'),ca=a[i].getAttribute('class');if(b[i].getAttribute('style')!==sa){if(sa==null)b[i].removeAttribute('style');else b[i].setAttribute('style',sa)}if(b[i].getAttribute('class')!==ca)b[i].setAttribute('class',ca||'')}
+    MZ.raf=requestAnimationFrame(sync)})();
+  function close(){if(ov.parentNode)ov.parentNode.removeChild(ov);removeEventListener('resize',fit);removeEventListener('keydown',key);mo.disconnect();if(MZ)cancelAnimationFrame(MZ.raf);MZ=null;document.documentElement.classList.remove('mz-on')}
   function key(e){if(e.key==='Escape')close()}
   addEventListener('resize',fit);addEventListener('keydown',key);
   x.addEventListener('click',function(e){e.stopPropagation();close()});x.addEventListener('pointerdown',function(e){e.stopPropagation()});
@@ -3564,6 +3581,10 @@ function miZoom(){
     else if(drag&&ids.length===1){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;st.x=drag.sx+dx;st.y=drag.sy+dy;bounds();apply()}});
   function up(e){var had=ptrs[e.pointerId];delete ptrs[e.pointerId];var left=Object.keys(ptrs).length;if(left<2)pinch=null;
     if(left===1){var id=Object.keys(ptrs)[0];drag={x:ptrs[id].x,y:ptrs[id].y,sx:st.x,sy:st.y}}
+    if(!left&&had&&!moved&&MZ){   /* 點到寵物、果樹、菜田、木材或泡泡按鈕：轉給真正的小島 */
+      var hit=document.elementFromPoint(e.clientX,e.clientY),tg=hit&&MZ.cl.contains(hit)&&hit.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop]');
+      if(tg&&MZ.cl.contains(tg)){var real=mzAt(MZ.src,mzPath(MZ.cl,tg));if(real){lastTap=0;real.click();drag=null;return}}
+      if(PW.sel&&!(hit&&hit.closest('.pbub'))){petBubClose()}}
     if(!left&&had&&!moved){var now=Date.now();if(now-lastTap<320){lastTap=0;zoomAt(st.s>1.2?1:2.5,e.clientX,e.clientY)}else lastTap=now}
     if(!left)drag=null}
   ov.addEventListener('pointerup',up);ov.addEventListener('pointercancel',up);
@@ -3665,7 +3686,7 @@ function petFx(pid,c,ms){var s=PW.st[(MI.fid||'me')+':'+pid];if(s)s.fx={c:c,u:pe
 /* 食物從按鈕飛到寵物嘴裡 */
 function petFoodFly(btn,pid,em){
   var el=document.querySelector('.mi-pet[data-mpet="'+pid+'"]');if(!btn||!el)return;
-  var r=btn.getBoundingClientRect(),c=el.getBoundingClientRect(),x0=r.left+r.width/2-13,y0=r.top,x1=c.left+c.width*.7-13,y1=c.top+c.height*.3-13,e=document.createElement('span'),t0=performance.now();
+  var r=mzRect(btn),c=mzRect(el),x0=r.left+r.width/2-13,y0=r.top,x1=c.left+c.width*.7-13,y1=c.top+c.height*.3-13,e=document.createElement('span'),t0=performance.now();
   e.className='pfly';e.textContent=em;document.body.appendChild(e);
   (function an(t){var k=Math.min(1,(t-t0)/550);e.style.transform='translate('+(x0+(x1-x0)*k)+'px,'+(y0+(y1-y0)*k-Math.sin(k*Math.PI)*70)+'px) rotate('+k*360+'deg) scale('+(1-k*.4)+')';
     if(k<1)requestAnimationFrame(an);else{e.remove();petFx(pid,'eat');burst(x1+13,y1+13,['😋','💕',em])}})(t0);
@@ -3827,7 +3848,7 @@ function buildFast(kind,t){
     fastReplay();if(V.t==='mine')paintMine();fastDrain();
   }).catch(function(){MI.busy=false;fastCancel();toast('⚠️ 網路不穩，剛才的建造可能沒有記上，請重新整理確認');loadMine()});
 }
-function fxAt(el,em){if(!el)return;var r=el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,em)}
+function fxAt(el,em){if(!el)return;var r=mzRect(el);burst(r.left+r.width/2,r.top+r.height/2,em)}
 var GIFT_I={coin:['🪙','金幣'],fruit:['🍎','水果'],iron:['🔩','鐵礦'],wood:['🪵','木材'],stone:['🪨','石頭']};
 // 依實際島形和物件範圍找最近的 5% 網格；同時救回舊版存到島外的物件。
 function fitIslandPoint(el,x,y){
@@ -3990,7 +4011,16 @@ pBody.addEventListener('click',function(e){
   if(d.pat||patId){var pid=d.pat||patId,pp0=MI.data&&MI.data.pets.filter(function(x){return x.id===pid})[0],pk=pp0&&(ANI[pp0.k]||[])[1];
     fastAct({a:'pat',id:pid},t,function(dd){var q=dd.pets.filter(function(x){return x.id===pid})[0];if(q){q.patted=true;q.aff=(q.aff||0)+1;q.lv=1+Math.floor(q.aff/10)}},function(){petFx(pid,'joy');fxAt(t,['💕','💖','✨']);playSfx(pp0&&pp0.k==='cat'?'cat':'dog');toast('💕 親密度 +1'+(pp0&&pp0.full<50?'（餵飽一點，牠就會送你禮物）':''))},function(j){
       if(j.gift){var g=GIFT_I[j.gift.k]||['🎁',''];setTimeout(function(){fxAt($('miBox')||t,[g[0],g[0],'🎁','✨'])},100);toast('💕 '+(pp0?pp0.n:'寵物')+' 送你 '+g[0]+' '+g[1]+' ×1！')}});return}
-  if(d.mwater!=null){mineAct({a:'water',fid:MI.fid},t,function(j){var g=GIFT_I[j.got.k]||['🎁',''];fxAt(t,['💧','💧','🌱',g[0]]);playSfx('flip');toast('💧 澆好水了！你拿到 '+g[0]+' '+g[1]+' ×1')});return}
+  if(d.mwater!=null){   /* 澆水：先顯示（水滴、按鈕變成已澆過），後台回來再補上拿到的禮物；失敗就恢復 */
+    var wf=MI.fid,wd=MI.data;if(!wf||!wd||wd.watered)return;
+    wd.watered=true;fxAt(t,['💧','💧','🌱','✨']);playSfx('flip');toast('💧 澆好水了！'+(wd.nick||'')+' 的菜會提早 1 小時長好');paintMine();
+    var wback=function(msg){if(MI.fid===wf&&MI.data){MI.data.watered=false;if(V.t==='mine')paintMine()}toast(msg)};
+    COINS.api({a:'water',fid:wf}).then(function(j){
+      if(!j||!j.ok){if(j&&j.err==='watered')return;wback('⚠️ '+COINS.errText(j));return}
+      if(j.island&&MI.fid===wf){var fr=MI.data&&MI.data.friend;MI.data=j.island;if(MI.data.friend==null&&fr!=null)MI.data.friend=fr;MI.data.watered=true;MI.at=Date.now();visCachePut(wf,MI.data);if(V.t==='mine')paintMine()}
+      var g=j.got&&GIFT_I[j.got.k];if(g)toast('🎁 澆水謝禮：你拿到 '+g[0]+' '+g[1]+' ×1');
+    }).catch(function(){wback('⚠️ 暫時連不上，澆水沒有成功，請再試一次')});
+    return}
 });
 window.ISLE_VISIT=function(fid,nick,back){MI.visitFid=fid;MI.sailNick=nick||'';MI.backBoard=back||null;MI.visLog=null;   /* back：從排行榜哪一頁來的，參觀頁會出現「返回排行榜」 */
   if(fid&&COINS.get().code)MI.pre={fid:fid,p:COINS.api({a:'island',fid:fid})};   /* 一點下去就開始載入，和航行動畫同時進行 */
