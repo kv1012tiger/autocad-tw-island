@@ -393,7 +393,7 @@ function profile_(r) {
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
     trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
     swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY,
-    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length,
+    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length, fl: list_(r[C.friends]).map(String), // fl：好友的好友碼（排行榜標「好友」用）
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',

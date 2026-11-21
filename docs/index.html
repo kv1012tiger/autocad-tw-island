@@ -1584,7 +1584,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=9bcdee5f"></script>
-<script src="assets/js/coins.js?v=2e935cf7"></script>
+<script src="assets/js/coins.js?v=c00b04f4"></script>
 <script>
 (function(){
 'use strict';
@@ -3455,9 +3455,9 @@ function costOK(cost){var w=COINS.get(),b=w.bag||{};for(var k in cost){var have=
 function renderMine(fid){
   MI.fid=fid||null;MI.data=null;MI.fit=null;clearInterval(MI.timer);clearInterval(MI.hbT);
   var w=COINS.get();
-  pBody.innerHTML='<div class="ph" style="--c:#fde047"><span class="ph-e">🏝️</span><div><div class="p-kicker">'+(fid?'VISIT・參觀小島':'MY ISLAND・我的小島')+'</div><h3 id="pTitle">'+(fid?'船長的小島':(w.nick?esc(w.nick)+' 的小島':'我的小島'))+'</h3><p id="miSub">'+(fid?'看看他蓋了什麼，好友還能幫忙澆水':'用採集到的物資蓋房子、種菜、養寵物')+'</p></div></div>'+(fid&&MI.backBoard?'<button class="btn btn-primary btn-sm mi-bback" type="button" id="miBack">🏆 返回排行榜</button>':'')+'<div id="miBox"><p class="s-count">登上小島中…</p></div>';
+  pBody.innerHTML='<div class="ph" style="--c:#fde047"><span class="ph-e">🏝️</span><div><div class="p-kicker">'+(fid?'VISIT・參觀小島':'MY ISLAND・我的小島')+'</div><h3 id="pTitle">'+(fid?'船長的小島':(w.nick?esc(w.nick)+' 的小島':'我的小島'))+'</h3><p id="miSub">'+(fid?'看看他蓋了什麼，好友還能幫忙澆水':'用採集到的物資蓋房子、種菜、養寵物')+'</p></div></div>'+(fid&&MI.backBoard?'<button class="btn btn-primary btn-sm mi-bback" type="button" id="miBack">'+(MI.backBoard==='bag'?'🎒 返回我的背包':'🏆 返回排行榜')+'</button>':'')+'<div id="miBox"><p class="s-count">登上小島中…</p></div>';
   $('pStep').textContent=fid?'🏝️ 參觀小島':'🏝️ 我的小島';
-  if($('miBack'))$('miBack').addEventListener('click',function(){var k=MI.backBoard;closePanel();COINS.board(k)});
+  if($('miBack'))$('miBack').addEventListener('click',function(){var k=MI.backBoard;closePanel();if(k==='bag')COINS.bag('friends');else COINS.board(k)});
   footSimple(fid?'← 航行清單':'← 回地圖',fid?'🏝️ 回我的小島':'🐾 寵物島 →');
   if(!w.code){$('miBox').innerHTML='<div class="mb-login"><p>取個暱稱，就能擁有自己的小島。</p><button class="btn btn-primary btn-sm" type="button" data-mjoin2>🏝️ 取暱稱・登島</button></div>';return}
   var mc=fid?visCacheGet(fid):miCacheGet();   /* 去過的島先顯示這台裝置記住的，背景再更新 */

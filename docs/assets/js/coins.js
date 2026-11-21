@@ -28,7 +28,7 @@
   function apply(p) {
     if (!p) return;
     P.code = p.code; P.nick = p.nick; P.bal = p.bal; P.earned = p.earned; P.streak = p.streak; P.admin = !!p.admin; P.qa = p.qa || [];
-    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'unread', 'friends', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
+    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'unread', 'friends', 'fl', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
     if (p.cd !== undefined) P.cdT = Date.now();
     save(); emit({ t: 'sync' });
   }
@@ -169,7 +169,7 @@
     '.cw-tabs{display:flex;gap:6px;justify-content:center;margin:6px 0 2px;flex-wrap:wrap}' +
     '.cw-tabs button{padding:7px 14px;border-radius:999px;border:1.5px solid rgba(255,209,102,.5);background:transparent;color:#fff8e7;font:800 14.5px "Noto Sans TC",sans-serif;cursor:pointer}' +
     '.cw-tabs button.on{background:#ffd166;color:#3a1a08;border-color:#ffd166}' +
-    '.cw-lb .on{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(74,222,128,.18);color:#86efac;font-size:12px;font-weight:700;vertical-align:2px}' +
+    '.cw-lb .lbtg{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:3px 4px;margin-top:3px;white-space:nowrap}.cw-lb .on,.cw-lb .fr{display:inline-block;padding:0 6px;border-radius:999px;font-size:11.5px;font-weight:700;line-height:1.5}.cw-lb .on{background:rgba(74,222,128,.18);color:#86efac}.cw-lb .fr{background:rgba(196,181,253,.2);color:#ddd6fe}.cw-lb li.frd{box-shadow:inset 3px 0 0 #a78bfa}' +
     '.cw-lb .a{flex:none;font-size:22px;width:28px;text-align:center}.cw-lb .s{display:block;font-size:12px;color:#b9d8e4;font-weight:400}' +
     '.cw-sec{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,209,102,.25);text-align:left}' +
     '.cw-sec h4{margin:0 0 8px;font-size:16px;color:#ffd166}' +
@@ -412,7 +412,8 @@
           body.innerHTML = '<ol class="cw-lb">' + rows.map(function (r, i) {
             var v = k === 'res' ? '🧺 ' + r.v : k === 'dia' ? '💎 ' + r.v : k === 'isle' ? '🏝️ ' + r.v : '🪙 ' + r.v;
             var go = r.fid && window.ISLE_VISIT, sail = go ? '<span class="go" aria-hidden="true">⛵</span>' : '';   // 整列可點：航向他的小島參觀
-            return '<li class="' + (r.nick === P.nick ? 'me' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (r.on ? '<span class="on">🟢 在線</span>' : '') +
+            var isFr = r.fid && (P.fl || []).indexOf(String(r.fid)) >= 0, tg = (isFr ? '<span class="fr">👥 好友</span>' : '') + (r.on ? '<span class="on">🟢 在線</span>' : '');   // 標記放在名字下方一行，名字不會被擠掉
+            return '<li class="' + (r.nick === P.nick ? 'me' : '') + (isFr ? ' frd' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (tg ? '<span class="lbtg">' + tg + '</span>' : '') +
               (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
@@ -544,7 +545,7 @@
               toast('🏪 換到 ' + j.add + ' 枚金幣！'); paint();
               if (window.TRADE_FX) { var tg = d.trade === 'dia' ? ['💎', 1] : d.trade === 'pumpkin' ? ['🎃', 5] : [RES[d.trade][0], 10]; window.TRADE_FX([tg], [['🪙', j.add]], d.trade === 'dia'); }
             }).catch(function () { netFail(); paint(); });
-          } else if (d.visit) { close(); window.ISLE_VISIT(d.visit); }
+          } else if (d.visit) { close(); window.ISLE_VISIT(d.visit, '', 'bag'); }   // 參觀頁會出現「🎒 返回我的背包」
           else if (d.giftpack != null) { close(); if (window.COINS && window.COINS.giftOpen) window.COINS.giftOpen(function () { bag(); }); }
           else if (d.copyfid != null) copy('#' + P.fid, '🪪 已複製海島編號 #' + P.fid);
           else if (d.fadd != null) {
@@ -593,7 +594,7 @@
           } else if (d.inbox != null) { busy(t); inboxFail = false; loadInbox(); }
         });
         paint();
-        api({ a: 'friends' }).then(function (j) { FR = (j && j.friends) || []; paint(); if (focus === 'friends') { var s = ov.querySelectorAll('.cw-sec')[P.qs && P.qs.length ? 4 : 3]; if (s) s.scrollIntoView(); } }).catch(function () { FR = []; paint(); });
+        api({ a: 'friends' }).then(function (j) { FR = (j && j.friends) || []; paint(); if (focus === 'friends') { var s = [].filter.call(ov.querySelectorAll('.cw-sec'), function (x) { var h = x.querySelector('h4'); return h && h.textContent.indexOf('好友') >= 0; })[0]; if (s) s.scrollIntoView(); } }).catch(function () { FR = []; paint(); });
         loadInbox();   /* 一打開背包就在背景抓悄悄話，不用再按「打開收件匣」等它 */
       }, false, 'wide');
   }
