@@ -113,7 +113,7 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
     <button class="sfx" id="sfx" type="button" aria-label="音效開關">🔊</button>
   </div>
   <h1>✨ 扭蛋島 ✨</h1>
-  <p class="sub">每抽 🪙 5 枚・每天 3 次・五行神獸只有 3%</p>
+  <p class="sub">每抽 🪙 5 枚・每天 3 次・五行神獸 6%</p>
 
   <div class="stage" id="stage">
     <div class="dark" id="dark"></div>
@@ -164,7 +164,7 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
   <div class="msg" id="msg" role="status"></div>
 
   <div class="sec">
-    <h2>🐲 五行神獸（合計 3%）</h2>
+    <h2>🐲 五行神獸（合計 6%）</h2>
     <div class="beasts" id="bst"></div>
     <p style="margin:6px 0 0;font-size:12px;color:var(--muted)">抽到會住進你的小島，不佔小屋的寵物名額；已經有的神獸再抽到，會收進「神獸收藏」，可以送給船長好友交換，或到商店島換資源。</p>
   </div>
@@ -293,7 +293,7 @@ $('bst').innerHTML=['dragon','phoenix','qilin','tiger','tortoise'].map(function(
 
 /* ---- 獎品表（要和後台 GACHA 一致） ---- */
 var TIER={w:['#f4f1ea','安慰獎'],g:['#66bb6a','普通'],b:['#42a5f5','不錯'],p:['#ab47bc','稀有'],y:['#ffca28','超稀有'],r:['conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)','神獸']};
-var TABLE=[['fruit',10,40,'w'],['wood',20,13,'g'],['stone',20,13,'g'],['iron',20,12,'g'],['coin',15,10,'b'],['dia',1,8,'p'],['dia',3,1,'y'],['beast',1,3,'r']];
+var TABLE=[['fruit',10,26,'w'],['wood',20,15,'g'],['stone',20,15,'g'],['iron',20,15,'g'],['coin',15,10,'b'],['dia',1,10,'p'],['dia',3,3,'y'],['beast',1,6,'r']];
 var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸']};
 $('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（五選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
 

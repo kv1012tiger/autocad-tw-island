@@ -182,7 +182,7 @@ function isBeast_(k) { return !!(ANIMALS[k] && ANIMALS[k].beast); }
 function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k); }).length; } // 佔名額的寵物（不含神獸）
 /* 扭蛋島：每抽 5 枚金幣、每天 3 次；[種類, 數量, 機率權重, 扭蛋顏色] */
 var GACHA_COST = 5, GACHA_DAY = 3;
-var GACHA = [['fruit', 10, 40, 'w'], ['wood', 20, 13, 'g'], ['stone', 20, 13, 'g'], ['iron', 20, 12, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 8, 'p'], ['dia', 3, 1, 'y'], ['beast', 1, 3, 'r']];
+var GACHA = [['fruit', 10, 26, 'w'], ['wood', 20, 15, 'g'], ['stone', 20, 15, 'g'], ['iron', 20, 15, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 10, 'p'], ['dia', 3, 3, 'y'], ['beast', 1, 6, 'r']];   // 第三欄是機率（%），合計 100
 var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
 var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸到商店島換資源
 /* 喜報跑馬燈：船長抽到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則 */

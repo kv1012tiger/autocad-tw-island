@@ -3066,7 +3066,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026111802',GACHA_V='2026111903';
+var BET_V='2026111802',GACHA_V='2026112101';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3107,7 +3107,7 @@ function renderGacha(){
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
     '<div class="p-sec"><h4>🎉 最近喜報</h4><div class="bn-list" id="bnList">'+bnListHTML()+'</div></div>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 3% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
+    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 6% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
   $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
   if(code)gaLoad();
 }
