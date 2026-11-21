@@ -3,24 +3,11 @@
    kind（cat/dog）、base 主毛色、bp 身體花斑 [[色,x,y,r]]、hp 頭頂花色、tail 尾巴色、stripe 條紋色、ear 狗耳色、snout 狗嘴色、old 老狗。 */
 (function () {
   var O = '#3b2414';
+  /* 寵物圖裡面不放任何零件動畫：部分手機瀏覽器（Brave 等）在很多「各自在動的小零件」時會隨機漏畫頭、身體、尾巴。
+     要動就讓「整隻」一起動（首頁的 .pw／.ring 負責）。ppFlip 給草地散步轉身用。 */
   var CSS =
     '.pq{overflow:visible}' +
-    '.ppA{animation:ppSw .6s ease-in-out infinite alternate}' +
-    '.ppB{animation:ppSw .6s ease-in-out infinite alternate-reverse}' +
-    '.ppT{animation:ppWag .45s ease-in-out infinite alternate}' +
-    '.ppE{animation:ppBlink 4.2s infinite}' +
-    '.ppR{animation:ppEar 5.5s ease-in-out infinite}' +
-    '.ppH{animation:ppNod .6s ease-in-out infinite alternate}' +
-    '.old .ppA,.old .ppB,.old .ppH{animation-duration:.9s}' +
-    '.still .ppA,.still .ppB,.still .ppH{animation:none}' +
-    '.still .ppT{animation-duration:1.1s}' +
-    '@keyframes ppSw{from{transform:rotate(-18deg)}to{transform:rotate(18deg)}}' +
-    '@keyframes ppWag{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}' +
-    '@keyframes ppBlink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.12)}}' +
-    '@keyframes ppEar{0%,84%,100%{transform:rotate(0)}88%{transform:rotate(-10deg)}92%{transform:rotate(4deg)}}' +
-    '@keyframes ppNod{from{transform:translateY(0)}to{transform:translateY(1.2px)}}' +
-    '@keyframes ppFlip{0%{transform:scaleX(1)}50%{transform:scaleX(-1)}}' +
-    '@media (prefers-reduced-motion:reduce){.ppA,.ppB,.ppT,.ppE,.ppR,.ppH{animation:none}}';
+    '@keyframes ppFlip{0%{transform:scaleX(1)}50%{transform:scaleX(-1)}}';
 
   function rgb(h) { h = String(h || '#888').replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); var n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
   function mix(h, to, t) { var a = rgb(h), b = rgb(to); var r = a.map(function (v, i) { return Math.round(v + (b[i] - v) * t); }); return '#' + r.map(function (v) { return (v < 16 ? '0' : '') + v.toString(16); }).join(''); }
@@ -39,14 +26,14 @@
     s += '<ellipse cx="33" cy="52.5" rx="21" ry="2.6" fill="rgba(0,0,0,.18)"/>';   // 影子
     function leg(x, cls, far) {   // 腳：短短圓圓，遠的兩隻顏色深一點
       var lc = far ? mix(c, '#000000', .2) : c, paw = mix(c, '#ffffff', cat ? .35 : .2);
-      return '<g class="' + cls + '" style="transform-origin:' + x + 'px 38px"><rect x="' + (x - 3.6) + '" y="36" width="7.2" height="13" rx="3.6" fill="' + lc + '" stroke="' + line + '" stroke-width="' + sw + '"/>' +
+      return '<g class="' + cls + '"><rect x="' + (x - 3.6) + '" y="36" width="7.2" height="13" rx="3.6" fill="' + lc + '" stroke="' + line + '" stroke-width="' + sw + '"/>' +
         '<ellipse cx="' + (x + .6) + '" cy="48.6" rx="4.3" ry="2.6" fill="' + (far ? mix(paw, '#000000', .15) : paw) + '" stroke="' + line + '" stroke-width="' + sw + '"/></g>';
     }
     s += leg(17, 'ppB', 1) + leg(37, 'ppA', 1);
     var tc = p.tail || c;   // 尾巴：貓長長捲起、狗短短毛茸茸
     s += cat
-      ? '<g class="ppT" style="transform-origin:14px 31px"><path d="M14 31C5 30 2 20 6 12C8 8 12 8 12 11" stroke="' + line + '" stroke-width="7.4" fill="none" stroke-linecap="round"/><path d="M14 31C5 30 2 20 6 12C8 8 12 8 12 11" stroke="' + tc + '" stroke-width="4.6" fill="none" stroke-linecap="round"/></g>'
-      : '<g class="ppT" style="transform-origin:14px 30px"><path d="M14 30C8 28 6 21 9 16" stroke="' + line + '" stroke-width="8.6" fill="none" stroke-linecap="round"/><path d="M14 30C8 28 6 21 9 16" stroke="' + tc + '" stroke-width="5.8" fill="none" stroke-linecap="round"/><circle cx="9" cy="16" r="2.2" fill="' + mix(tc, '#ffffff', .25) + '"/></g>';
+      ? '<g class="ppT"><path d="M14 31C5 30 2 20 6 12C8 8 12 8 12 11" stroke="' + line + '" stroke-width="7.4" fill="none" stroke-linecap="round"/><path d="M14 31C5 30 2 20 6 12C8 8 12 8 12 11" stroke="' + tc + '" stroke-width="4.6" fill="none" stroke-linecap="round"/></g>'
+      : '<g class="ppT"><path d="M14 30C8 28 6 21 9 16" stroke="' + line + '" stroke-width="8.6" fill="none" stroke-linecap="round"/><path d="M14 30C8 28 6 21 9 16" stroke="' + tc + '" stroke-width="5.8" fill="none" stroke-linecap="round"/><circle cx="9" cy="16" r="2.2" fill="' + mix(tc, '#ffffff', .25) + '"/></g>';
     // 身體＋花斑＋條紋＋亮一點的肚子
     s += '<ellipse cx="29" cy="34" rx="17" ry="11" fill="' + c + '"/><g clip-path="url(#' + cB + ')">';
     (p.bp || []).forEach(function (q) { s += '<circle cx="' + (29 + (q[1] - 34) * .82).toFixed(1) + '" cy="' + (34 + (q[2] - 27)).toFixed(1) + '" r="' + (q[3] * .9).toFixed(1) + '" fill="' + q[0] + '"/>'; });
@@ -58,12 +45,12 @@
     s += '<g class="ppH">';
     if (cat) {   // 貓耳：外框＋粉紅內耳，左耳偶爾抖一下
       var ec = p.hp || c;
-      s += '<g class="ppR" style="transform-origin:42px 12px"><path d="M38 14l2-13 10 8z" fill="' + ec + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40.5 11.5l1.2-7 5.3 4.4z" fill="#f6a5b6"/></g>' +
+      s += '<g class="ppR"><path d="M38 14l2-13 10 8z" fill="' + ec + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40.5 11.5l1.2-7 5.3 4.4z" fill="#f6a5b6"/></g>' +
         '<path d="M62 14l-1-13-10 7z" fill="' + c + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M59.8 11.5l-.7-7-5.4 3.8z" fill="#f6a5b6"/>';
     }
     if (!cat && p.prick) {   // 狗的立耳：畫在頭後面，尖端圓圓的，內耳淡一點；左耳會抖
       var pe = p.ear || c, pin = dark ? mix(c, '#ffffff', .22) : '#f3c6c6';
-      s += '<g class="ppR" style="transform-origin:42px 12px"><path d="M37.5 15C36 8 37 2 40 .5c3 1.5 8 6 10 9.5z" fill="' + pe + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40 11.5c-.6-4 0-7 1-8 2 1.4 4.6 4 5.6 6z" fill="' + pin + '"/></g>' +
+      s += '<g class="ppR"><path d="M37.5 15C36 8 37 2 40 .5c3 1.5 8 6 10 9.5z" fill="' + pe + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M40 11.5c-.6-4 0-7 1-8 2 1.4 4.6 4 5.6 6z" fill="' + pin + '"/></g>' +
         '<path d="M62.5 15c1.4-7 .6-13-2.3-14.6-3.2 1.4-8 5.6-10.2 9z" fill="' + pe + '" stroke="' + line + '" stroke-width="' + sw + '" stroke-linejoin="round"/><path d="M60 11.5c.6-4 .2-7-.9-8-2 1.3-4.6 3.8-5.6 5.8z" fill="' + pin + '"/>';
     }
     s += '<circle cx="50" cy="22" r="14" fill="' + c + '"/><g clip-path="url(#' + cH + ')">';
@@ -80,7 +67,7 @@
       s += '<path d="M39 32q9 6 20 2" stroke="' + col + '" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="50" cy="36.4" r="2" fill="#ffd166" stroke="#b8860b" stroke-width=".6"/>';
     }
     function eye(x, y, r) {   // 大眼睛：兩個反光點，會眨眼；黑毛的眼睛周圍亮一圈才看得到
-      return '<g class="ppE" style="transform-origin:' + x + 'px ' + y + 'px">' + (dark ? '<ellipse cx="' + x + '" cy="' + y + '" rx="' + (r + .9) + '" ry="' + (r * 1.2 + .9) + '" fill="rgba(255,255,255,.35)"/>' : '') +
+      return '<g class="ppE">' + (dark ? '<ellipse cx="' + x + '" cy="' + y + '" rx="' + (r + .9) + '" ry="' + (r * 1.2 + .9) + '" fill="rgba(255,255,255,.35)"/>' : '') +
         '<ellipse cx="' + x + '" cy="' + y + '" rx="' + r + '" ry="' + (r * 1.2) + '" fill="#2a1a10"/><circle cx="' + (x + r * .35) + '" cy="' + (y - r * .45) + '" r="' + (r * .42) + '" fill="#fff"/><circle cx="' + (x - r * .35) + '" cy="' + (y + r * .45) + '" r="' + (r * .18) + '" fill="#fff"/></g>';
     }
     s += eye(53.5, 20.5, 2.5) + eye(60.5, 20.5, 2.2);
