@@ -1037,6 +1037,13 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-snd{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);background:rgba(0,0,0,.25);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer}
 .rs-bag{display:flex;flex-wrap:wrap;gap:8px}.rs-bag span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
 .rs-bag span.bump{animation:rsBump .35s}
+/* 物資島：固定在下方的小背包列，採集時圖示飛進來、數字一路跳上去 */
+.rs-mini{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:5px 6px;margin:4px auto 8px;padding:6px 8px;max-width:440px;border-radius:16px;background:rgba(3,30,44,.72);border:1.5px solid rgba(255,209,102,.5)}
+.rs-mini:empty{display:none}
+.rs-mini span{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.08);font-size:14.5px;transition:background .3s}
+.rs-mini b{color:#ffd166;font-variant-numeric:tabular-nums}
+.rs-mini span.hl{box-shadow:inset 0 0 0 1.5px #ffd166}
+.rs-mini span.bump{animation:rsBump .35s;background:rgba(255,209,102,.38)}
 @keyframes rsBump{40%{transform:scale(1.25);background:rgba(255,209,102,.35)}}
 .rs-p{font-size:20px}
 .rs-plus{position:absolute;transform:translate(-50%,-50%);font:900 30px/1.2 "Noto Sans TC",sans-serif;color:#fff;text-align:center;text-shadow:0 0 10px #ffb347,0 3px 0 rgba(0,0,0,.45);white-space:nowrap;animation:rsUp 1.8s ease-out forwards}
@@ -2667,6 +2674,7 @@ function renderRes(n){
           (R.rk==='iron'?'<span class="rs-ore"><i></i><i></i><i></i></span>':'')+
           '<span class="rs-tool" id="rsTool">'+R.tool+'</span></button>'+
         '<b class="rs-combo" id="rsCombo"></b></div>'+
+      '<div class="rs-mini" id="rsMini" aria-label="我的背包"></div>'+   /* 小背包列就在點的東西下面：採集時看得到圖示飛進來、數字跳上去 */
       '<div class="rs-timer" id="rsTimerBox"><i id="rsTime"></i></div>'+
       '<p class="rs-cnt" id="rsCnt"></p>'+
       '<div class="rs-stock" id="rsStock">看看今天島上還有多少'+esc(R.item)+'…</div>'+
@@ -2685,7 +2693,8 @@ function renderRes(n){
 function bagReal(k){var w=COINS.get();return k==='dia'?(w.dia||0):k==='gold'?(w.bal||0):((w.bag||{})[k]||0)}
 function bagVal(k){return RS.shown[k]!=null?RS.shown[k]:bagReal(k)}
 function resBag(){
-  var el=$('rsBag'),w=COINS.get();if(!el)return;
+  var el=$('rsBag'),w=COINS.get(),mini=$('rsMini');if(!el)return;
+  if(mini){var cur=RESI[V.i]&&RESI[V.i].rk;mini.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'"'+(x.rk===cur?' class="hl"':'')+'>'+x.it+'<b>'+bagVal(x.rk)+'</b></span>'}).join('')+'<span data-k="dia">💎<b>'+bagVal('dia')+'</b></span><span data-k="gold"'+(cur==='gold'?' class="hl"':'')+'>🪙<b>'+bagVal('gold')+'</b></span>':''}
   el.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'">'+x.it+' <b>'+bagVal(x.rk)+'</b> '+x.item+'</span>'}).join('')+'<span data-k="dia">💎 <b>'+bagVal('dia')+'</b> 鑽石</span><span data-k="gold">🪙 <b>'+bagVal('gold')+'</b> 金幣</span>':'<span>取個暱稱就能開始採集，物資會存進你的背包。</span>';
 }
 /* 現在能不能採：回傳原因文字，可以採就回傳空字串 */
@@ -2877,15 +2886,16 @@ function rsGain(R,g,cx,cy){
   resBag();
   icons.forEach(function(ic,k){
     setTimeout(function(){
-      var tgt=document.querySelector('#rsBag [data-k="'+ic[1]+'"]'),tr=tgt?tgt.getBoundingClientRect():null;
+      var tgt=document.querySelector('#rsMini [data-k="'+ic[1]+'"]')||document.querySelector('#rsBag [data-k="'+ic[1]+'"]'),tr=tgt?tgt.getBoundingClientRect():null;   /* 飛進下方固定的小背包列 */
       var e=document.createElement('span');e.className='rs-fly'+(ic[1]==='dia'?' dia':'');e.textContent=ic[0];
       e.style.left=cx+'px';e.style.top=cy+'px';fx.appendChild(e);
       var dx=tr&&tr.width?tr.left+18-cx:0,dy=tr&&tr.width?tr.top+tr.height/2-cy:220;
       requestAnimationFrame(function(){requestAnimationFrame(function(){e.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px) scale(.6)';e.style.opacity='.2'})});
-      setTimeout(function(){e.remove();var kk=ic[1];if(RS.shown[kk]!=null){RS.shown[kk]+=1;if(RS.shown[kk]>=bagReal(kk))delete RS.shown[kk]}resBag();var t2=document.querySelector('#rsBag [data-k="'+ic[1]+'"]');if(t2)rsAnim(t2,'bump');if(!reduce&&SFX_ON)tone(1200+k*90,0,.08,'sine',.06)},760);
+      setTimeout(function(){e.remove();var kk=ic[1];if(RS.shown[kk]!=null){RS.shown[kk]+=1;if(RS.shown[kk]>=bagReal(kk))delete RS.shown[kk]}resBag();['#rsMini','#rsBag'].forEach(function(sel){var t2=document.querySelector(sel+' [data-k="'+ic[1]+'"]');if(t2)rsAnim(t2,'bump')});if(!reduce&&SFX_ON)tone(1200+k*90,0,.08,'sine',.06)},760);
     },250+k*160);
   });
   toast(g.dia?(g.n?'💎 哇！撿到 '+g.dia+' 顆鑽石，還有 '+R.it+' +'+g.n+' '+R.item:'💎 哇！剛才還撿到 '+g.dia+' 顆鑽石！'):R.it+' +'+g.n+' '+R.item+'！');
+  setTimeout(function(){if(g.n)delete RS.shown[R.rk];if(g.dia)delete RS.shown.dia;resBag()},250+icons.length*160+900);   /* 動畫跑完一定對回背包真正的數字 */
 }
 pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='res')return;
