@@ -8,7 +8,7 @@
     if (A.state === 'suspended') { try { A.resume(); } catch (e) {} }
     return A;
   }
-  function out() { if (!M) { M = A.createGain(); M.gain.value = 0.55; M.connect(A.destination); } return M; }
+  function out() { if (!M) { M = A.createGain(); M.connect(A.destination); } M.gain.value = kind === 'res' ? 1.1 : 0.55; return M; }   /* 物資島工作歌大聲一倍，跟大海音樂差不多 */
   function osc(f, f2, t, d, type, vol) {
     var o = A.createOscillator(), g = A.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);

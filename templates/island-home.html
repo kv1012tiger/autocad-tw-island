@@ -1606,7 +1606,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 
 <script src="assets/js/pets.js"></script>
 <script src="assets/js/coins.js"></script>
-<script src="assets/bet/bgm.js?v=2026112203"></script>
+<script src="assets/bet/bgm.js?v=2026112204"></script>
 <script>
 (function(){
 'use strict';
@@ -2121,8 +2121,8 @@ function layout(){
   SP.forEach(function(s){s.w=Math.round(s.base*f);s.el.style.setProperty('--w',s.w+'px')});
   ['memberb','sponsora'].forEach(function(id,k){var i=SP.findIndex(function(s){return s.id===id}),j=5+k;if(i>=0&&cells[j]){var temp=cells[i];cells[i]=cells[j];cells[j]=temp}});
   SP.forEach(function(s,i){var c=cells[i],jx=(rnd(i,5)-.5)*.3,jy=(rnd(i,6)-.5)*.26;s.x=Math.round(pad+(c[0]+.5+jx)*cw);s.y=Math.round(pad+(c[1]+.5+jy)*ch)});
-  /* 同一排的兩座島靠太近（主島放大後燈塔、光圈會疊到旁邊的島）就左右推開，只移動非主島那座、剛好不碰 */
-  SP.forEach(function(a,i){SP.forEach(function(b,j){if(j<=i)return;var dx=b.x-a.x,need=Math.round((a.w+b.w)/2*1.05);if(Math.abs(b.y-a.y)>=160||Math.abs(dx)>=need)return;var sg=dx<0?-1:1,mv=need-Math.abs(dx);if(b.major&&!a.major)a.x-=sg*mv;else b.x+=sg*mv})});
+  /* 同一排的兩座島靠太近（主島放大後燈塔、光圈會疊到旁邊的島）就左右推開，主島不動、兩座一般島各讓一半，多跑幾輪讓旁邊的島也順著讓開 */
+  for(var rr=0;rr<10;rr++)SP.forEach(function(a,i){SP.forEach(function(b,j){if(j<=i)return;var dx=b.x-a.x,need=Math.round((a.w+b.w)/2*1.24);if(Math.abs(b.y-a.y)>=160||Math.abs(dx)>=need)return;var sg=dx<0?-1:1,mv=need-Math.abs(dx);if(b.major&&!a.major)a.x-=sg*mv;else if(a.major&&!b.major)b.x+=sg*mv;else{a.x-=sg*mv/2;b.x+=sg*mv/2}})});
   SP.forEach(function(s){s.el.style.left=s.x+'px';s.el.style.top=s.y+'px'});
   G={w:W,h:H};map.style.width=W+'px';map.style.height=H+'px';
   var route=$('route');route.setAttribute('viewBox','0 0 '+W+' '+H);route.setAttribute('width',W);route.setAttribute('height',H);
