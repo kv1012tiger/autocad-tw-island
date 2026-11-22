@@ -2680,7 +2680,7 @@ function msgNow(){var d=new Date(),z=function(n){return (n<10?'0':'')+n};return 
 function redrawMsg(id){var m=MB.list.filter(function(x){return x.id===id})[0],el=pBody.querySelector('.mb[data-mid="'+id+'"]');if(m&&el)el.outerHTML=msgHTML(m)}
 
 /* ---------- 物資島：連續點擊採集（每座島手感、音效、特效不同），每天隨機總量、偶爾撿到鑽石 ---------- */
-var RS={st:null,until:0,timer:0,seq:0,round:null,busy:false,cd:{},nx:{},shown:{}};
+var RS={st:null,until:0,timer:0,seq:0,round:null,busy:false,cd:{},nx:{},pend:{}};
 /* 這座島還要等幾秒才能再採：後台回報的冷卻（每座島 30～120 秒不同）加上這次剛採的 */
 function cdLeft(R){
   var w=COINS.get(),sec=w.cd&&w.cd[R.id],a=sec!=null?(w.cdT||0)+sec*1000:0,b=RS.cd[R.id]||0;
@@ -2714,7 +2714,9 @@ function renderRes(n){
 }
 /* 背包數字：得到物資時先顯示舊的數字，小圖示一個一個飛進來再 +1（5→6→7→8），不要一下子跳到最後 */
 function bagReal(k){var w=COINS.get();return k==='dia'?(w.dia||0):k==='gold'?(w.bal||0):((w.bag||{})[k]||0)}
-function bagVal(k){return RS.shown[k]!=null?RS.shown[k]:bagReal(k)}
+/* 背包顯示 = 真正的數字 − 還在路上飛的圖示；每飛進一個就 +1，後台改了數量也不會亂跳 */
+function bagVal(k){return Math.max(0,bagReal(k)-(RS.pend[k]||0))}
+function rsDrop(toks,n){for(var i=toks.length-1;i>=0&&n>0;i--){var t=toks[i];if(!t.done&&!t.dead&&t.k!=='dia'){t.dead=true;RS.pend[t.k]=Math.max(0,(RS.pend[t.k]||0)-1);n--}}resBag()}
 function resBag(){
   var el=$('rsBag'),w=COINS.get(),mini=$('rsMini');if(!el)return;
   if(mini){var cur=RESI[V.i]&&RESI[V.i].rk;mini.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'"'+(x.rk===cur?' class="hl"':'')+'>'+x.it+'<b>'+bagVal(x.rk)+'</b></span>'}).join('')+'<span data-k="dia">💎<b>'+bagVal('dia')+'</b></span><span data-k="gold"'+(cur==='gold'?' class="hl"':'')+'>🪙<b>'+bagVal('gold')+'</b></span>':''}
@@ -2864,16 +2866,18 @@ function rsDone(){
     if(sx){sx.left-=fast.n;sx.mine++}
     RS.cd[R.id]=Date.now()+R.gap*1000;resPaint();rsReset();
     for(var q=0;q<10;q++){var a0=Math.random()*Math.PI*2,d0=60+Math.random()*90;rsPart(cx0,cy0,R.fin[q%R.fin.length],Math.cos(a0)*d0,Math.sin(a0)*d0-40,22)}
-    rsSound('win');rsGain(R,fast,cx0,cy0);resStock();
+    rsSound('win');var toks=rsGain(R,fast,cx0,cy0);resStock();
     COINS.api({a:'gather',isle:R.id}).then(function(j){
       if(j.nx!=null&&j.nxi)RS.nx[j.nxi]=j.nx;
       if(j.isles)setSt(j.isles);
       if(!j.ok){
         /* 沒成功：把剛才先加上去的退回來，再提醒 */
         if(!j.p){var w1=COINS.get();if(R.rk==='gold')w1.bal=Math.max(0,(w1.bal||0)-fast.n);else if(w1.bag)w1.bag[R.rk]=Math.max(0,(w1.bag[R.rk]||0)-fast.n)}   /* 後台有回帳戶（j.p）時已經是正確的數字了 */
-        if(j.err==='cool')RS.cd[R.id]=Date.now()+j.wait*1000;toast('⚠️ 剛才那次採集沒有成功：'+COINS.errText(j));resBag();resStock();return}
+        rsDrop(toks,fast.n);if(j.err==='cool')RS.cd[R.id]=Date.now()+j.wait*1000;toast('⚠️ 剛才那次採集沒有成功：'+COINS.errText(j));resBag();resStock();return}
       var gs=j.got||{};
-      if(gs.dia){rsSound('dia');rsGain(R,{k:R.rk,n:0,dia:gs.dia},cx0,cy0)}
+      var more=Math.max(0,(gs.n||0)-fast.n);
+      if(gs.n<fast.n)rsDrop(toks,fast.n-gs.n);   /* 先估多了：還沒飛到的扣掉，數字不倒退 */
+      if(more||gs.dia){if(gs.dia)rsSound('dia');rsGain(R,{k:R.rk,n:more,dia:gs.dia||0},cx0,cy0)}   /* 實際比估的多：補飛幾個，一樣一個一個 +1 */
       if(gs.n!==fast.n){
         /* 和先顯示的數字不同：以後台為準（估的就不吵人） */
         /* 成功的回應一定帶 j.p，帳戶已經被後台的數字蓋過，不用再補 */
@@ -2904,19 +2908,19 @@ function rsGain(R,g,cx,cy){
   lab.innerHTML=(g.n?'+'+g.n+' '+R.it:'')+(g.dia?(g.n?'<br>':'')+'💎 +'+g.dia+' 鑽石！':'');
   lab.style.left=cx+'px';lab.style.top=cy+'px';fx.appendChild(lab);setTimeout(function(){lab.remove()},1900);
   var icons=[];for(var i=0;i<g.n;i++)icons.push([R.it,R.rk]);for(i=0;i<g.dia;i++)icons.push(['💎','dia']);
-  if(g.n)RS.shown[R.rk]=Math.max(0,bagReal(R.rk)-g.n-(RS.shown[R.rk]!=null?0:0));
-  if(g.dia)RS.shown.dia=Math.max(0,bagReal('dia')-g.dia);
+  var toks=icons.map(function(ic){RS.pend[ic[1]]=(RS.pend[ic[1]]||0)+1;return {k:ic[1]}});
   resBag();
   /* 背包不在畫面上：先把畫面輕輕捲到「我的背包」，再開始飛（採集已結束，捲動不會誤點） */
   var bagEl=$('rsBag'),br=bagEl?bagEl.getBoundingClientRect():null,wait=0;
   if(br&&br.height&&(br.top<70||br.bottom>innerHeight-20)){var sc=bagEl.closest('.p-body')||pBody;sc.scrollBy({top:br.top-90,behavior:reduce?'auto':'smooth'});wait=480}
   icons.forEach(function(ic,k){
     setTimeout(function(){
+      if(toks[k].dead)return;
       var tgt=document.querySelector('#rsBag [data-k="'+ic[1]+'"]'),tr=tgt?tgt.getBoundingClientRect():null;   /* 飛進背包裡對應的那一格 */
       var e=document.createElement('span');e.className='rs-fly'+(ic[1]==='dia'?' dia':'');e.textContent=ic[0];
       e.style.left=cx+'px';e.style.top=cy+'px';fx.appendChild(e);
       var ok=tr&&tr.width,dx=ok?tr.left+22-cx:0,dy=ok?tr.top+tr.height/2-cy:-220;
-      var land=function(){e.remove();var kk=ic[1];if(RS.shown[kk]!=null){RS.shown[kk]+=1;if(RS.shown[kk]>=bagReal(kk))delete RS.shown[kk]}resBag();
+      var land=function(){e.remove();var kk=ic[1],tk=toks[k];if(tk.dead||tk.done)return;tk.done=true;RS.pend[kk]=Math.max(0,(RS.pend[kk]||0)-1);resBag();
         var t2=document.querySelector('#rsBag [data-k="'+kk+'"]');if(t2){rsAnim(t2,'bump');var r2=t2.getBoundingClientRect(),pl=document.createElement('b');pl.className='rs-p1';pl.textContent='+1';pl.style.left=(r2.right-14)+'px';pl.style.top=r2.top+'px';fx.appendChild(pl);setTimeout(function(){pl.remove()},800)}
         if(!reduce&&SFX_ON)tone(1200+k*90,0,.08,'sine',.06)};
       if(reduce||!e.animate){e.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px)';setTimeout(land,300);return}
@@ -2925,7 +2929,8 @@ function rsGain(R,g,cx,cy){
     },wait+250+k*170);
   });
   toast(g.dia?(g.n?'💎 哇！撿到 '+g.dia+' 顆鑽石，還有 '+R.it+' +'+g.n+' '+R.item:'💎 哇！剛才還撿到 '+g.dia+' 顆鑽石！'):R.it+' +'+g.n+' '+R.item+'！');
-  setTimeout(function(){if(g.n)delete RS.shown[R.rk];if(g.dia)delete RS.shown.dia;resBag()},wait+250+icons.length*170+1100);   /* 動畫跑完一定對回背包真正的數字 */
+  setTimeout(function(){toks.forEach(function(t){if(!t.done&&!t.dead){t.dead=true;RS.pend[t.k]=Math.max(0,(RS.pend[t.k]||0)-1)}});resBag()},wait+250+icons.length*170+2500);   /* 動畫跑完一定對回背包真正的數字 */
+  return toks;
 }
 pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='res')return;
