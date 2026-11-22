@@ -1037,6 +1037,8 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-snd{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);background:rgba(0,0,0,.25);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer}
 .rs-bag{display:flex;flex-wrap:wrap;gap:8px}.rs-bag span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
 .rs-bag span.bump{animation:rsBump .35s}
+.lnk-go p{margin:0 0 14px;font-size:16px;line-height:1.7}.lnk-go .btn{font-size:17px;padding:13px 24px}
+button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 /* 物資島：固定在下方的小背包列，採集時圖示飛進來、數字一路跳上去 */
 .rs-mini{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:5px 6px;margin:4px auto 8px;padding:6px 8px;max-width:440px;border-radius:16px;background:rgba(3,30,44,.72);border:1.5px solid rgba(255,209,102,.5)}
 .rs-mini:empty{display:none}
@@ -1744,6 +1746,20 @@ SP.push({k:'dock',e:'⛵',name:'報名碼頭',sub:'場次・費用・報名方�
 SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手氣',c:'#fbbf24',g:['#fde68a','#b45309'],dc:['🪙','🍒','✨']});
 SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
+/* 「找到蘋果爸」的 6 個連結也做成小島（和商店島一樣大），點進去先看介紹，再按「前往 ↗」用新分頁開 */
+var LINK_SPOTS=[
+  {e:'🍄',name:'蘋果爸愛分享頻道',sub:'免費教學影片看到飽',url:'https://www.youtube.com/user/kv1012tiger',c:'#ef4444',g:['#fecaca','#b91c1c'],dc:['🎬','📺','▶️'],go:'到 YouTube 看影片',desc:'蘋果爸的 YouTube 頻道：AutoCAD 從基礎到進階的免費教學影片，邊看邊做最好學。'},
+  {e:'🚀',name:'AutoCAD 顧問基地',sub:'問題、範例、程式都在這',url:'http://www.autocad-tw.com/',c:'#38bdf8',g:['#bae6fd','#0369a1'],dc:['🛰️','🧑‍💻','📐'],go:'到 AutoCAD 顧問論壇',desc:'AutoCAD 顧問論壇：多年累積的問答、範例圖檔與 LISP 程式，遇到問題先來這裡找。'},
+  {e:'📢',name:'CAD 同好交流圈',sub:'一起討論、互相幫忙',url:'https://www.facebook.com/groups/autocad.tw/',c:'#3b82f6',g:['#bfdbfe','#1d4ed8'],dc:['💬','🤝','👥'],go:'加入 FB 社團',desc:'Facebook 社團：和 CAD 同好一起討論、分享作品、互相幫忙解決問題。'},
+  {e:'🍤',name:'最新消息快報站',sub:'開課與活動第一手',url:'https://www.facebook.com/autocad.tw/',c:'#f59e0b',g:['#fde68a','#b45309'],dc:['📰','📣','🗓️'],go:'到 FB 粉絲專頁',desc:'Facebook 粉絲專頁：開課時間、活動與新教學的第一手消息。'},
+  {e:'🎁',name:'LINE 一對一問蘋果爸',sub:'有問題直接問・@sni5329r',url:LINE,c:'#22c55e',g:['#bbf7d0','#15803d'],dc:['💚','💬','🙋'],go:'加 LINE 好友',desc:'加入蘋果爸的 LINE 官方帳號（@sni5329r），有問題可以一對一直接問。'},
+  {e:'🛍️',name:'蘋果爸教學商城',sub:'AutoCAD 線上顧問・教學產品',url:'https://autocad-tw.my1shop.com/',c:'#ec4899',g:['#fbcfe8','#be185d'],dc:['🛒','📦','🎓'],go:'逛教學商城',desc:'AutoCAD 顧問教學商城：專屬 AutoCAD 線上個人顧問與教學產品，是學習路上的良師益友，也是職場上最即時的支援後盾。'}
+];
+LINK_SPOTS.forEach(function(L,k){L.k='link';L.n=k});
+(function(){   /* 6 座平均分散插進島群，不會擠在同一區 */
+  var N=LINK_SPOTS.length,B=SP.length;
+  for(var k=N-1;k>=0;k--){var at=Math.min(SP.length,4+Math.round((k+.5)*(B-4)/N));SP.splice(at,0,LINK_SPOTS[k])}
+})();
 SP.forEach(function(s,i){s.si=i});
 function pad(n){return (n<10?'0':'')+n}
 var ISLE_OF={};ISLES.forEach(function(s,i){s.rows.forEach(function(r){ISLE_OF[r]=i})});
@@ -1997,7 +2013,8 @@ function isleSVG(s){
   if(s.k==='game'){land='#60a5fa';deep='#1e40af';tree='#1e3a8a';leaf='#93c5fd'}
   if(s.k==='pets'){land='#f9a8d4';deep='#be185d';tree='#9d174d';leaf='#fbcfe8'}
   if(s.k==='mine'){land='#bef264';deep='#4d7c0f';tree='#3f6212';leaf='#d9f99d'}
-  var glow=X.glow||(s.k==='game'?'#38bdf8':s.k==='pets'?'#fb7185':s.k==='mine'?'#fde047':s.k==='shop'?'#fb923c':'');
+  if(s.k==='link'){land=mix(s.g[0],'#56b43c',.45);deep=mix(s.g[1],'#2f8a2e',.5)}
+  var glow=X.glow||(s.k==='game'?'#38bdf8':s.k==='pets'?'#fb7185':s.k==='mine'?'#fde047':s.k==='shop'?'#fb923c':s.k==='link'?s.c:'');
   var o='<svg class="isl" viewBox="-14 -12 168 124" aria-hidden="true">'+
     (s.k==='search'?'<path d="'+blob(70,cy+8,rx,ry,1.33,sd)+'" fill="#e9d5ff" opacity=".3"/><path d="'+blob(70,cy+8,rx,ry,1.33,sd)+'" fill="none" stroke="#e9d5ff" stroke-width="2.2" stroke-dasharray="1.5 6" stroke-linecap="round"/>':'')+
     (glow?'<path d="'+blob(70,cy+8,rx,ry,1.33,sd)+'" fill="'+glow+'" opacity=".22"/><path d="'+blob(70,cy+8,rx,ry,1.33,sd)+'" fill="none" stroke="'+glow+'" stroke-width="2.4" stroke-dasharray="1.5 5" stroke-linecap="round"/>':'')+
@@ -2016,6 +2033,7 @@ function isleSVG(s){
   if(s.k==='res')resProps(s.rk,I);
   if(s.k==='game')gameProps(I);
   if(s.k==='shop')shopProps(I);
+  if(s.k==='link'){I.push({y:40,h:bigFlag(18,40,s.c)});I.push({y:44,h:isoHut(112,44,8,s.c)})}
   if(s.k==='mine'){I.push({y:40,h:isoHut(100,40,9,'#e76f51')});I.push({y:44,h:isoHut(40,44,7,'#2a9d8f')});I.push({y:50,h:'<rect x="60" y="46" width="22" height="8" rx="2" fill="#7a4a22"/><path d="M63 48v4M68 48v4M73 48v4M78 48v4" stroke="#4ade80" stroke-width="2"/>'})}
   if(s.k==='pets'){I.push({y:42,h:isoHut(98,42,9,'#fb7185')});I.push({y:46,h:'<path d="M38 46c-4-6 4-10 7-5 3-5 11-1 7 5l-7 6z" fill="#f43f5e" stroke="#9f1239" stroke-width=".7"/>'})}
   if(s.k==='msg'){I.push({y:44,h:mailbox(114,44)});I.push({y:40,h:mailbox(26,40)})}
@@ -2038,7 +2056,7 @@ SP.forEach(function(s,i){
   var b=document.createElement('button');b.type='button';
   var isl=s.k==='isle',frm=s.k==='forum',num=isl||frm;
   var cnt=isl?'💬 AI 問答・'+s.rows.length+' 則':frm?'📖 '+s.total+' 篇教學・'+(s.subs.length+1)+' 間小屋':s.k==='search'?'🔍 搜尋文章・🃏 抽塔羅牌':s.sub;
-  s.base=frm?220+9*Math.min(s.subs.length+1,10):isl?205:s.k==='home'?255:s.k==='search'?285:s.k==='res'?170:s.k==='msg'?215:s.k==='game'?225:s.k==='mine'?230:s.k==='pets'?320:s.k==='shop'?340:235;
+  s.base=frm?220+9*Math.min(s.subs.length+1,10):isl?205:s.k==='home'?255:s.k==='search'?285:s.k==='res'?170:s.k==='msg'?215:s.k==='game'?225:s.k==='mine'?230:s.k==='pets'?320:s.k==='shop'||s.k==='link'?340:235;
   if(s.major)s.base=Math.round(s.base*1.4);
   if(s.member){var ref=FORUM.find(function(x){return x.id==='courses'});s.base=ref?Math.round((220+9*Math.min(ref.subs.length+1,10))*1.4):320;}
   b.className='spot'+(num?'':' sp')+(s.k==='home'?' home':'')+(s.k==='search'?' oracle':'')+(isl?' qai':'')+(frm?' fi':'')+(s.major?' major':'');
@@ -2110,7 +2128,7 @@ function visit(i,after){
   busy=true;centerOn(i,true);placeBoat(i);playSfx('row');
   setTimeout(function(){busy=false;go()},900);
 }
-function openSpot(i){var s=SP[i];if(s.k==='forum'){location.hash='isle-'+encodeURIComponent(s.id);return}if(s.k==='isle'||s.k==='res')openPanel(s.k,s.n);else openPanel(s.k,0)}
+function openSpot(i){var s=SP[i];if(s.k==='forum'){location.hash='isle-'+encodeURIComponent(s.id);return}if(s.k==='isle'||s.k==='res'||s.k==='link')openPanel(s.k,s.n);else openPanel(s.k,0)}
 /* 縮放：手勢進行中只做 GPU 變形，放開後才一次更新版面；最小可看整張地圖 */
 var TKN=10.2,Z=1,Zmin=.3,Zmax=1.6,baseFont=20,zRaf=0,pinch=null,zg=null,wheelT=0;
 function fitZoom(){Zmin=Math.min(world.clientWidth/G.w,world.clientHeight/G.h)}
@@ -2329,6 +2347,7 @@ function route(){
   else if(h==='tarot'){openPanel('search',1);placeBoat(spotIdx('search'),true)}
   else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'){openPanel(h);placeBoat(spotIdx(h),true)}
   else if((m=h.match(/^res-(\d+)$/))&&RESI[+m[1]]){openPanel('res',+m[1]);placeBoat(RESI[+m[1]].si,true)}
+  else if((m=h.match(/^link-(\d+)$/))&&LINK_SPOTS[+m[1]]){openPanel('link',+m[1]);placeBoat(LINK_SPOTS[+m[1]].si,true)}
   else if(!h&&panel.classList.contains('open'))closePanel();
 }
 window.addEventListener('hashchange',route);
@@ -2336,7 +2355,7 @@ $('sceneBack').addEventListener('click',function(){location.hash=''});
 $('sceneBackBottom').addEventListener('click',function(){location.hash=''});
 
 /* ---------- 分享連結與收藏島 ---------- */
-function spotHash(s){return s.k==='forum'?'isle-'+s.id:s.k==='isle'?'qa-'+s.n:s.k==='res'?'res-'+s.n:s.k}
+function spotHash(s){return s.k==='forum'?'isle-'+s.id:s.k==='isle'?'qa-'+s.n:s.k==='res'?'res-'+s.n:s.k==='link'?'link-'+s.n:s.k}
 function shareHash(hash,title){
   var url=location.href.split('#')[0]+'#'+hash;
   if(navigator.share&&matchMedia('(pointer: coarse)').matches){navigator.share({title:title+'｜論壇資源島',url:url}).catch(function(){});return}
@@ -2514,6 +2533,7 @@ function renderHome(){
       '<a class="lk" href="https://www.facebook.com/groups/autocad.tw/" target="_blank" rel="noopener"><i>📢</i><span><b>CAD 同好交流圈</b><small>一起討論、互相幫忙</small></span></a>'+
       '<a class="lk" href="https://www.facebook.com/autocad.tw/" target="_blank" rel="noopener"><i>🍤</i><span><b>最新消息快報站</b><small>開課與活動第一手</small></span></a>'+
       '<a class="lk" href="'+LINE+'" target="_blank" rel="noopener"><i>🎁</i><span><b>LINE 一對一問蘋果爸</b><small>有問題直接問・@sni5329r</small></span></a>'+
+      '<a class="lk" href="https://autocad-tw.my1shop.com/" target="_blank" rel="noopener"><i>🛍️</i><span><b>蘋果爸教學商城</b><small>AutoCAD 線上顧問・教學產品</small></span></a>'+
     '</div></div>'+
     '<p class="fav-note">© 蘋果爸／AutoCAD顧問論壇｜歡迎參考學習，禁止商業用途｜<a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh-hant" target="_blank" rel="noopener license">CC BY-NC-ND 4.0 ↗</a></p>';
   $('pStep').textContent='🏡 蘋果爸小島';
@@ -2998,6 +3018,16 @@ function tradeFx(give,get,big){
   }catch(e){}
 }
 window.TRADE_FX=tradeFx;
+/* 連結小島：介紹＋「前往 ↗」（新分頁），下面列出另外 5 座可以直接跳過去 */
+function renderLink(n){
+  var L=LINK_SPOTS[n];
+  pBody.innerHTML='<div class="ph" style="--c:'+L.c+'"><span class="ph-e">'+L.e+'</span><div><div class="p-kicker">APPLE DAD・找到蘋果爸</div><h3 id="pTitle">'+esc(L.name)+'</h3><p>'+esc(L.sub)+'</p></div></div>'+
+    '<div class="p-sec lnk-go"><p>'+esc(L.desc)+'</p><a class="btn btn-primary" href="'+esc(L.url)+'" target="_blank" rel="noopener">'+L.e+' '+esc(L.go)+' ↗</a></div>'+
+    '<div class="p-sec"><h4>找到蘋果爸的其他小島</h4><div class="links">'+LINK_SPOTS.filter(function(x){return x!==L}).map(function(x){return '<button class="lk" type="button" data-lgo="'+x.n+'"><i>'+x.e+'</i><span><b>'+esc(x.name)+'</b><small>'+esc(x.sub)+'</small></span></button>'}).join('')+'</div></div>';
+  $('pStep').textContent=L.e+' '+L.name;
+  footSimple('← 回地圖','下一座 →');
+}
+pBody.addEventListener('click',function(e){var t=e.target.closest('[data-lgo]');if(!t||V.t!=='link')return;var k=+t.dataset.lgo;openPanel('link',k);placeBoat(LINK_SPOTS[k].si)});
 function renderShop(){
   pBody.innerHTML='<div class="ph" style="--c:#fb923c"><span class="ph-e">🏪</span><div><div class="p-kicker">SHOP ISLAND・商店島</div><h3 id="pTitle">商店島</h3><p>買自己的船、用金幣換物資、鑽石換金幣</p></div></div><div id="shBox"></div>';
   $('pStep').textContent='🏪 商店島';
@@ -4640,7 +4670,7 @@ function applySync(code){
 }
 function actsHTML(){
   var s=null,h='',title='';
-  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='game'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='res')s=RESI[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
+  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='game'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
   if(V.t==='hut'&&SCN){h=spotHash(SCN)+'/'+V.i;title=SCN.name+'・'+SCN.huts[V.i].name}
   else if(s){h=spotHash(s);title=s.name}
   if(!h)return '';
@@ -4649,7 +4679,7 @@ function actsHTML(){
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
-  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
+  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
   pBody.scrollTop=0;
@@ -4658,7 +4688,7 @@ function render(dir){
 function openPanel(t,i,dir){
   var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha'),isBet=t==='slot'||t==='rps'||t==='gacha';
   V={t:t,i:i||0};render(dir);
-  var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?['game','遊戲島']:t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
+  var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?['game','遊戲島']:t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='link'?['link-'+V.i,LINK_SPOTS[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
   if(vk){var ph=pBody.querySelector('.ph,.home-top');if(ph){var vd=document.createElement('div');ph.parentNode.insertBefore(vd,ph.nextSibling);COINS.visit(vk[0],vk[1],vd)}}
   if(!panel.classList.contains('open')){
     opener=document.activeElement;
@@ -4693,6 +4723,7 @@ pNext.addEventListener('click',function(){
   else if(V.t==='castle')openPanel('dock');
   else if(V.t==='dock')openPanel('castle');
   else if(V.t==='res'){openPanel('res',(V.i+1)%RESI.length);placeBoat(RESI[V.i].si)}
+  else if(V.t==='link'){openPanel('link',(V.i+1)%LINK_SPOTS.length);placeBoat(LINK_SPOTS[V.i].si)}
   else if(V.t==='msg')openPanel('home');
   else if(V.t==='game'){openPanel('res',0);placeBoat(RESI[0].si)}
   else if(V.t==='voyage')voyageRandom();
@@ -4880,6 +4911,7 @@ else if((hm=HASH.match(/^qa-(\d+)$/))&&ISLES[+hm[1]])HASH_SP=ISLES[+hm[1]].si;
 else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='gacha'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
 else if(HASH==='tarot')HASH_SP=spotIdx('search');
 else if((hm=HASH.match(/^res-(\d+)$/))&&RESI[+hm[1]])HASH_SP=RESI[+hm[1]].si;
+else if((hm=HASH.match(/^link-(\d+)$/))&&LINK_SPOTS[+hm[1]])HASH_SP=LINK_SPOTS[+hm[1]].si;
 if(HASH_SP>=0)seen=true;
 if(seen)intro.hidden=true;
 else{document.documentElement.classList.add('lock');setTimeout(function(){$('introGo').focus({preventScroll:true})},120)}
