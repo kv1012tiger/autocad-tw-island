@@ -40,6 +40,7 @@ var D_HEAD = ['時間', '暱稱', '登島碼', '文章', '文章網址', '檔案
 var V_HEAD = ['時間', '暱稱', '登島碼', '小島代號', '小島', '日期', '管理員'];
 var M_HEAD = ['編號', '時間', '暱稱', '登島碼', '頭像', '內容', '回覆', '回覆時間', '回覆修改時間', '狀態'];
 var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內容'];
+var MI_HEAD = ['留言編號', '檔案ID', '時間'];   // v59 留言圖片：檔案存在站長雲端硬碟「留言碼頭圖片」資料夾
 var R_HEAD = ['代號', '物資島', '日期', '今日總量', '已採集', '鑽石藏在第幾份', '已撿到鑽石'];
 var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容'];
 var DAILY = 3;      // 第 1 天 3 枚、第 2 天 4 枚
@@ -218,6 +219,7 @@ function beastGive_(o, k) {
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
+var MSG_IMG_MAX = 1200000;   // v59 圖片 base64 長度上限（前台會先縮到 1280px JPEG，約 100～300 KB）
 var NOTE_LEN = 100, NOTE_DAY = 20;
 
 /* ---------- 漂流寶物（隨機出現在各座島的金幣、鑽石）與每日任務 ---------- */
@@ -1008,14 +1010,18 @@ function handle_(q) {
 
     /* ----- 留言碼頭 ----- */
     } else if (a === 'msg') {
-      var body = body_(q.text, MSG_LEN);
-      if (plain_(body).length < 2) return { ok: false, err: 'msgshort', p: me };
+      var body = body_(q.text, MSG_LEN), img = String(q.img || '');
+      if (img && (img.length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(img))) return { ok: false, err: 'imgbad', p: me };
+      if (plain_(body).length < 2 && !img) return { ok: false, err: 'msgshort', p: me };
       var mw = num_(r[C.msgLast]) + MSG_GAP - Date.now();
       if (mw > 0 && !me.admin) return { ok: false, err: 'msgcool', wait: Math.ceil(mw / 1000), p: me };
       if (num_(r[C.msgN]) >= MSG_DAY && !me.admin) return { ok: false, err: 'msgmax', p: me };
+      var newMid = 'M' + Date.now().toString(36).toUpperCase(), imgId = '';
+      if (img) { try { imgId = msgImgSave_(newMid, img); } catch (ie) { return { ok: false, err: 'imgfail', p: me }; } }
       r[C.msgN] = num_(r[C.msgN]) + 1;
       r[C.msgLast] = Date.now();
-      sheet_('留言板', M_HEAD).appendRow(['M' + Date.now().toString(36).toUpperCase(), new Date(), r[C.nick], r[C.code], r[C.av], body, '', '', '', '']);
+      sheet_('留言板', M_HEAD).appendRow([newMid, new Date(), r[C.nick], r[C.code], r[C.av], body, '', '', '', '']);
+      if (imgId) sheet_('留言圖片', MI_HEAD).appendRow([newMid, imgId, new Date()]);
       bump_('msgs');
     } else if (a === 'msgreply') {
       var parentSheet = sheet_('留言板', M_HEAD), parentRow = msgRow_(parentSheet, q.id);
@@ -1044,6 +1050,7 @@ function handle_(q) {
       } else {
         if (String(mv[3]).toUpperCase() !== me.code.toUpperCase() && !me.admin) return { ok: false, err: 'admin', p: me };
         mv[9] = '刪除';
+        msgImgTrash_(String(mv[0]));
       }
       ms.getRange(mrow, 1, 1, M_HEAD.length).setValues([mv]);
       bump_('msgs');
@@ -1521,6 +1528,31 @@ function adminCodes_() {
   cput_('adm', out, 600);
   return out;
 }
+/* v59：第一次部署後，站長在編輯器選這個函式按「執行」，Google 會跳出授權畫面（允許存檔到雲端硬碟）。只讀資料夾名稱，不改任何東西 */
+function authorizeDrive() { return DriveApp.getRootFolder().getName(); }
+/* v59 留言圖片：存到站長雲端硬碟的「留言碼頭圖片」資料夾，設成知道連結的人可以看；回傳檔案 ID */
+function msgImgDir_() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('MSG_IMG_DIR');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  var dir = DriveApp.createFolder('留言碼頭圖片');
+  props.setProperty('MSG_IMG_DIR', dir.getId());
+  return dir;
+}
+function msgImgSave_(mid, b64) {
+  var blob = Utilities.newBlob(Utilities.base64Decode(b64), 'image/jpeg', mid + '.jpg');
+  var file = msgImgDir_().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return file.getId();
+}
+function msgImgMap_() {
+  var sh = sheet_('留言圖片', MI_HEAD), n = sh.getLastRow() - 1, m = {};
+  if (n > 0) sh.getRange(2, 1, n, 2).getValues().forEach(function (v) { if (v[0] && v[1]) m[String(v[0])] = String(v[1]); });
+  return m;
+}
+function msgImgTrash_(mid) {
+  var fid = msgImgMap_()[mid];
+  if (fid) { try { DriveApp.getFileById(fid).setTrashed(true); } catch (e) {} }
+}
 function msgsBuild_(admin, prefix) {
   var rows = rows_(players_()), avOf = {};
   rows.forEach(function (r) { avOf[String(r[C.code]).toUpperCase()] = plain_(r[C.av]); });
@@ -1541,7 +1573,8 @@ function msgsBuild_(admin, prefix) {
     var id = String(v[0] || ''), who = String(v[3] || '').toUpperCase(); if (!id) return;
     (byParent[id] || (byParent[id] = [])).push({ t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]) });
   });
-  list.forEach(function (m) { m.replies = byParent[m.id] || []; });
+  var imgs = msgImgMap_();
+  list.forEach(function (m) { m.replies = byParent[m.id] || []; if (imgs[m.id]) m.img = imgs[m.id]; });
   var total = list.length, pages = Math.max(1, Math.ceil(total / MSG_PAGE)), all = {}, first = {};
   for (var p = 1; p <= Math.min(pages, MSG_CACHE_PAGES); p++) {
     first = { total: total, pending: admin ? pending : 0, pages: pages, list: list.slice((p - 1) * MSG_PAGE, p * MSG_PAGE) };
@@ -1562,7 +1595,7 @@ function msgs_(q) {
   }
   return { ok: true, total: pg.total, pending: pg.pending, admin: admin, page: page, pages: pg.pages,
     list: pg.list.map(function (m) {
-      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, replies: m.replies || [], hidden: m.hidden, mine: !!code && m.w === code };
+      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, replies: m.replies || [], hidden: m.hidden, mine: !!code && m.w === code, img: m.img || undefined };
     }) };
 }
 

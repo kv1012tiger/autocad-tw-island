@@ -1035,7 +1035,13 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-stock .bar{height:9px;margin:6px auto 0;max-width:300px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden}
 .rs-stock .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#ffd166,var(--c))}
 .rs-snd{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);background:rgba(0,0,0,.25);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer}
-.rs-bag{display:flex;flex-wrap:wrap;gap:8px}.rs-bag span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
+.rs-bag{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rs-bag span{white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;padding:6px 6px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
+.yt{position:relative;display:block;width:100%;max-width:480px;aspect-ratio:16/9;margin:8px 0;padding:0;border:0;border-radius:12px;overflow:hidden;background:#000;cursor:pointer}.yt img{width:100%;height:100%;object-fit:cover;display:block}.yt span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:44px;border-radius:12px;background:#ff0033;color:#fff;font-size:22px;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.yt-f{width:100%;max-width:480px;aspect-ratio:16/9;margin:8px 0;border-radius:12px;overflow:hidden;background:#000}.yt-f iframe{width:100%;height:100%;border:0;display:block}
+.mb-img{display:block;margin:8px 0;padding:0;border:0;background:none;cursor:zoom-in;max-width:100%}.mb-img img{display:block;max-width:100%;max-height:360px;border-radius:12px;object-fit:contain;background:rgba(0,0,0,.2)}
+.mb-pv{position:relative;display:inline-block;margin:8px 0 2px}.mb-pv img{display:block;max-height:140px;max-width:220px;border-radius:10px}.mb-pv button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
+.mb-lb{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}.mb-lb img{max-width:100%;max-height:100%;border-radius:8px}
+.rs-bag span:only-child{grid-column:1/-1;white-space:normal;text-align:left}
 .rs-bag span.bump{animation:rsGot .45s}
 @keyframes rsGot{40%{transform:scale(1.22);background:rgba(255,209,102,.45);box-shadow:0 0 16px rgba(255,209,102,.9);border-color:#ffd166}}
 .lnk-go p{margin:0 0 14px;font-size:16px;line-height:1.7}.lnk-go .btn{font-size:17px;padding:13px 24px}
@@ -2574,11 +2580,14 @@ function renderMsg(){
 function msgForm(){
   var box=$('mbNew'),w=COINS.get();if(!box)return;
   if(!w.code){box.innerHTML='<div class="mb-login"><p>取個暱稱，就能在碼頭留言給蘋果爸。</p><button class="btn btn-primary btn-sm" type="button" data-mjoin>🏝️ 取暱稱・登島</button></div>';return}
-  box.innerHTML='<div class="mb-me"><span class="mb-av">'+COINS.av(w)+'</span><b>'+esc(w.nick)+'</b><small>想說什麼？可以直接貼上網址</small></div>'+
+  box.innerHTML='<div class="mb-me"><span class="mb-av">'+COINS.av(w)+'</span><b>'+esc(w.nick)+'</b><small>想說什麼？可以貼網址、YouTube 影片，或附一張圖</small></div>'+
     '<textarea class="mb-ta" id="mbText" maxlength="300" placeholder="寫下你的留言…（300 字內，可以貼網址）"></textarea>'+
-    '<div class="mb-row"><small id="mbCnt">0 / 300</small><button class="btn btn-primary btn-sm" type="button" id="mbSend">📮 送出留言</button></div>'+
+    '<input type="file" id="mbFile" accept="image/*" hidden><div class="mb-pv" id="mbPv" hidden></div>'+
+    '<div class="mb-row"><small id="mbCnt">0 / 300</small><span><button class="btn btn-ghost btn-sm" type="button" id="mbPic">📷 加圖片</button> <button class="btn btn-primary btn-sm" type="button" id="mbSend">📮 送出留言</button></span></div>'+
     '<p class="mb-hint">留言會公開顯示，請不要留電話、Email 等個人資料。每天最多 10 則，每則間隔 1 分鐘。</p>';
   var ta=$('mbText');ta.addEventListener('input',function(){$('mbCnt').textContent=ta.value.length+' / 300'});
+  mbPvPaint();
+  $('mbFile').addEventListener('change',function(){var f=this.files&&this.files[0];this.value='';if(!f)return;if(!/^image\//.test(f.type)){toast('只能附圖片檔');return}toast('🖼️ 圖片處理中…');mbShrink(f).then(function(d){MB.pic=d;mbPvPaint()}).catch(function(){toast('⚠️ 這張圖片讀不出來，換一張試試')})});
 }
 /* 留言快取：第 1 頁存在這台裝置，打開碼頭先秀上次看到的，再背景更新；靠近留言碼頭時就先預抓 */
 var MSGC=null;try{MSGC=JSON.parse(localStorage.getItem('aikb-msgs')||'null')}catch(e){}
@@ -2609,12 +2618,21 @@ function loadMsgs(page,fresh){
     msgRender(j,$('mbList'));
   }).catch(function(){if(my===MB.seq&&$('mbList')&&!shown)$('mbList').innerHTML='<p class="s-count">⚠️ 暫時連不上留言碼頭，請稍後再試。</p>'});
 }
+/* 留言裡的 YouTube 網址：先顯示縮圖，按了才在留言裡播放（隱私加強模式）；每則最多 2 支 */
+function ytIds(t){var re=/(?:youtube\.com\/(?:watch\?(?:[^\s<"]*?&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/g,m,o=[];t=String(t||'');while((m=re.exec(t))&&o.length<2){if(o.indexOf(m[1])<0)o.push(m[1])}return o}
+function ytHTML(t){return ytIds(t).map(function(id){return '<button class="yt" type="button" data-yt="'+id+'" aria-label="播放 YouTube 影片"><img src="https://i.ytimg.com/vi/'+id+'/hqdefault.jpg" alt="" loading="lazy"><span>▶</span></button>'}).join('')}
+/* 留言圖片：存在站長雲端硬碟（知道連結的人可以看），點了放大 */
+function mbImgUrl(id){return 'https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=w1280'}
+function mbImgHTML(id){return id?'<button class="mb-img" type="button" data-mimg="'+esc(id)+'" aria-label="放大圖片"><img src="'+mbImgUrl(id)+'" alt="留言圖片" loading="lazy" onerror="this.onerror=null;this.src=\'https://drive.google.com/thumbnail?id='+esc(id)+'&amp;sz=w1280\'"></button>':''}
+/* 選好的照片先在手機上縮小（最長邊 1280、JPEG），再送出 */
+function mbShrink(file){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);var q=.82,d=c.toDataURL('image/jpeg',q);while(d.length>1100000&&q>.4){q-=.12;d=c.toDataURL('image/jpeg',q)}ok(d)};im.onerror=function(){URL.revokeObjectURL(u);no()};im.src=u})}
+function mbPvPaint(){var pv=$('mbPv');if(!pv)return;pv.hidden=!MB.pic;pv.innerHTML=MB.pic?'<img src="'+MB.pic+'" alt="要附上的圖片"><button type="button" data-mpvx aria-label="拿掉圖片">✕</button>':''}
 function msgHTML(m){
   var ed=MB.edit===m.id;
   return '<article class="mb'+(m.hidden?' hid':'')+'" data-mid="'+esc(m.id)+'"><div class="mb-h"><span class="mb-av">'+COINS.av(m)+'</span><b>'+esc(m.nick)+'</b><small>'+esc(m.t)+'</small>'+(m.hidden?'<em>已隱藏</em>':'')+'</div>'+
-    '<div class="mb-t">'+COINS.linkify(m.text)+'</div>'+
-    (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small><p>'+COINS.linkify(r.text)+'</p></div></div>'}).join('')+
-    (m.reply&&!ed?'<div class="qa-a mb-r"><span class="tav" aria-hidden="true"></span><div><small>🍎 蘋果爸回覆・'+esc(m.rt)+(m.re?'・已編輯 '+esc(m.re):'')+'</small><p>'+COINS.linkify(m.reply)+'</p></div></div>':'')+
+    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img)+ytHTML(m.text)+
+    (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small><p>'+COINS.linkify(r.text)+'</p>'+ytHTML(r.text)+'</div></div>'}).join('')+
+    (m.reply&&!ed?'<div class="qa-a mb-r"><span class="tav" aria-hidden="true"></span><div><small>🍎 蘋果爸回覆・'+esc(m.rt)+(m.re?'・已編輯 '+esc(m.re):'')+'</small><p>'+COINS.linkify(m.reply)+'</p>'+ytHTML(m.reply)+'</div></div>':'')+
     (ed?'<textarea class="mb-ta" data-rta maxlength="300" placeholder="回覆內容（清空後儲存＝刪除回覆）">'+esc(m.reply||'')+'</textarea><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-msave="'+esc(m.id)+'">💾 儲存回覆</button><button class="btn btn-ghost btn-sm" type="button" data-mcancel>取消</button></div>':
      (MB.admin||m.mine?'<div class="mb-k">'+(MB.admin?'<button class="mb-b" type="button" data-mrep="'+esc(m.id)+'">'+(m.reply?'✏️ 編輯回覆':'💬 回覆')+'</button><button class="mb-b" type="button" data-mhide="'+esc(m.id)+'" data-h="'+(m.hidden?0:1)+'">'+(m.hidden?'👁️ 取消隱藏':'🙈 隱藏')+'</button>':'')+
        (m.mine?'<button class="mb-b" type="button" data-mdel="'+esc(m.id)+'">🗑️ 刪除</button>':'')+'</div>':''))+
@@ -2630,16 +2648,21 @@ function markPending(n){
 pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='msg')return;
   var d=t.dataset;
+  if(d.yt){var yf=document.createElement('div');yf.className='yt-f';yf.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+d.yt+'?autoplay=1&playsinline=1&rel=0" title="YouTube 影片" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';t.replaceWith(yf);return}
+  if(d.mimg){var lb=document.createElement('div');lb.className='mb-lb';lb.innerHTML='<img src="'+mbImgUrl(d.mimg)+'" alt="留言圖片">';lb.addEventListener('click',function(){lb.remove()});document.body.appendChild(lb);return}
+  if(t.id==='mbPic'){$('mbFile').click();return}
+  if(d.mpvx!=null){MB.pic=null;mbPvPaint();return}
   if(d.mjoin!=null){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
   if(t.id==='mbSend'){
-    var ta=$('mbText'),v=ta.value.trim();if(v.length<2){toast('留言至少要 2 個字');ta.focus();return}
+    var ta=$('mbText'),v=ta.value.trim(),pic=MB.pic;if(v.length<2&&!pic){toast('留言至少要 2 個字，或附一張圖');ta.focus();return}
     /* 先在畫面上送出：輸入框馬上清空、留言先放到最上面（送出中…），後台確認後再換成正式的；失敗就把字放回去 */
     var mw=COINS.get(),pe=document.createElement('article');
-    pe.className='mb mb-pend';pe.innerHTML='<div class="mb-h"><span class="mb-av">'+COINS.av(mw)+'</span><b>'+esc(mw.nick)+'</b><small>⏳ 送出中…</small></div><div class="mb-t">'+COINS.linkify(v)+'</div>';
+    pe.className='mb mb-pend';pe.innerHTML='<div class="mb-h"><span class="mb-av">'+COINS.av(mw)+'</span><b>'+esc(mw.nick)+'</b><small>⏳ 送出中…</small></div>'+(v?'<div class="mb-t">'+COINS.linkify(v)+'</div>':'')+(pic?'<div class="mb-img"><img src="'+pic+'" alt=""></div>':'')+ytHTML(v);
     var lb=$('mbList'),cp=lb&&lb.querySelector('.s-count');if(lb){var em=lb.querySelector('.t-empty');if(em)em.remove();if(cp)cp.after(pe);else lb.prepend(pe)}
-    ta.value='';$('mbCnt').textContent='0 / 300';t.disabled=true;toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');
-    function back(msg){pe.remove();t.disabled=false;var ta2=$('mbText');if(ta2&&!ta2.value){ta2.value=v;$('mbCnt').textContent=v.length+' / 300'}toast(msg)}
-    COINS.api({a:'msg',text:v},true).then(function(j){
+    ta.value='';$('mbCnt').textContent='0 / 300';t.disabled=true;MB.pic=null;mbPvPaint();toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');
+    function back(msg){pe.remove();t.disabled=false;var ta2=$('mbText');if(ta2&&!ta2.value){ta2.value=v;$('mbCnt').textContent=v.length+' / 300'}if(pic&&!MB.pic){MB.pic=pic;mbPvPaint()}toast(msg)}
+    var mq={a:'msg',text:v};if(pic)mq.img=pic.slice(pic.indexOf(',')+1);
+    COINS.api(mq,true).then(function(j){
       if(!j.ok){back('⚠️ 留言沒有送出：'+COINS.errText(j));return}
       t.disabled=false;if(MSGA.cur!=null){MSGA.cur+=1;msgSeenSet(MSGA.cur)}loadMsgs(MB.page=1,1);
     }).catch(function(){back('⚠️ 暫時連不上，留言沒有送出，文字已放回去')});
@@ -2721,7 +2744,7 @@ function rsDrop(toks,n){for(var i=toks.length-1;i>=0&&n>0;i--){var t=toks[i];if(
 function resBag(){
   var el=$('rsBag'),w=COINS.get(),mini=$('rsMini');if(!el)return;
   if(mini){var cur=RESI[V.i]&&RESI[V.i].rk;mini.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'"'+(x.rk===cur?' class="hl"':'')+'>'+x.it+'<b>'+bagVal(x.rk)+'</b></span>'}).join('')+'<span data-k="dia">💎<b>'+bagVal('dia')+'</b></span><span data-k="gold"'+(cur==='gold'?' class="hl"':'')+'>🪙<b>'+bagVal('gold')+'</b></span>':''}
-  el.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'">'+x.it+' <b>'+bagVal(x.rk)+'</b> '+x.item+'</span>'}).join('')+'<span data-k="dia">💎 <b>'+bagVal('dia')+'</b> 鑽石</span><span data-k="gold">🪙 <b>'+bagVal('gold')+'</b> 金幣</span>':'<span>取個暱稱就能開始採集，物資會存進你的背包。</span>';
+  el.innerHTML=w.code?RTYPE.map(function(x){return '<span data-k="'+x.rk+'">'+x.it+' <b>'+bagVal(x.rk)+'</b> '+x.item+'</span>'}).join('')+'<span data-k="gold">🪙 <b>'+bagVal('gold')+'</b> 金幣</span><span data-k="dia">💎 <b>'+bagVal('dia')+'</b> 鑽石</span>':'<span>取個暱稱就能開始採集，物資會存進你的背包。</span>';
 }
 /* 現在能不能採：回傳原因文字，可以採就回傳空字串 */
 function setSt(st){RS.st=st;RS.stT=Date.now()}
