@@ -993,10 +993,14 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-ring .fg{stroke:var(--c);stroke-linecap:round;stroke-dasharray:339.3;stroke-dashoffset:339.3;transition:stroke-dashoffset .15s;filter:drop-shadow(0 0 6px var(--c))}
 .rs-obj{position:absolute;left:22px;top:22px;width:156px;height:156px;border-radius:50%;border:0;padding:0;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.18),rgba(255,255,255,.03));cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .rs-obj:active{transform:scale(.96)}
-.rs-obj.off{filter:grayscale(.7) brightness(.8)}
+.rs-obj.off .rs-art,.rs-obj.off .rs-tool{filter:brightness(.72) saturate(.75)}
+.rs-obj.zz::after{content:'💤 明天再來';position:absolute;left:50%;top:6px;transform:translateX(-50%);white-space:nowrap;padding:3px 10px;border-radius:999px;background:rgba(3,30,40,.78);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:13px;font-weight:800;animation:rsZz 2.4s ease-in-out infinite}
+@keyframes rsZz{50%{transform:translateX(-50%) translateY(-4px)}}
 .rs-art{position:absolute;inset:0;display:grid;place-items:center;font-size:96px;line-height:1;transform-origin:50% 90%}
-.rs-iron .rs-art{filter:brightness(.55) contrast(1.3) drop-shadow(0 0 14px rgba(251,146,60,.7))}
-.rs-stone .rs-art{filter:sepia(.5) brightness(1.05)}
+.rs-art svg{width:140px;height:140px;display:block;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.rs-tool svg{width:56px;height:56px;display:block}
+.rs-iron .rs-art{filter:drop-shadow(0 0 12px rgba(251,146,60,.45))}
+
 .rs-ore{position:absolute;inset:0;pointer-events:none}
 .rs-ore i{position:absolute;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#ffd29a,#f97316 60%,transparent 70%);animation:rsOre 1.6s ease-in-out infinite}
 .rs-ore i:nth-child(1){left:52px;top:70px}.rs-ore i:nth-child(2){left:92px;top:60px;animation-delay:-.6s}.rs-ore i:nth-child(3){left:76px;top:96px;animation-delay:-1.1s}
@@ -1727,6 +1731,49 @@ var RGOLD={k:'res',n:9,rk:'gold',e:'🪙',it:'🪙',item:'金幣',name:'金礦�
   st:{land:'#e9c46a',deep:'#a16207',tree:'#7a6a1a',leaf:'#d9c46a',sand:['#b8892f','#e2b957','#f7e0a1'],dirt:'#78501a',n:3,glow:'#facc15'}};
 /* 20 座物資島（代號、種類、名稱、再採間隔秒、每次最少、每次最多）：和後台 tools/coin-server.gs 的 ISL 是同一份，要一起改 */
 var ISLT=[['r0','stone','花崗岩島',100,3,5],['r1','iron','礦山島',90,3,6],['r2','wood','森林島',80,3,7],['r3','stone','採石島',70,2,4],['r4','iron','銅礦灣',80,3,6],['r5','iron','鐵砧島',60,2,6],['r6','wood','松林島',30,1,3],['r7','stone','石灰岩',30,1,4],['r8','wood','楓樹林',40,1,5],['r9','iron','紅岩礦坑',70,2,4],['r10','gold','金礦島',110,1,2],['r11','gold','金沙灣',110,1,2],['r12','gold','黃金谷',120,1,2],['r13','iron','黑曜礦脈',50,2,5],['r14','wood','竹林灣',50,2,6],['r15','stone','大理石岸',100,3,5],['r16','wood','橡木谷',40,1,4],['r17','gold','淘金河',120,1,2],['r18','wood','神木島',60,2,4],['r19','stone','礫石灘',90,3,6]];
+/* 物資島採集區的插畫（自己畫的向量圖，手機和電腦看起來一樣；取代原本的表情符號） */
+var RS_SVG={
+fruit:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="rsgL" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#b6f06a"/><stop offset=".55" stop-color="#46a83f"/><stop offset="1" stop-color="#1d6430"/></radialGradient><linearGradient id="rsgT" x1="0" x2="1"><stop offset="0" stop-color="#6b4220"/><stop offset=".45" stop-color="#b47c45"/><stop offset="1" stop-color="#5a3518"/></linearGradient><radialGradient id="rsgA" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffc2b8"/><stop offset=".4" stop-color="#ef4444"/><stop offset="1" stop-color="#8f1414"/></radialGradient><radialGradient id="rsgO" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ffe2a8"/><stop offset=".45" stop-color="#fb923c"/><stop offset="1" stop-color="#b4500c"/></radialGradient></defs>'+
+ '<ellipse cx="60" cy="112" rx="36" ry="6" fill="#000" opacity=".28"/><path d="M52 112C55 96 54 86 47 74l7 2 4-10 4 10 9-6c-6 10-7 24-4 42z" fill="url(#rsgT)"/><path d="M57 100c1-6 0-12-2-17M63 104c-1-7 0-14 2-20" stroke="#4a2a10" stroke-width="1.2" fill="none" opacity=".6"/>'+
+ '<circle cx="34" cy="62" r="20" fill="url(#rsgL)"/><circle cx="86" cy="62" r="20" fill="url(#rsgL)"/><circle cx="60" cy="54" r="30" fill="url(#rsgL)"/><circle cx="44" cy="34" r="19" fill="url(#rsgL)"/><circle cx="76" cy="34" r="19" fill="url(#rsgL)"/><circle cx="60" cy="22" r="15" fill="url(#rsgL)"/>'+
+ '<ellipse cx="46" cy="26" rx="9" ry="5" fill="#fff" opacity=".28" transform="rotate(-25 46 26)"/>'+
+ '<g stroke="#5a3518" stroke-width="1.3"><path d="M40 52v-4M70 40v-4M80 66v-4M50 72v-4M62 28v-4M30 66v-4"/></g>'+
+ '<circle cx="40" cy="56" r="6" fill="url(#rsgA)"/><circle cx="70" cy="44" r="6" fill="url(#rsgO)"/><circle cx="80" cy="70" r="6.5" fill="url(#rsgA)"/><circle cx="50" cy="76" r="6" fill="url(#rsgO)"/><circle cx="62" cy="32" r="5.5" fill="url(#rsgA)"/><circle cx="30" cy="70" r="5.5" fill="url(#rsgA)"/>'+
+ '<path d="M41 48q4-3 7 0q-4 2-7 0zM71 36q4-3 7 0q-4 2-7 0z" fill="#4ade80"/></svg>',
+wood:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="rsgP" x1="0" x2="1"><stop offset="0" stop-color="#2fae56"/><stop offset=".5" stop-color="#1b7a3c"/><stop offset="1" stop-color="#0d4524"/></linearGradient><linearGradient id="rsgB" x1="0" x2="1"><stop offset="0" stop-color="#5a3518"/><stop offset=".4" stop-color="#a26a36"/><stop offset="1" stop-color="#4a2a10"/></linearGradient></defs>'+
+ '<ellipse cx="60" cy="112" rx="32" ry="6" fill="#000" opacity=".28"/><path d="M52 112l2-20h12l2 20z" fill="url(#rsgB)"/><path d="M57 96v14M62 94v16" stroke="#3a1f08" stroke-width="1.1" opacity=".6"/>'+
+ '<path d="M16 96L60 50l44 46q-44 10-88 0z" fill="url(#rsgP)"/><path d="M26 74L60 32l34 42q-34 9-68 0z" fill="url(#rsgP)"/><path d="M36 52L60 12l24 40q-24 7-48 0z" fill="url(#rsgP)"/>'+
+ '<path d="M16 96L60 50l-6 14-22 26zM26 74L60 32l-5 13-18 23zM36 52L60 12l-4 13-13 21z" fill="#7ee08f" opacity=".35"/>'+
+ '<path d="M24 92q8 3 14-1q6 4 12 0q6 4 12 0q6 4 12 0q6 4 12 0q6 3 12-1M33 71q7 3 12-1q5 4 10 0q5 4 10 0q5 4 10 0q5 3 10-1M42 50q5 2 9-1q4 3 9 0q4 3 9 0q4 2 9-1" stroke="#0a3a1c" stroke-width="1.4" fill="none" opacity=".45"/>'+
+ '<circle cx="60" cy="12" r="2.6" fill="#fde047"/></svg>',
+iron:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="rsgI" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#8b93a1"/><stop offset=".5" stop-color="#4b5261"/><stop offset="1" stop-color="#22262e"/></linearGradient><filter id="rsgGl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>'+
+ '<ellipse cx="60" cy="110" rx="44" ry="7" fill="#000" opacity=".32"/><path d="M14 100L22 62 46 38l32-4 24 24 6 38q-46 14-94 4z" fill="url(#rsgI)"/>'+
+ '<path d="M22 62L46 38l32-4-8 22-28 10z" fill="#c3c9d3" opacity=".35"/><path d="M78 34l24 24-12 6-20-8z" fill="#9aa2af" opacity=".3"/><path d="M14 100l8-38 20 4-6 36z" fill="#000" opacity=".18"/>'+
+ '<path d="M42 66l28-10 20 8 12 34M42 66l-2 36" stroke="#1a1d23" stroke-width="1.3" fill="none" opacity=".55"/>'+
+ '<g filter="url(#rsgGl)" stroke="#ff7a1a" stroke-width="5" fill="none" opacity=".9"><path d="M30 80q10-6 18-2t16-6M70 74q8 4 14 0t10 6M52 54q6-6 14-4"/></g>'+
+ '<g stroke="#ffd3a0" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M30 80q10-6 18-2t16-6M70 74q8 4 14 0t10 6M52 54q6-6 14-4"/></g>'+
+ '<path d="M40 86l6-4 5 3-2 6-7 1zM80 82l6-3 4 4-3 5-6-1zM60 60l5-3 4 3-2 5-6 0z" fill="#fb923c" stroke="#7c2d12" stroke-width=".8"/></svg>',
+stone:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="rsgS" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#f5f2ee"/><stop offset=".55" stop-color="#b4aca4"/><stop offset="1" stop-color="#6b625a"/></radialGradient></defs>'+
+ '<ellipse cx="58" cy="110" rx="46" ry="7" fill="#000" opacity=".3"/><path d="M12 100C8 72 28 42 58 40c32-2 52 24 50 58q-48 12-96 2z" fill="url(#rsgS)"/>'+
+ '<path d="M90 104c0-12 8-20 16-18 8 2 8 12 6 18q-11 3-22 0z" fill="url(#rsgS)"/>'+
+ '<ellipse cx="42" cy="54" rx="14" ry="7" fill="#fff" opacity=".4" transform="rotate(-20 42 54)"/>'+
+ '<g fill="#57534e" opacity=".55"><circle cx="34" cy="76" r="1.6"/><circle cx="52" cy="66" r="1.3"/><circle cx="72" cy="58" r="1.5"/><circle cx="84" cy="76" r="1.8"/><circle cx="62" cy="88" r="1.4"/><circle cx="26" cy="92" r="1.3"/><circle cx="92" cy="90" r="1.2"/><circle cx="46" cy="96" r="1.5"/></g>'+
+ '<g fill="#e7a99a" opacity=".6"><circle cx="44" cy="82" r="1.6"/><circle cx="70" cy="72" r="1.4"/><circle cx="78" cy="94" r="1.5"/><circle cx="58" cy="54" r="1.2"/></g>'+
+ '<path d="M64 44l-4 12 6 8-3 10M66 64l10 4" stroke="#57534e" stroke-width="1.4" fill="none" opacity=".6" stroke-linecap="round"/></svg>',
+gold:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="rsgR" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#8a6a4a"/><stop offset=".55" stop-color="#5a4330"/><stop offset="1" stop-color="#2e2218"/></linearGradient><radialGradient id="rsgN" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff7c2"/><stop offset=".45" stop-color="#facc15"/><stop offset="1" stop-color="#a16207"/></radialGradient></defs>'+
+ '<ellipse cx="60" cy="110" rx="44" ry="7" fill="#000" opacity=".32"/><path d="M14 100l10-36 24-24 30-2 24 26 4 36q-46 12-92 0z" fill="url(#rsgR)"/>'+
+ '<path d="M24 64l24-24 30-2-10 20-26 10z" fill="#d6b48a" opacity=".3"/><path d="M14 100l10-36 18 4-6 34z" fill="#000" opacity=".18"/>'+
+ '<path d="M28 84q12-8 22-4t18-8 20 4M50 56q8-6 16-2" stroke="#facc15" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+ '<path d="M34 80l7-5 7 3-2 8-9 1zM62 70l8-5 7 4-3 8-9 0zM78 88l6-4 6 4-3 6-7 0zM54 50l6-4 5 3-2 6-6 0z" fill="url(#rsgN)" stroke="#92400e" stroke-width=".8"/>'+
+ '<g fill="#fffbe0"><path d="M88 46l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/><path d="M30 52l1.4 4 4 1.4-4 1.4-1.4 4-1.4-4-4-1.4 4-1.4z"/></g></svg>'
+};
+var RS_TOOL={
+fruit:'<svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="22" cy="26" r="7" fill="#ef4444"/><circle cx="34" cy="24" r="7" fill="#fb923c"/><circle cx="28" cy="20" r="6" fill="#ef4444"/><path d="M6 28h48l-6 26H12z" fill="#c08a4a" stroke="#6b4220" stroke-width="1.5"/><path d="M8 36h44M10 44h40M18 28l2 26M30 28v26M42 28l-2 26" stroke="#7a4a22" stroke-width="1.5"/><rect x="4" y="25" width="52" height="6" rx="3" fill="#a86f36" stroke="#6b4220" stroke-width="1.2"/></svg>',
+iron:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M14 56L40 12" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M14 56L40 12" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M6 20Q28 0 56 14l-2 4Q30 8 9 24z" fill="#9aa3b0" stroke="#3f4652" stroke-width="1.4"/><path d="M9 19Q28 5 52 14" stroke="#e5e9ef" stroke-width="1.4" fill="none"/><rect x="34" y="8" width="10" height="9" rx="2" fill="#5b6270" transform="rotate(30 39 12)"/></svg>',
+wood:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M16 57L38 8" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M16 57L38 8" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M30 6l18-4q10 14 0 30l-18-8z" fill="#b8c0cc" stroke="#3f4652" stroke-width="1.4"/><path d="M48 2q10 14 0 30" stroke="#f1f5f9" stroke-width="2.4" fill="none"/><path d="M30 6l6 2-2 12-4 4z" fill="#dc2626"/></svg>',
+stone:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M18 57L34 18" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M18 57L34 18" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M16 8l32 12-6 14-32-12z" fill="#8a93a1" stroke="#2f343d" stroke-width="1.4"/><path d="M16 8l32 12-2 4-32-12z" fill="#d4d9e1"/><path d="M28 13l10 4-4 9-10-4z" fill="#5b6270"/></svg>'
+};
+RS_TOOL.gold=RS_TOOL.iron;
 var RESI=ISLT.map(function(a,i){
   var T=a[1]==='gold'?RGOLD:RTYPE[['fruit','iron','wood','stone'].indexOf(a[1])],o={};
   for(var k in T)o[k]=T[k];
@@ -2732,10 +2779,10 @@ function renderRes(n){
     '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2" style="flex-wrap:nowrap"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 排行榜</button></div></div>'+
     '<div class="rs-stage rs-'+R.rk+'" style="--c:'+R.c+'">'+
       '<div class="rs-arena"><svg class="rs-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" class="bg"/><circle cx="60" cy="60" r="54" class="fg" id="rsRing"/></svg>'+
-        '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+R.art+'</span>'+
+        '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+(RS_SVG[R.rk]||R.art)+'</span>'+
           (R.rk==='stone'?'<svg class="rs-crack" id="rsCrack" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 18 L44 34 L54 44 L46 60"/><path d="M54 44 L70 50 L76 66"/><path d="M46 60 L32 70 L28 84"/><path d="M46 60 L56 78 L52 90"/></svg>':'')+
           (R.rk==='iron'?'<span class="rs-ore"><i></i><i></i><i></i></span>':'')+
-          '<span class="rs-tool" id="rsTool">'+R.tool+'</span></button>'+
+          '<span class="rs-tool" id="rsTool">'+(RS_TOOL[R.rk]||R.tool)+'</span></button>'+
         '<b class="rs-combo" id="rsCombo"></b></div>'+
       '<div class="rs-timer" id="rsTimerBox"><i id="rsTime"></i></div>'+
       '<p class="rs-cnt" id="rsCnt"></p>'+
@@ -2827,7 +2874,7 @@ function resStock(){
       (function(){var lv=lvOf(R);return lv?'<div class="rs-lv l'+lv.lv+'" id="rsLv" title="'+LVN[lv.lv]+'">'+STARS[lv.lv]+' <small>⏱ '+Math.ceil(lv.ms/1000)+' 秒後換批</small></div>':''})()+
       '<small>你今天在這裡採了 '+x.mine+' / '+x.max+' 次'+(x.found?'・今天已有 '+x.found+' 顆 💎 被撿走':'・聽說島上藏著鑽石…')+'</small>'}
   var why=rsBlock();
-  obj.classList.toggle('off',!!why);
+  obj.classList.toggle('off',!!why);obj.classList.toggle('zz',!!why&&/明天/.test(why));   /* 今天採夠了才掛「💤 明天再來」 */
   if(!RS.round)cnt.innerHTML=why?esc(why):'👆 <b>6 秒內連點 '+R.taps+' 下</b>'+esc(R.art==='🌳'?'搖果樹':R.act)+'！';
   clearTimeout(RS.timer);if(why&&cdLeft(R)>0)RS.timer=setTimeout(resStock,1000);
   lvTick();
