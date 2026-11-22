@@ -1,8 +1,8 @@
 /* 拉霸島、猜拳島的背景音樂：全部用 Web Audio 即時合成（原創旋律，不用任何音檔）
-   GBGM.start('slot'|'rps') 開始、stop() 停；tempo(x) 改速度；heart(true) 加心跳；riser／roll／boom 是緊張感音效 */
+   GBGM.start('slot'|'rps'|'res') 開始（res＝物資島工作歌，GBGM.res(物資種類) 換敲擊聲）、stop() 停；tempo(x) 改速度；heart(true) 加心跳；riser／roll／boom 是緊張感音效 */
 (function () {
   'use strict';
-  var A = null, M = null, N = null, on = false, kind = '', step = 0, next = 0, timer = 0, tempo = 1, heart = false;
+  var A = null, M = null, N = null, on = false, kind = '', step = 0, next = 0, timer = 0, tempo = 1, heart = false, rk = 'wood';
   function ac() {
     if (!A) { try { A = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
     if (A.state === 'suspended') { try { A.resume(); } catch (e) {} }
@@ -43,11 +43,28 @@
     if (i % 4 === 0) osc(mtof(38 + (Math.floor(s / 16) % 2 ? 3 : 0)), 0, t, 0.28, 'sawtooth', 0.028);
     var m = MEL[s % 32]; if (m) osc(mtof(m), 0, t, 0.16, 'triangle', 0.034);
   }
+  /* 物資島：輕快的五聲音階工作歌，每座島的敲擊聲不同（鐵砧叮噹、木魚叩叩、石頭低咚、金礦鈴聲） */
+  var WMEL = [72, 0, 76, 79, 0, 76, 74, 0, 72, 74, 76, 0, 79, 81, 79, 0, 76, 0, 74, 72, 0, 74, 76, 0, 72, 0, 69, 67, 0, 69, 72, 0], WB = [48, 48, 45, 43];
+  function hit(t, acc) {
+    var v = acc ? 1 : 0.6;
+    if (rk === 'iron') { osc(1568, 0, t, 0.35, 'sine', 0.05 * v); osc(2350, 0, t, 0.2, 'square', 0.008 * v); noise(t, 0.03, 0.05 * v, 4000); }
+    else if (rk === 'stone') { osc(140, 55, t, 0.22, 'sine', 0.26 * v); noise(t, 0.1, 0.06 * v, 300); }
+    else if (rk === 'gold') { osc(2637, 0, t, 0.5, 'sine', 0.035 * v); osc(3136, 0, t + 0.07, 0.45, 'sine', 0.025 * v); }
+    else { osc(900, 640, t, 0.07, 'sine', 0.12 * v); osc(1300, 0, t, 0.03, 'triangle', 0.03 * v); }
+  }
+  function resStep(s, t) {
+    var i = s % 16, bar = Math.floor(s / 16) % 4;
+    if (i === 0 || i === 8) osc(mtof(WB[bar] - 12), 0, t, 0.35, 'triangle', 0.13);
+    if (i === 4 || i === 12) osc(mtof(WB[bar] - 5), 0, t, 0.2, 'triangle', 0.07);
+    if (i === 0 || i === 6 || i === 8 || i === 12) hit(t, i === 0 || i === 8);
+    if (i % 2 === 1) noise(t, 0.02, 0.012, 8000);
+    var m = WMEL[s % 32]; if (m) { osc(mtof(m), 0, t, 0.22, 'triangle', 0.045); osc(mtof(m + 12), 0, t, 0.12, 'sine', 0.012); }
+  }
   function tick() {
     if (!on || !A) return;
-    var spb = 60 / ((kind === 'slot' ? 128 : 100) * tempo) / 4;
+    var spb = 60 / ((kind === 'slot' ? 128 : kind === 'res' ? 96 : 100) * tempo) / 4;
     while (next < A.currentTime + 0.2) {
-      (kind === 'slot' ? slotStep : rpsStep)(step, next);
+      (kind === 'slot' ? slotStep : kind === 'res' ? resStep : rpsStep)(step, next);
       if (heart && step % 8 === 0) { osc(70, 45, next, 0.12, 'sine', 0.26); osc(60, 40, next + 0.18, 0.12, 'sine', 0.18); }
       next += spb; step++;
     }
@@ -57,6 +74,7 @@
     stop: function () { on = false; clearInterval(timer); },
     tempo: function (x) { tempo = x; },
     heart: function (b) { heart = !!b; },
+    res: function (k) { rk = k || 'wood'; },
     riser: function (d) { if (!on || !ac()) return; var t = A.currentTime; osc(180, 1400, t, d, 'sawtooth', 0.03); noise(t, d, 0.018, 3000); },
     roll: function (d) { if (!on || !ac()) return; var t = A.currentTime; for (var x = 0; x < d; x += 0.06) noise(t + x, 0.05, 0.03 + x / d * 0.07, 900); },
     boom: function () { if (!on || !ac()) return; var t = A.currentTime; osc(90, 30, t, 0.6, 'sine', 0.35); noise(t, 0.5, 0.12, 200); }

@@ -1606,6 +1606,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 
 <script src="assets/js/pets.js"></script>
 <script src="assets/js/coins.js"></script>
+<script src="assets/bet/bgm.js?v=2026112203"></script>
 <script>
 (function(){
 'use strict';
@@ -2119,7 +2120,10 @@ function layout(){
   var port=world.clientWidth<world.clientHeight,f=port?.64:.92,cols=port?5:12,rows=Math.max(port?12:5,Math.ceil(SP.length/cols)),cw=port?290:400,ch=port?312:375,pad=port?150:185,W=cols*cw+pad*2,H=rows*ch+pad*2,cells=spiral(cols,rows);
   SP.forEach(function(s){s.w=Math.round(s.base*f);s.el.style.setProperty('--w',s.w+'px')});
   ['memberb','sponsora'].forEach(function(id,k){var i=SP.findIndex(function(s){return s.id===id}),j=5+k;if(i>=0&&cells[j]){var temp=cells[i];cells[i]=cells[j];cells[j]=temp}});
-  SP.forEach(function(s,i){var c=cells[i],jx=(rnd(i,5)-.5)*.3,jy=(rnd(i,6)-.5)*.26;s.x=Math.round(pad+(c[0]+.5+jx)*cw);s.y=Math.round(pad+(c[1]+.5+jy)*ch);s.el.style.left=s.x+'px';s.el.style.top=s.y+'px'});
+  SP.forEach(function(s,i){var c=cells[i],jx=(rnd(i,5)-.5)*.3,jy=(rnd(i,6)-.5)*.26;s.x=Math.round(pad+(c[0]+.5+jx)*cw);s.y=Math.round(pad+(c[1]+.5+jy)*ch)});
+  /* 同一排的兩座島靠太近（主島放大後燈塔、光圈會疊到旁邊的島）就左右推開，只移動非主島那座、剛好不碰 */
+  SP.forEach(function(a,i){SP.forEach(function(b,j){if(j<=i)return;var dx=b.x-a.x,need=Math.round((a.w+b.w)/2*1.05);if(Math.abs(b.y-a.y)>=160||Math.abs(dx)>=need)return;var sg=dx<0?-1:1,mv=need-Math.abs(dx);if(b.major&&!a.major)a.x-=sg*mv;else b.x+=sg*mv})});
+  SP.forEach(function(s){s.el.style.left=s.x+'px';s.el.style.top=s.y+'px'});
   G={w:W,h:H};map.style.width=W+'px';map.style.height=H+'px';
   var route=$('route');route.setAttribute('viewBox','0 0 '+W+' '+H);route.setAttribute('width',W);route.setAttribute('height',H);
   var d=crPath(SP);$('r1').setAttribute('d',d);$('r2').setAttribute('d',d);
@@ -4751,6 +4755,7 @@ function openPanel(t,i,dir){
     setTimeout(function(){$('pClose').focus({preventScroll:true})},60);
   }
   if(isBet)bgmStop();else if(wasBet&&SFX_ON)bgmStart();
+  musicSync();
   playSfx('tap');
 }
 function closePanel(){
@@ -4761,6 +4766,7 @@ function closePanel(){
   panel.classList.remove('open');backdrop.classList.remove('open');panel.setAttribute('aria-hidden','true');document.documentElement.classList.remove('lock');
   if(opener&&opener.focus)opener.focus({preventScroll:true});
   if(wasBet&&SFX_ON)bgmStart();
+  musicSync();
 }
 $('pClose').addEventListener('click',closePanel);
 backdrop.addEventListener('click',closePanel);
@@ -4918,7 +4924,7 @@ function betSound(k,event){
 }
 var sfxBtn=$('sfxBtn');
 function sfxUI(){sfxBtn.textContent=SFX_ON?'🔊':'🔇';sfxBtn.setAttribute('aria-label',SFX_ON?'關閉音效':'開啟音效')}
-sfxBtn.addEventListener('click',function(){SFX_ON=!SFX_ON;try{sessionStorage.setItem('aic-sfx',SFX_ON?'on':'off')}catch(e){}sfxUI();toast(SFX_ON?'已開啟音效與背景音樂':'已關閉音效與背景音樂');if(SFX_ON){tone(1046,0,.18,'sine',.12);bgmStart()}else bgmStop()});
+sfxBtn.addEventListener('click',function(){SFX_ON=!SFX_ON;try{sessionStorage.setItem('aic-sfx',SFX_ON?'on':'off')}catch(e){}sfxUI();toast(SFX_ON?'已開啟音效與背景音樂':'已關閉音效與背景音樂');if(SFX_ON){tone(1046,0,.18,'sine',.12);bgmStart()}else bgmStop();musicSync()});
 sfxUI();
 var BGM={on:false,timer:null,nodes:[],step:0,master:null};
 function bnote(a,f,t,dur,type,vol){var o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(BGM.master);o.start(t);o.stop(t+dur+.05)}
@@ -4941,7 +4947,7 @@ function bgmTick(a){
 }
 
 function bgmStart(){
-  if(!SFX_ON||BGM.on||(!reader.hidden&&reader.classList.contains('game'))||(panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha')))return;var a=ac();if(!a)return;BGM.on=true;
+  if(!SFX_ON||BGM.on||RES_BGM||(!reader.hidden&&reader.classList.contains('game'))||(panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha')))return;var a=ac();if(!a)return;BGM.on=true;
   BGM.master=a.createGain();BGM.master.gain.setValueAtTime(0,a.currentTime);BGM.master.gain.linearRampToValueAtTime(BGM_VOL,a.currentTime+2.5);BGM.master.connect(a.destination);
   try{bgmInit(a)}catch(e){}
   BGM.timer=setInterval(function(){if(!document.hidden)try{bgmTick(a)}catch(e){}},BGM_STEP);
@@ -4953,7 +4959,13 @@ function bgmStop(){
   setTimeout(function(){ns.forEach(function(n){try{n.stop()}catch(e){}});try{m.disconnect()}catch(e){}},700);
 }
 var intro=$('intro');
-function firstGesture(){if(!intro.hidden)return;if(SFX_ON)bgmStart()}
+function firstGesture(){if(!intro.hidden)return;musicSync();if(SFX_ON)bgmStart()}
+/* 物資島專屬背景音樂（bgm.js 的 res 曲目，敲擊聲依島的物資種類）：進物資島時大海音樂淡出，離開再切回來 */
+var RES_BGM=false;
+function musicSync(){var w=window.GBGM,res=SFX_ON&&!document.hidden&&panel.classList.contains('open')&&V.t==='res'&&reader.hidden&&RESI[V.i];
+  if(res&&w){if(!RES_BGM){RES_BGM=true;bgmStop()}w.res(RESI[V.i].rk);w.start('res')}
+  else if(RES_BGM){RES_BGM=false;if(w)w.stop();if(SFX_ON&&!document.hidden)bgmStart()}}
+document.addEventListener('visibilitychange',musicSync);
 document.addEventListener('pointerdown',firstGesture,{once:true});
 document.addEventListener('keydown',firstGesture,{once:true});
 document.addEventListener('visibilitychange',function(){if(!AC)return;if(document.hidden)AC.suspend();else if(SFX_ON)AC.resume()});
