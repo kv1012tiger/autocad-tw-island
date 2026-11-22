@@ -141,7 +141,7 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
     <button class="pick" data-h="rock" type="button"><span>✊</span>石頭</button>
     <button class="pick" data-h="paper" type="button"><span>✋</span>布</button>
   </div>
-  <div class="info"><span>每局下注 1 枚・贏回 2 枚・平手回 1 枚</span><span class="streak">連勝 <b id="streak">0</b></span></div>
+  <div class="info"><span>下注 1 枚・這把贏 <b id="nw">3</b> 枚（連勝加倍）・平手回 1</span><span class="streak">連勝 <b id="streak">0</b></span></div>
   
 </div>
 <script>
@@ -150,6 +150,9 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
 var $=function(id){return document.getElementById(id)};
 var HE={rock:'✊',paper:'✋',scissors:'✌️'},BEAT={rock:'scissors',paper:'rock',scissors:'paper'};
 var coins=20,left=10,streak=0,busy=false,sfx=false;
+/* 贏 3 枚，連勝加倍，最多 24 枚（和後台 RPS_WIN／RPS_MAX 一致） */
+function winPay(s){return Math.min(24,3*Math.pow(2,s))}
+function showStreak(){$('streak').textContent=streak;$('nw').textContent=winPay(streak)}
 var cap=$('cap');
 function mood(m){cap.className='cap m-'+m}
 var LINES={
@@ -170,12 +173,13 @@ $('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){
 function restart(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
 /* 結果一律由伺服器決定（父頁面的 AIKB_BET）；單獨打開這頁時用假結果，方便測試 */
 var K='rps',API=null;try{API=parent!==window&&parent.AIKB_BET?parent.AIKB_BET:null}catch(e){}
-function fakeServer(h){return new Promise(function(r){setTimeout(function(){var c=['rock','paper','scissors'][Math.floor(Math.random()*3)];r({ok:true,bet:{roll:[h,c],paid:h===c?1:BEAT[h]===c?2:0}})},400+Math.random()*600)})}
+function fakeServer(h){return new Promise(function(r){setTimeout(function(){var c=['rock','paper','scissors'][Math.floor(Math.random()*3)];var w=BEAT[h]===c;r({ok:true,bet:{roll:[h,c],paid:h===c?1:w?winPay(streak):0,streak:h===c?streak:w?streak+1:0}})},400+Math.random()*600)})}
 var ST={login:true,coins:20,left:10,pending:false};
 function sync(){
   if(busy)return;
   if(API){try{ST=API.state(K)}catch(e){}}
   $('coins').textContent=ST.coins;$('left').textContent=ST.left==null?'…':ST.left;
+  if(ST.streak!=null)streak=ST.streak;showStreak();
   var a=$('act'),ok=ST.login&&!ST.pending&&ST.left!=null&&ST.left>0&&ST.coins>=1;
   a.hidden=true;a.disabled=false;
   if(!ST.login){a.hidden=false;a.textContent='🏝️ 先登島才能玩';a.dataset.act='login'}
@@ -213,8 +217,8 @@ function reveal(bet){
   if(!API){ST.coins+=paid-1;ST.left--}
   setTimeout(function(){
     var res=$('res');
-    if(r==='win'){streak++;me.classList.add('winr');cpu.classList.add('lose');
-      res.textContent='你贏了！+'+paid;res.style.color='#ffd166';
+    if(r==='win'){streak=bet.streak!=null?bet.streak:streak+1;me.classList.add('winr');cpu.classList.add('lose');
+      res.textContent=(streak>=2?streak+' 連勝！+':'你贏了！+')+paid;res.style.color='#ffd166';
       mood(streak>=3?'shock':'angry');restart(cap,'knock');restart($('stars'),'on');restart($('stage'),'shake');
       say(pickLine(streak>=4?'win4':streak>=2?'win2':'win0'),2400);
       [523,659,784,1047].forEach(function(f,i){tone(f,0,.2,'triangle',.08,i*.08)});
@@ -222,11 +226,11 @@ function reveal(bet){
     }else if(r==='tie'){
       res.textContent='平手！+1';res.style.color='#9be7ff';mood('shock');say(pickLine('tie'));sparks();
       tone(880,440,.2,'sawtooth',.05);
-    }else{streak=0;me.classList.add('lose');cpu.classList.add('winr');
+    }else{streak=bet.streak!=null?bet.streak:0;me.classList.add('lose');cpu.classList.add('winr');
       res.textContent='你輸了…';res.style.color='#ff9aa8';mood('laugh');restart(cap,'laugh');say(pickLine('lose'));
       tone(392,196,.4,'sine',.07);[0,.12,.24].forEach(function(d){tone(300,0,.08,'square',.04,.3+d)});
     }
-    restart(res,'on');$('streak').textContent=streak;
+    restart(res,'on');showStreak();
     setTimeout(function(){busy=false;sync();if(ST.left===0)say('今天打烊啦！明天再來 ⚓',4000);if(r!=='lose')mood(streak>=3?'shock':'angry');setTimeout(function(){if(!busy)mood('smug')},1600)},1700);
   },350);
 }

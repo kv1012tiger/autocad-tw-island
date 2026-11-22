@@ -3133,9 +3133,9 @@ function betKey(k){return 'aikb-bet-'+k+'-'+COINS.get().code}
 function betLoad(k){try{return JSON.parse(localStorage.getItem(betKey(k))||'null')}catch(e){return null}}
 function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p));else localStorage.removeItem(betKey(k))}catch(e){}}
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
-function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
+function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026111802',GACHA_V='2026112101';
+var BET_V='2026112201',GACHA_V='2026112101';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3182,7 +3182,7 @@ function renderGacha(){
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={
-  state:function(k){var w=COINS.get(),s=BET[k];return {login:!!w.code,coins:w.bal||0,left:s.left,pending:!!s.pending,pendingChoice:s.pending?s.pending.choice:'',sfx:SFX_ON}},
+  state:function(k){var w=COINS.get(),s=BET[k];return {login:!!w.code,coins:w.bal||0,dia:w.dia||0,left:s.left,streak:k==='rps'?(s.rs||0):null,pending:!!s.pending,pendingChoice:s.pending?s.pending.choice:'',sfx:SFX_ON}},
   play:function(k,choice,retry){return betPlay(k,choice,retry)},
   login:function(k){COINS.need(function(){renderBet(k)})},
   size:function(k,h){var f=$('betF');if(f&&V.t===k&&h>200)f.style.height=Math.ceil(h)+'px'}
@@ -3193,7 +3193,7 @@ function renderBet(k){
   BET[k].pending=betLoad(k);
   pBody.innerHTML='<div class="ph" style="--c:#fbbf24"><span class="ph-e">'+(slot?'🎰':'✊')+'</span><div><div class="p-kicker">GAME ISLAND・遊戲島</div><h3 id="pTitle">'+name+'</h3><p>每局下注 1 枚金幣，每天最多 10 局</p></div></div>'+
     '<iframe class="bet-f" id="betF" src="assets/bet/'+k+'.html?v='+BET_V+'" title="'+name+'" scrolling="no"></iframe>'+
-    '<div class="p-sec"><h4>📖 遊戲規則</h4><p>'+(slot?'三個相同回得 6 枚，恰有兩個相同回得 1 枚，全不同沒有回報；三輪從四種圖案各自等機率抽出。':'贏了回得 2 枚、平手回得 1 枚、輸了沒有回報；船長從三種手勢等機率選擇。')+'回得的金幣包含下注本金。結果由伺服器決定。</p></div>';
+    '<div class="p-sec"><h4>📖 遊戲規則</h4><p>'+(slot?'三個一樣回得 🪙 10 枚，兩個一樣回得 🪙 3 枚；💎 三個一樣得 10 顆鑽石、兩個一樣得 3 顆鑽石；全不同沒有回報。三輪從五種圖案（🥥🦜🏴‍☠️💰💎）各自等機率抽出。':'贏了回得 3 枚，連勝加倍：3 → 6 → 12，第 4 連勝起每局 24 枚；平手回得 1 枚、連勝保留；輸了沒有回報、連勝歸 0（每天換日也歸 0）。船長從三種手勢等機率選擇。')+'回得的金幣包含下注本金。結果由伺服器決定。</p></div>';
   $('pStep').textContent=name;footSimple('← 回地圖','');pNext.hidden=true;
   if(COINS.get().code)betStatus(k);
 }
@@ -3205,7 +3205,7 @@ function betPlay(k,choice,retry){
   return COINS.api({a:'betplay',kind:k,choice:pending.choice,id:pending.id}).then(function(j){
     state.busy=false;if(COINS.get().code!==owner)return {ok:false,msg:'帳號已切換'};
     if(!j||!j.ok){if(j&&j.err!=='bad'){state.pending=null;betStore(k,null)}return {ok:false,msg:j&&j.err==='betmax'?'今天次數已用完':COINS.errText(j)}}
-    state.pending=null;betStore(k,null);state.result=j.bet;if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps}
+    state.pending=null;betStore(k,null);state.result=j.bet;if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0}
     return {ok:true,bet:j.bet};
   }).catch(function(){state.busy=false;return {ok:false,msg:'網路中斷，請按「確認上一局結果」'}});
 }

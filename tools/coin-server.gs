@@ -66,6 +66,7 @@ var ISL_MAP = {};
 ISL.forEach(function (x) { ISL_MAP[x.id] = x; });
 /* 金礦島（t:'gold'）：採集拿的是金幣，不是物資。全島每天只有 GOLD_STOCK 枚（大家搶），每人每座每天最多採 GOLD_MAX 次，不會藏鑽石 */
 var GOLD_STOCK_MIN = 23, GOLD_STOCK_MAX = 23, GOLD_MAX = 3;   // 每座金礦每天全島固定 23 枚（2026-11-21 由 15 提高 50%）
+var RPS_WIN = 3, RPS_MAX = 24;   // v58 猜拳：贏 3 枚、連勝加倍、單局最多 24 枚
 /* 物資島「隨機換一批」：每座島每一輪的資源多寡不同（0 稀少／1 普通／2 豐富），島永遠都能採，只是這一輪拿得多或少。
    每一輪長度也隨機：1、2 或 3 分鐘（每座島、每天各自抽一串，全站所有人看到的一樣；網頁用同一套算法自己算，不用再問後台）。
    稀少 ≈ 一半數量、豐富 ≈ 1.6 倍（金礦：稀少 1、普通 1～2、豐富 2～3） */
@@ -509,7 +510,7 @@ function handle_(q) {
       r[C.isle]=JSON.stringify(guideIsland);
     } else if (a === 'betstatus' || a === 'betplay') {
       var betIsland=isleOf_(r), betDay=day_(), bets=betIsland.bets||{};
-      if (bets.d!==betDay) bets={d:betDay,slot:0,rps:0,receipts:Array.isArray(bets.receipts)?bets.receipts.slice(-100):[]};
+      if (bets.d!==betDay) bets={d:betDay,slot:0,rps:0,rs:0,receipts:Array.isArray(bets.receipts)?bets.receipts.slice(-100):[]};
       if (!Array.isArray(bets.receipts)) bets.receipts=[];
       if (a==='betplay') {
         var bt=String(q.kind||''),bid=String(q.id||''),choice=String(q.choice||'');
@@ -520,14 +521,27 @@ function handle_(q) {
           var betTime=parseInt(bid.split('-').pop(),36);if(!isFinite(betTime)||Math.abs(Date.now()-betTime)>86400000) return {ok:false,err:'expired',p:me};
           if (num_(bets[bt])>=10) return {ok:false,err:'betmax',p:me};
           if (num_(r[C.bal])<1) return {ok:false,err:'nocoin',p:me};
-          var roll=[],paid=0,result='';
-          if (bt==='slot') {for(var br=0;br<3;br++)roll.push(Math.floor(Math.random()*4)); var uniq=roll.filter(function(x,i){return roll.indexOf(x)===i}).length;paid=uniq===1?6:uniq===2?1:0;result=uniq===1?'三個相同':uniq===2?'兩個相同':'沒有相同';}
-          else {var hands=['rock','paper','scissors'],cpu=hands[Math.floor(Math.random()*3)],player=hands.indexOf(choice),op=hands.indexOf(cpu);paid=player===op?1:(player-op+3)%3===1?2:0;roll=[choice,cpu];result=paid===2?'獲勝':paid===1?'平手':'落敗';}
+          var roll=[],paid=0,result='',bdia=0,streak=null;
+          if (bt==='slot') {
+            /* v58：五種圖案（4 = 💎）；兩個一樣 3 枚、三個一樣 10 枚；💎 兩個一樣 3 顆鑽石、三個一樣 10 顆鑽石 */
+            for(var br=0;br<3;br++)roll.push(Math.floor(Math.random()*5));
+            var uniq=roll.filter(function(x,i){return roll.indexOf(x)===i}).length,same=uniq===3?-1:roll[0]===roll[1]||roll[0]===roll[2]?roll[0]:roll[1];
+            if(uniq<3){var big=uniq===1?10:3;if(same===4)bdia=big;else paid=big;}
+            result=uniq===1?'三個相同':uniq===2?'兩個相同':'沒有相同';
+          } else {
+            /* v58：贏 3 枚，連勝加倍（3、6、12，最多 24）；平手回 1 枚、連勝保留；輸了連勝歸 0 */
+            var hands=['rock','paper','scissors'],cpu=hands[Math.floor(Math.random()*3)],player=hands.indexOf(choice),op=hands.indexOf(cpu),rs=num_(bets.rs);
+            if(player===op){paid=1;result='平手';}
+            else if((player-op+3)%3===1){paid=Math.min(RPS_MAX,RPS_WIN*Math.pow(2,rs));rs++;result='獲勝';}
+            else {rs=0;result='落敗';}
+            bets.rs=rs;streak=rs;roll=[choice,cpu];
+          }
           r[C.bal]=num_(r[C.bal])-1+paid;r[C.earned]=num_(r[C.earned])+Math.max(0,paid-1);bets[bt]=num_(bets[bt])+1;
-          res.bet={kind:bt,roll:roll,paid:paid,result:result};bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
+          if(bdia)r[C.dia]=num_(r[C.dia])+bdia;
+          res.bet={kind:bt,roll:roll,paid:paid,result:result};if(bdia)res.bet.dia=bdia;if(streak!==null)res.bet.streak=streak;bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
         }
       }
-      betIsland.bets=bets;r[C.isle]=JSON.stringify(betIsland);res.betstats={slot:10-num_(bets.slot),rps:10-num_(bets.rps)};
+      betIsland.bets=bets;r[C.isle]=JSON.stringify(betIsland);res.betstats={slot:10-num_(bets.slot),rps:10-num_(bets.rps),rs:num_(bets.rs)};
     } else if (a === 'gacha') {
       /* 扭蛋島：q.id 有值就抽一次（同一個 id 重送只回原結果），沒有 id 只回今天剩幾次 */
       var gIsle=isleOf_(r), gDay=day_(), ga=gIsle.gacha||{};

@@ -104,17 +104,17 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
     <div class="tray" id="tray"></div>
   </div>
   <button class="spin" id="spin" type="button">拉桿！下注 1 枚</button>
-  <div class="msg" id="msg">拉下右邊的拉桿，或按上面的按鈕<small>三個一樣回得 6 枚・兩個一樣回得 1 枚</small></div>
-  <div class="pay"><div>🥥🥥🥥　<b>× 6</b></div><div>🦜🦜🦜　<b>× 6</b></div><div>🏴‍☠️🏴‍☠️🏴‍☠️　<b>× 6</b></div><div>💰💰💰　<b>× 6</b></div></div>
+  <div class="msg" id="msg">拉下右邊的拉桿，或按上面的按鈕<small>三個一樣 10 枚・兩個一樣 3 枚・💎 換成鑽石</small></div>
+  <div class="pay"><div>🥥🥥🥥・🦜🦜🦜　<b>🪙 10</b></div><div>🏴‍☠️🏴‍☠️🏴‍☠️・💰💰💰　<b>🪙 10</b></div><div>任兩個一樣　<b>🪙 3</b></div><div>💎💎💎　<b>💎 10</b></div><div>💎💎　<b>💎 3</b></div><div>全不同　<b>0</b></div></div>
   
 </div>
 <div class="jp" id="jp"><div class="rays"></div><b>JACKPOT!</b></div>
 <script>
 (function(){
 'use strict';
-var SY=['🥥','🦜','🏴‍☠️','💰'];
-/* 每條滾輪的圖案順序（四種各 3 次，打散） */
-var STR=[[0,1,2,3,1,0,3,2,0,2,1,3],[2,0,3,1,0,2,1,3,2,1,0,3],[1,3,0,2,3,1,2,0,1,0,3,2]],L=12;
+var SY=['🥥','🦜','🏴‍☠️','💰','💎'];
+/* 每條滾輪的圖案順序（五種各 3 次，打散；4 = 💎） */
+var STR=[[0,1,2,3,4,1,0,3,2,4,0,2,1,3,4],[2,0,3,4,1,0,2,1,3,4,2,1,0,4,3],[1,3,0,4,2,3,1,2,0,4,1,0,3,4,2]],L=15;
 var $=function(id){return document.getElementById(id)};
 var coins=20,left=10,busy=false,sfx=false,H=0;
 var reels=[0,1,2].map(function(i){
@@ -158,7 +158,7 @@ function stopAt(r,sym,minD,slow,done){
 }
 /* 結果一律由伺服器決定（父頁面的 AIKB_BET）；單獨打開這頁時用假結果，方便測試 */
 var K='slot',API=null;try{API=parent!==window&&parent.AIKB_BET?parent.AIKB_BET:null}catch(e){}
-function fakeServer(){return new Promise(function(res){setTimeout(function(){var roll=[0,1,2].map(function(){return Math.floor(Math.random()*4)}),u=roll.filter(function(x,i){return roll.indexOf(x)===i}).length;res({ok:true,bet:{roll:roll,paid:u===1?6:u===2?1:0}})},500+Math.random()*700)})}
+function fakeServer(){return new Promise(function(res){setTimeout(function(){var roll=[0,1,2].map(function(){return Math.floor(Math.random()*5)}),u=roll.filter(function(x,i){return roll.indexOf(x)===i}).length,s=roll[0]===roll[1]||roll[0]===roll[2]?roll[0]:roll[1],big=u===1?10:u===2?3:0,b={roll:roll,paid:0};if(big){if(s===4)b.dia=big;else b.paid=big}res({ok:true,bet:b})},500+Math.random()*700)})}
 var ST={login:true,coins:20,left:10,pending:false};
 function sync(){
   if(busy)return;
@@ -189,7 +189,7 @@ function play(retry){
     setTimeout(function(){
       if(!res||!res.ok||!res.bet){
         /* 失敗：滾輪隨便停下，顯示原因，不扣錢（伺服器沒有成立這一局，或要再確認） */
-        var n=0;reels.forEach(function(r,i){setTimeout(function(){stopAt(r,Math.floor(Math.random()*4),5,1,function(){if(++n===3){$('msg').innerHTML='⚠️ '+((res&&res.msg)||'發生錯誤')+'<small>金幣以錢包顯示為準</small>';busy=false;sync()}})},i*150)});
+        var n=0;reels.forEach(function(r,i){setTimeout(function(){stopAt(r,Math.floor(Math.random()*5),5,1,function(){if(++n===3){$('msg').innerHTML='⚠️ '+((res&&res.msg)||'發生錯誤')+'<small>金幣以錢包顯示為準</small>';busy=false;sync()}})},i*150)});
         return;
       }
       var roll=res.bet.roll,near=roll[0]===roll[1];
@@ -204,27 +204,28 @@ function play(retry){
 }
 function finish(bet){
   if(!API){ST.coins+=bet.paid-1;ST.left--}
-  if(bet.paid>=6){
+  var dia=bet.dia||0,win=bet.paid+dia;
+  if(win>=10){
     reels.forEach(function(r){r.el.classList.add('hit')});$('machine').classList.add('win','shake');
     $('jp').classList.remove('on');void $('jp').offsetWidth;$('jp').classList.add('on');
-    $('msg').innerHTML='🎉 三個一樣！回得 '+bet.paid+' 枚！<small>大豐收！寶藏都是你的</small>';
+    $('msg').innerHTML=dia?'💎 三顆鑽石！得到 '+dia+' 顆鑽石！<small>傳說中的鑽石寶藏！</small>':'🎉 三個一樣！回得 '+bet.paid+' 枚！<small>大豐收！寶藏都是你的</small>';
     [523,659,784,1047,1319,1568].forEach(function(f,i){tone(f,0,.25,'triangle',.08,i*.09)});
-    burst(26);
-  }else if(bet.paid>=1){
+    burst(26,dia?'💎':'🪙');
+  }else if(win>=1){
     var r=bet.roll,pair=r[0]===r[1]?[0,1]:r[0]===r[2]?[0,2]:[1,2];pair.forEach(function(i){reels[i].el.classList.add('hit')});
     $('machine').classList.add('win');
-    $('msg').innerHTML='兩個一樣！回得 '+bet.paid+' 枚<small>本金拿回來了，再拉一次？</small>';
-    [659,784].forEach(function(f,i){tone(f,0,.16,'triangle',.07,i*.1)});burst(4);
+    $('msg').innerHTML=dia?'💎 兩顆鑽石！得到 '+dia+' 顆鑽石<small>鑽石已放進背包</small>':'兩個一樣！回得 '+bet.paid+' 枚<small>賺到了，再拉一次？</small>';
+    [659,784].forEach(function(f,i){tone(f,0,.16,'triangle',.07,i*.1)});burst(dia?8:8,dia?'💎':'🪙');
   }else{
     $('msg').innerHTML='沒有相同… 😵<small>'+['風浪太大了，再試一次！','鸚鵡說：下一把一定中！','寶藏還在海底等你！'][Math.floor(Math.random()*3)]+'</small>';
     tone(330,160,.35,'sine',.06);
   }
-  setTimeout(function(){$('machine').classList.remove('shake');busy=false;sync()},bet.paid>=6?1400:bet.paid?700:300);
+  setTimeout(function(){$('machine').classList.remove('shake');busy=false;sync()},win>=10?1400:win?700:300);
 }
 /* 金幣從出幣口噴出 */
-function burst(n){
+function burst(n,sym){
   var tr=$('tray').getBoundingClientRect(),cx=tr.left+tr.width/2,cy=tr.top+10,ps=[];
-  for(var i=0;i<n;i++){var e=document.createElement('span');e.className='coin';e.textContent='🪙';document.body.appendChild(e);
+  for(var i=0;i<n;i++){var e=document.createElement('span');e.className='coin';e.textContent=sym||'🪙';document.body.appendChild(e);
     ps.push({e:e,x:cx+(Math.random()-.5)*tr.width*.6,y:cy,vx:(Math.random()-.5)*420,vy:-(380+Math.random()*420),r:Math.random()*360,vr:(Math.random()-.5)*720,d:i*35})}
   var t0=performance.now(),lt=t0;
   (function step(t){var dt=Math.min(.04,(t-lt)/1000),alive=false;lt=t;
