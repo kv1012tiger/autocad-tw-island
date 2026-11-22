@@ -1040,6 +1040,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .yt-f{width:100%;max-width:480px;aspect-ratio:16/9;margin:8px 0;border-radius:12px;overflow:hidden;background:#000}.yt-f iframe{width:100%;height:100%;border:0;display:block}
 .mb-img{display:block;margin:8px 0;padding:0;border:0;background:none;cursor:zoom-in;max-width:100%}.mb-img img{display:block;max-width:100%;max-height:360px;border-radius:12px;object-fit:contain;background:rgba(0,0,0,.2)}
 .mb-pv{position:relative;display:inline-block;margin:8px 0 2px}.mb-pv img{display:block;max-height:140px;max-width:220px;border-radius:10px}.mb-pv button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
+.mb-ld{display:inline-block;padding:18px 22px;border-radius:12px;background:rgba(0,0,0,.25);color:var(--muted);font-size:14px}
 .mb-lb{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}.mb-lb img{max-width:100%;max-height:100%;border-radius:8px}
 .rs-bag span:only-child{grid-column:1/-1;white-space:normal;text-align:left}
 .rs-bag span.bump{animation:rsGot .45s}
@@ -1604,7 +1605,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=38a3375b"></script>
+<script src="assets/js/coins.js?v=c92521fb"></script>
 <script>
 (function(){
 'use strict';
@@ -2608,7 +2609,7 @@ function msgRender(j,box){
   if(!MB.list.length)h+='<div class="t-empty"><span>📮</span><b>還沒有人留言</b><small>當第一個在碼頭留言的船長吧！</small></div>';
   h+=MB.list.map(msgHTML).join('');
   if(j.pages>1)h+='<nav class="pager">'+(MB.page>1?'<button class="pg" type="button" data-mpg="'+(MB.page-1)+'">‹ 較新的留言</button>':'')+'<span class="pg-gap">'+MB.page+' / '+j.pages+'</span>'+(MB.page<j.pages?'<button class="pg" type="button" data-mpg="'+(MB.page+1)+'">較舊的留言 ›</button>':'')+'</nav>';
-  box.innerHTML=h;
+  box.innerHTML=h;mbImgLoad(box);
 }
 function loadMsgs(page,fresh){
   var my=++MB.seq,box=$('mbList');if(!box)return;
@@ -2624,16 +2625,21 @@ function loadMsgs(page,fresh){
 /* 留言裡的 YouTube 網址：先顯示縮圖，按了才在留言裡播放（隱私加強模式）；每則最多 2 支 */
 function ytIds(t){var re=/(?:youtube\.com\/(?:watch\?(?:[^\s<"]*?&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/g,m,o=[];t=String(t||'');while((m=re.exec(t))&&o.length<2){if(o.indexOf(m[1])<0)o.push(m[1])}return o}
 function ytHTML(t){return ytIds(t).map(function(id){return '<button class="yt" type="button" data-yt="'+id+'" aria-label="播放 YouTube 影片"><img src="https://i.ytimg.com/vi/'+id+'/hqdefault.jpg" alt="" loading="lazy"><span>▶</span></button>'}).join('')}
-/* 留言圖片：存在站長雲端硬碟（知道連結的人可以看），點了放大 */
-function mbImgUrl(id){return 'https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=w1280'}
-function mbImgHTML(id){return id?'<button class="mb-img" type="button" data-mimg="'+esc(id)+'" aria-label="放大圖片"><img src="'+mbImgUrl(id)+'" alt="留言圖片" loading="lazy" onerror="this.onerror=null;this.src=\'https://drive.google.com/thumbnail?id='+esc(id)+'&amp;sz=w1280\'"></button>':''}
+/* 留言圖片：存在後台試算表，顯示時用 a:'mimg' 讀回來；讀過的記在這台裝置（最多 12 張） */
+var MIMG={};
+function mimgGet(id){if(MIMG[id])return Promise.resolve(MIMG[id]);try{var c=localStorage.getItem('mimg:'+id);if(c){MIMG[id]=c;return Promise.resolve(c)}}catch(e){}
+  return COINS.call({a:'mimg',id:id}).then(function(j){if(!j||!j.ok||!j.b64)throw 0;var d='data:image/jpeg;base64,'+j.b64;MIMG[id]=d;
+    try{var ks=JSON.parse(localStorage.getItem('mimg-keys')||'[]').filter(function(k){return k!==id});ks.push(id);while(ks.length>12)localStorage.removeItem('mimg:'+ks.shift());localStorage.setItem('mimg:'+id,d);localStorage.setItem('mimg-keys',JSON.stringify(ks))}catch(e){}
+    return d})}
+function mbImgHTML(id){return id?'<button class="mb-img" type="button" data-mimg="'+esc(id)+'" aria-label="放大圖片">'+(MIMG[id]?'<img src="'+MIMG[id]+'" alt="留言圖片">':'<span class="mb-ld">🖼️ 圖片載入中…</span>')+'</button>':''}
+function mbImgLoad(root){[].forEach.call((root||pBody).querySelectorAll('[data-mimg]'),function(b){if(b.querySelector('img'))return;var id=b.dataset.mimg;mimgGet(id).then(function(d){b.innerHTML='<img src="'+d+'" alt="留言圖片">'}).catch(function(){b.innerHTML='<span class="mb-ld">⚠️ 圖片暫時讀不到</span>'})})}
 /* 選好的照片先在手機上縮小（最長邊 1280、JPEG），再送出 */
-function mbShrink(file){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);var q=.82,d=c.toDataURL('image/jpeg',q);while(d.length>1100000&&q>.4){q-=.12;d=c.toDataURL('image/jpeg',q)}ok(d)};im.onerror=function(){URL.revokeObjectURL(u);no()};im.src=u})}
+function mbShrink(file){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,1024/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);var q=.78,d=c.toDataURL('image/jpeg',q);while(d.length>380000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}if(d.length>380000){no();return}ok(d)};im.onerror=function(){URL.revokeObjectURL(u);no()};im.src=u})}
 function mbPvPaint(){var pv=$('mbPv');if(!pv)return;pv.hidden=!MB.pic;pv.innerHTML=MB.pic?'<img src="'+MB.pic+'" alt="要附上的圖片"><button type="button" data-mpvx aria-label="拿掉圖片">✕</button>':''}
 function msgHTML(m){
   var ed=MB.edit===m.id;
   return '<article class="mb'+(m.hidden?' hid':'')+'" data-mid="'+esc(m.id)+'"><div class="mb-h"><span class="mb-av">'+COINS.av(m)+'</span><b>'+esc(m.nick)+'</b><small>'+esc(m.t)+'</small>'+(m.hidden?'<em>已隱藏</em>':'')+'</div>'+
-    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img)+ytHTML(m.text)+
+    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img?m.id:'')+ytHTML(m.text)+
     (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small><p>'+COINS.linkify(r.text)+'</p>'+ytHTML(r.text)+'</div></div>'}).join('')+
     (m.reply&&!ed?'<div class="qa-a mb-r"><span class="tav" aria-hidden="true"></span><div><small>🍎 蘋果爸回覆・'+esc(m.rt)+(m.re?'・已編輯 '+esc(m.re):'')+'</small><p>'+COINS.linkify(m.reply)+'</p>'+ytHTML(m.reply)+'</div></div>':'')+
     (ed?'<textarea class="mb-ta" data-rta maxlength="300" placeholder="回覆內容（清空後儲存＝刪除回覆）">'+esc(m.reply||'')+'</textarea><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-msave="'+esc(m.id)+'">💾 儲存回覆</button><button class="btn btn-ghost btn-sm" type="button" data-mcancel>取消</button></div>':
@@ -2652,7 +2658,7 @@ pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='msg')return;
   var d=t.dataset;
   if(d.yt){var yf=document.createElement('div');yf.className='yt-f';yf.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+d.yt+'?autoplay=1&playsinline=1&rel=0" title="YouTube 影片" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';t.replaceWith(yf);return}
-  if(d.mimg){var lb=document.createElement('div');lb.className='mb-lb';lb.innerHTML='<img src="'+mbImgUrl(d.mimg)+'" alt="留言圖片">';lb.addEventListener('click',function(){lb.remove()});document.body.appendChild(lb);return}
+  if(d.mimg){var im0=t.querySelector('img');if(!im0)return;var lb=document.createElement('div');lb.className='mb-lb';lb.innerHTML='<img src="'+im0.src+'" alt="留言圖片">';lb.addEventListener('click',function(){lb.remove()});document.body.appendChild(lb);return}
   if(t.id==='mbPic'){$('mbFile').click();return}
   if(d.mpvx!=null){MB.pic=null;mbPvPaint();return}
   if(d.mjoin!=null){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
@@ -2703,7 +2709,7 @@ pBody.addEventListener('click',function(e){
   }).catch(function(){t.disabled=false;toast('⚠️ 暫時連不上，請稍後再試')});
 });
 function msgNow(){var d=new Date(),z=function(n){return (n<10?'0':'')+n};return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())}
-function redrawMsg(id){var m=MB.list.filter(function(x){return x.id===id})[0],el=pBody.querySelector('.mb[data-mid="'+id+'"]');if(m&&el)el.outerHTML=msgHTML(m)}
+function redrawMsg(id){var m=MB.list.filter(function(x){return x.id===id})[0],el=pBody.querySelector('.mb[data-mid="'+id+'"]');if(m&&el){el.outerHTML=msgHTML(m);mbImgLoad()}}
 
 /* ---------- 物資島：連續點擊採集（每座島手感、音效、特效不同），每天隨機總量、偶爾撿到鑽石 ---------- */
 var RS={st:null,until:0,timer:0,seq:0,round:null,busy:false,cd:{},nx:{},pend:{},opt:{}};

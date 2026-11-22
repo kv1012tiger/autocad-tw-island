@@ -34,7 +34,7 @@
   }
 
   /* ---------- 呼叫試算表（長文字用 POST） ---------- */
-  var READ_ONLY = { me: 1, login: 1, island: 1, isles: 1, top: 1, msgs: 1, visitors: 1, visall: 1, friends: 1, anns: 1, voyage: 1, drops: 1, isl: 1 };
+  var READ_ONLY = { me: 1, login: 1, island: 1, isles: 1, top: 1, msgs: 1, mimg: 1, visitors: 1, visall: 1, friends: 1, anns: 1, voyage: 1, drops: 1, isl: 1 };
   function call(o, post, retried) {
     var req = post ? fetch(API, { method: 'POST', body: JSON.stringify(o), cache: 'no-store' })
       : fetch(API + '?q=' + encodeURIComponent(JSON.stringify(o)), { cache: 'no-store' });
