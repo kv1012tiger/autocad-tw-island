@@ -2680,7 +2680,7 @@ function msgNow(){var d=new Date(),z=function(n){return (n<10?'0':'')+n};return 
 function redrawMsg(id){var m=MB.list.filter(function(x){return x.id===id})[0],el=pBody.querySelector('.mb[data-mid="'+id+'"]');if(m&&el)el.outerHTML=msgHTML(m)}
 
 /* ---------- 物資島：連續點擊採集（每座島手感、音效、特效不同），每天隨機總量、偶爾撿到鑽石 ---------- */
-var RS={st:null,until:0,timer:0,seq:0,round:null,busy:false,cd:{},nx:{},pend:{}};
+var RS={st:null,until:0,timer:0,seq:0,round:null,busy:false,cd:{},nx:{},pend:{},opt:{}};
 /* 這座島還要等幾秒才能再採：後台回報的冷卻（每座島 30～120 秒不同）加上這次剛採的 */
 function cdLeft(R){
   var w=COINS.get(),sec=w.cd&&w.cd[R.id],a=sec!=null?(w.cdT||0)+sec*1000:0,b=RS.cd[R.id]||0;
@@ -2713,7 +2713,8 @@ function renderRes(n){
   (w.code?COINS.api({a:'isles',isle:R.id}):COINS.call({a:'isles'})).then(function(j){if(j&&j.nx!=null&&j.nxi)RS.nx[j.nxi]=j.nx;if(my===RS.seq&&j&&j.isles){setSt(j.isles);resStock()}}).catch(function(){if(my===RS.seq&&$('rsStock'))$('rsStock').textContent='⚠️ 暫時連不上物資島，請稍後再試'});
 }
 /* 背包數字：得到物資時先顯示舊的數字，小圖示一個一個飛進來再 +1（5→6→7→8），不要一下子跳到最後 */
-function bagReal(k){var w=COINS.get();return k==='dia'?(w.dia||0):k==='gold'?(w.bal||0):((w.bag||{})[k]||0)}
+/* RS.opt：這次採到、後台還沒確認的數量另外記，不寫進帳戶；別的同步帶回舊數字時才不會倒退 */
+function bagReal(k){var w=COINS.get();return (k==='dia'?(w.dia||0):k==='gold'?(w.bal||0):((w.bag||{})[k]||0))+(RS.opt[k]||0)}
 /* 背包顯示 = 真正的數字 − 還在路上飛的圖示；每飛進一個就 +1，後台改了數量也不會亂跳 */
 function bagVal(k){return Math.max(0,bagReal(k)-(RS.pend[k]||0))}
 function rsDrop(toks,n){for(var i=toks.length-1;i>=0&&n>0;i--){var t=toks[i];if(!t.done&&!t.dead&&t.k!=='dia'){t.dead=true;RS.pend[t.k]=Math.max(0,(RS.pend[t.k]||0)-1);n--}}resBag()}
@@ -2857,22 +2858,23 @@ function rsDone(){
   var tb=$('rsTimerBox');if(tb)tb.classList.remove('on');
   rsAnim($('rsArt'),'fin-'+R.rk);
   var nx=nextN(R),sx=RS.st&&RS.st[R.id],guess=nx<=0;
-  if(guess)nx=scaleN(R,R.lo+Math.floor(Math.random()*(R.hi-R.lo+1)),lvOf(R).lv);   /* 後台還沒回報下一次數量時，先用估的，連點一完成照樣馬上顯示，稍後對帳 */
+  if(guess)nx=scaleN(R,R.lo,lvOf(R).lv);   /* 估最少的量：後台多給就補飛，不會先加多再倒扣；連點一完成照樣馬上顯示，稍後對帳 */
   if(!cdLeft(R)&&(!sx||(sx.left>0&&sx.mine<sx.max))){
     /* 即時結算：下一次的數量是後台事先抽好的（或先估），連點一完成就馬上拿到、馬上顯示；後台在背景確認（鑽石等結果稍後補上） */
     var w0=COINS.get(),fast={k:R.rk,n:sx?Math.min(nx,sx.left):nx,dia:0},rc0=obj.getBoundingClientRect(),cx0=rc0.left+rc0.width/2,cy0=rc0.top+rc0.height/2;
     RS.nx[R.id]=0;RS.busy=false;
-    if(R.rk==='gold')w0.bal=(w0.bal||0)+fast.n;else if(w0.bag)w0.bag[R.rk]=(w0.bag[R.rk]||0)+fast.n;
+    RS.opt[R.rk]=(RS.opt[R.rk]||0)+fast.n;
     if(sx){sx.left-=fast.n;sx.mine++}
     RS.cd[R.id]=Date.now()+R.gap*1000;resPaint();rsReset();
     for(var q=0;q<10;q++){var a0=Math.random()*Math.PI*2,d0=60+Math.random()*90;rsPart(cx0,cy0,R.fin[q%R.fin.length],Math.cos(a0)*d0,Math.sin(a0)*d0-40,22)}
     rsSound('win');var toks=rsGain(R,fast,cx0,cy0);resStock();
+    var unOpt=function(){RS.opt[R.rk]=Math.max(0,(RS.opt[R.rk]||0)-fast.n)};
     COINS.api({a:'gather',isle:R.id}).then(function(j){
+      unOpt();   /* 後台的帳戶（j.p）已經算進這次，暫存拿掉 */
       if(j.nx!=null&&j.nxi)RS.nx[j.nxi]=j.nx;
       if(j.isles)setSt(j.isles);
       if(!j.ok){
         /* 沒成功：把剛才先加上去的退回來，再提醒 */
-        if(!j.p){var w1=COINS.get();if(R.rk==='gold')w1.bal=Math.max(0,(w1.bal||0)-fast.n);else if(w1.bag)w1.bag[R.rk]=Math.max(0,(w1.bag[R.rk]||0)-fast.n)}   /* 後台有回帳戶（j.p）時已經是正確的數字了 */
         rsDrop(toks,fast.n);if(j.err==='cool')RS.cd[R.id]=Date.now()+j.wait*1000;toast('⚠️ 剛才那次採集沒有成功：'+COINS.errText(j));resBag();resStock();return}
       var gs=j.got||{};
       var more=Math.max(0,(gs.n||0)-fast.n);
@@ -2884,7 +2886,7 @@ function rsDone(){
         if(!guess)toast('📦 實際採到 '+gs.n+' 個（島上剩的不夠了）');
       }
       resBag();resStock();
-    }).catch(function(){toast('⚠️ 網路不穩，剛才那次採集可能沒有記上，請重新整理確認');resBag();resStock()});
+    }).catch(function(){unOpt();rsDrop(toks,fast.n);toast('⚠️ 網路不穩，剛才那次採集可能沒有記上，正在重新同步');COINS.api({a:'me'}).then(function(){resBag()}).catch(function(){});resBag();resStock()});
     return;
   }
   $('rsCnt').innerHTML='✨ '+esc(R.act)+'中…';
