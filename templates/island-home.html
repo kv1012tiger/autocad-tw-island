@@ -2687,6 +2687,7 @@ var RS_TIME=6000;
 function renderRes(n){
   var R=RESI[n];rsCancel();
   pBody.innerHTML='<div class="ph" style="--c:'+R.c+'"><span class="ph-e">'+R.e+'</span><div><div class="p-kicker">RESOURCE ISLAND・物資島</div><h3 id="pTitle">'+esc(R.name)+'</h3><p>每 '+R.gap+' 秒可再採・每次 '+R.lo+'～'+R.hi+(R.rk==='gold'?' 枚金幣・連續點擊'+esc(R.act)+'，直接領金幣':' 個・連續點擊'+esc(R.act)+'、撿鑽石')+'</p></div></div>'+
+    '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包・兌換所・好友</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 物資排行榜</button></div></div>'+
     '<div class="rs-stage rs-'+R.rk+'" style="--c:'+R.c+'">'+
       '<div class="rs-arena"><svg class="rs-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" class="bg"/><circle cx="60" cy="60" r="54" class="fg" id="rsRing"/></svg>'+
         '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+R.art+'</span>'+
@@ -2700,7 +2701,7 @@ function renderRes(n){
       '<div class="rs-stock" id="rsStock">看看今天島上還有多少'+esc(R.item)+'…</div>'+
       (SFX_ON?'':'<button class="rs-snd" type="button" id="rsSnd">🔇 打開音效更好玩</button>')+
     '</div>'+
-    '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包・兌換所・好友</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 物資排行榜</button></div></div>'+
+    '<div id="rsVis"></div>'+   /* 物資島：造訪紀錄放在採集區下面，背包移到最上面 */
     '<div class="p-sec"><h4>物資島規則</h4><ul class="notes"><li>6 秒內連續點 '+R.taps+' 下就能'+esc(R.act)+'，太慢會失敗，不扣次數。</li>'+(R.rk==='gold'?'<li>🪙 金礦島：每座每天全島有 23 枚金幣，大家一起搶，挖光了要等明天。</li><li>每人每座金礦每天最多挖 3 次（每次 '+R.lo+'～'+R.hi+' 枚，★★★ 時最多 3 枚、★ 時只有 1 枚）；4 座金礦分散在地圖各處。</li><li>金礦裡沒有鑽石，挖到的金幣直接加進你的錢包。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>':'<li>每座物資島每天的總量隨機（90～240 份），大家一起採，採光了就要等明天重新長出來。</li><li>每人每座島每天最多採 8 次；這座島每次 '+R.lo+'～'+R.hi+' 個，採完要等 '+R.gap+' 秒才能再採（每座島的秒數和數量都不一樣，30～120 秒）。</li><li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li><li>⭐ 每 1～3 分鐘隨機換一批資源多寡：★★★ 拿得多、★★ 照平常、★ 拿得少。島上的星星和這頁上方都看得到，挑 ★★★ 的島去採最划算。</li>')+'<li>🏪 兌換所：10 個同種物資換 1 枚金幣（每天 3 次）、1 顆鑽石換 10 枚金幣（另外每天 3 次）。</li><li>🏆 物資排行榜看累計採集量，兌換和送禮不會掉名次。</li></ul></div>';
   $('pStep').textContent=R.e+' 物資島';
   footSimple('← 回大海','');
@@ -4689,7 +4690,7 @@ function openPanel(t,i,dir){
   var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha'),isBet=t==='slot'||t==='rps'||t==='gacha';
   V={t:t,i:i||0};render(dir);
   var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?['game','遊戲島']:t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='link'?['link-'+V.i,LINK_SPOTS[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
-  if(vk){var ph=pBody.querySelector('.ph,.home-top');if(ph){var vd=document.createElement('div');ph.parentNode.insertBefore(vd,ph.nextSibling);COINS.visit(vk[0],vk[1],vd)}}
+  if(vk){var rv=t==='res'&&$('rsVis');if(rv)COINS.visit(vk[0],vk[1],rv);else{var ph=pBody.querySelector('.ph,.home-top');if(ph){var vd=document.createElement('div');ph.parentNode.insertBefore(vd,ph.nextSibling);COINS.visit(vk[0],vk[1],vd)}}}
   if(!panel.classList.contains('open')){
     opener=document.activeElement;
     if(pinch){pinch=null;try{zoomEnd()}catch(e){}}world.style.touchAction='';
