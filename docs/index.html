@@ -1036,7 +1036,8 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-stock .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#ffd166,var(--c))}
 .rs-snd{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);background:rgba(0,0,0,.25);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer}
 .rs-bag{display:flex;flex-wrap:wrap;gap:8px}.rs-bag span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
-.rs-bag span.bump{animation:rsBump .35s}
+.rs-bag span.bump{animation:rsGot .45s}
+@keyframes rsGot{40%{transform:scale(1.22);background:rgba(255,209,102,.45);box-shadow:0 0 16px rgba(255,209,102,.9);border-color:#ffd166}}
 .lnk-go p{margin:0 0 14px;font-size:16px;line-height:1.7}.lnk-go .btn{font-size:17px;padding:13px 24px}
 button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 /* 物資島：固定在下方的小背包列，採集時圖示飛進來、數字一路跳上去 */
@@ -1051,7 +1052,9 @@ button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .rs-plus{position:absolute;transform:translate(-50%,-50%);font:900 30px/1.2 "Noto Sans TC",sans-serif;color:#fff;text-align:center;text-shadow:0 0 10px #ffb347,0 3px 0 rgba(0,0,0,.45);white-space:nowrap;animation:rsUp 1.8s ease-out forwards}
 .rs-plus.dia{color:#bff3ff;text-shadow:0 0 14px #38bdf8,0 3px 0 rgba(0,0,0,.45)}
 @keyframes rsUp{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-80%) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
-.rs-fly{position:absolute;margin:-14px 0 0 -14px;font-size:28px;line-height:1;transition:transform .7s cubic-bezier(.5,-.3,.6,1),opacity .7s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.rs-fly{position:absolute;margin:-16px 0 0 -16px;font-size:32px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,209,102,.95)) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.rs-p1{position:absolute;font:900 18px/1 "Noto Sans TC",sans-serif;color:#ffd166;text-shadow:0 0 6px #ff9f1c,0 2px 0 rgba(0,0,0,.5);animation:rsP1 .8s ease-out forwards}
+@keyframes rsP1{0%{transform:translate(0,4px) scale(.6);opacity:0}25%{transform:translate(0,-6px) scale(1.15);opacity:1}100%{transform:translate(0,-26px);opacity:0}}
 .rs-fly.dia{font-size:36px;filter:drop-shadow(0 0 10px #7dd3fc)}
 @media (prefers-reduced-motion:reduce){.rs-art,.rs-tool,.rs-ore i,.rs-obj,.rs-combo{animation:none!important}}
 /* 遊戲島 */
@@ -2904,18 +2907,25 @@ function rsGain(R,g,cx,cy){
   if(g.n)RS.shown[R.rk]=Math.max(0,bagReal(R.rk)-g.n-(RS.shown[R.rk]!=null?0:0));
   if(g.dia)RS.shown.dia=Math.max(0,bagReal('dia')-g.dia);
   resBag();
+  /* 背包不在畫面上：先把畫面輕輕捲到「我的背包」，再開始飛（採集已結束，捲動不會誤點） */
+  var bagEl=$('rsBag'),br=bagEl?bagEl.getBoundingClientRect():null,wait=0;
+  if(br&&br.height&&(br.top<70||br.bottom>innerHeight-20)){var sc=bagEl.closest('.p-body')||pBody;sc.scrollBy({top:br.top-90,behavior:reduce?'auto':'smooth'});wait=480}
   icons.forEach(function(ic,k){
     setTimeout(function(){
-      var tgt=document.querySelector('#rsMini [data-k="'+ic[1]+'"]')||document.querySelector('#rsBag [data-k="'+ic[1]+'"]'),tr=tgt?tgt.getBoundingClientRect():null;   /* 飛進下方固定的小背包列 */
+      var tgt=document.querySelector('#rsBag [data-k="'+ic[1]+'"]'),tr=tgt?tgt.getBoundingClientRect():null;   /* 飛進背包裡對應的那一格 */
       var e=document.createElement('span');e.className='rs-fly'+(ic[1]==='dia'?' dia':'');e.textContent=ic[0];
       e.style.left=cx+'px';e.style.top=cy+'px';fx.appendChild(e);
-      var dx=tr&&tr.width?tr.left+18-cx:0,dy=tr&&tr.width?tr.top+tr.height/2-cy:220;
-      requestAnimationFrame(function(){requestAnimationFrame(function(){e.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px) scale(.6)';e.style.opacity='.2'})});
-      setTimeout(function(){e.remove();var kk=ic[1];if(RS.shown[kk]!=null){RS.shown[kk]+=1;if(RS.shown[kk]>=bagReal(kk))delete RS.shown[kk]}resBag();['#rsMini','#rsBag'].forEach(function(sel){var t2=document.querySelector(sel+' [data-k="'+ic[1]+'"]');if(t2)rsAnim(t2,'bump')});if(!reduce&&SFX_ON)tone(1200+k*90,0,.08,'sine',.06)},760);
-    },250+k*160);
+      var ok=tr&&tr.width,dx=ok?tr.left+22-cx:0,dy=ok?tr.top+tr.height/2-cy:-220;
+      var land=function(){e.remove();var kk=ic[1];if(RS.shown[kk]!=null){RS.shown[kk]+=1;if(RS.shown[kk]>=bagReal(kk))delete RS.shown[kk]}resBag();
+        var t2=document.querySelector('#rsBag [data-k="'+kk+'"]');if(t2){rsAnim(t2,'bump');var r2=t2.getBoundingClientRect(),pl=document.createElement('b');pl.className='rs-p1';pl.textContent='+1';pl.style.left=(r2.right-14)+'px';pl.style.top=r2.top+'px';fx.appendChild(pl);setTimeout(function(){pl.remove()},800)}
+        if(!reduce&&SFX_ON)tone(1200+k*90,0,.08,'sine',.06)};
+      if(reduce||!e.animate){e.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px)';setTimeout(land,300);return}
+      var mx=dx*.35+(k%2?40:-40),my=Math.min(dy,0)*.55-90;   /* 弧線：先往上拋，再落進背包 */
+      e.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate('+mx.toFixed(0)+'px,'+my.toFixed(0)+'px) scale(1.3)',offset:.45},{transform:'translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px) scale(.75)'}],{duration:820,easing:'cubic-bezier(.3,.1,.4,1)',fill:'forwards'}).onfinish=land;
+    },wait+250+k*170);
   });
   toast(g.dia?(g.n?'💎 哇！撿到 '+g.dia+' 顆鑽石，還有 '+R.it+' +'+g.n+' '+R.item:'💎 哇！剛才還撿到 '+g.dia+' 顆鑽石！'):R.it+' +'+g.n+' '+R.item+'！');
-  setTimeout(function(){if(g.n)delete RS.shown[R.rk];if(g.dia)delete RS.shown.dia;resBag()},250+icons.length*160+900);   /* 動畫跑完一定對回背包真正的數字 */
+  setTimeout(function(){if(g.n)delete RS.shown[R.rk];if(g.dia)delete RS.shown.dia;resBag()},wait+250+icons.length*170+1100);   /* 動畫跑完一定對回背包真正的數字 */
 }
 pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='res')return;
