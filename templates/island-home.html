@@ -2690,7 +2690,7 @@ var RS_TIME=6000;
 function renderRes(n){
   var R=RESI[n];rsCancel();
   pBody.innerHTML='<div class="ph" style="--c:'+R.c+'"><span class="ph-e">'+R.e+'</span><div><div class="p-kicker">RESOURCE ISLAND・物資島</div><h3 id="pTitle">'+esc(R.name)+'</h3><p>每 '+R.gap+' 秒可再採・每次 '+R.lo+'～'+R.hi+(R.rk==='gold'?' 枚金幣・連續點擊'+esc(R.act)+'，直接領金幣':' 個・連續點擊'+esc(R.act)+'、撿鑽石')+'</p></div></div>'+
-    '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包・兌換所・好友</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 物資排行榜</button></div></div>'+
+    '<div class="p-sec"><h4>我的背包</h4><div class="rs-bag" id="rsBag"></div><div class="row2" style="flex-wrap:nowrap"><button class="btn btn-ghost btn-sm" type="button" data-rbag>🎒 背包</button><button class="btn btn-ghost btn-sm" type="button" data-rrank>🏆 排行榜</button></div></div>'+
     '<div class="rs-stage rs-'+R.rk+'" style="--c:'+R.c+'">'+
       '<div class="rs-arena"><svg class="rs-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54" class="bg"/><circle cx="60" cy="60" r="54" class="fg" id="rsRing"/></svg>'+
         '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+R.art+'</span>'+
