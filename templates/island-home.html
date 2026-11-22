@@ -1552,7 +1552,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
         <li>🔑 登島碼是你的帳號鑰匙，請記下來、不要給別人；忘記了用 LINE 官方帳號問蘋果爸。</li>
       </ul></section>
       <section class="hp" data-p="1" hidden><ul>
-        <li>地圖上散佈著 <b>20 座物資島</b>：16 座一般物資島（🍎 果園、⛏️ 礦山、🌲 森林、🪨 採石各 4 座），另外 <b>4 座 🪙 金礦島</b>（挖了直接領金幣：每座每天全島 23 枚、每人每座最多挖 3 次）；它們分散在地圖各處，要自己去找。每座島<b>每 1～3 分鐘會隨機換一批資源多寡</b>，島上的 <b>★</b> 越多代表現在資源越多（★★★ 拿最多、★ 拿最少），看到 ★★★ 就趕快去；<b>6 秒內連續點擊</b>物件（8～10 下）就能採集，太慢不扣次數。</li>
+        <li>地圖上散佈著 <b>20 座物資島</b>：16 座一般物資島（⛏️ 礦山 5 座、🌲 森林 6 座、🪨 採石 5 座；🍎 水果改到扭蛋島抽、商店島買），另外 <b>4 座 🪙 金礦島</b>（挖了直接領金幣：每座每天全島 23 枚、每人每座最多挖 3 次）；它們分散在地圖各處，要自己去找。每座島<b>每 1～3 分鐘會隨機換一批資源多寡</b>，島上的 <b>★</b> 越多代表現在資源越多（★★★ 拿最多、★ 拿最少），看到 ★★★ 就趕快去；<b>6 秒內連續點擊</b>物件（8～10 下）就能採集，太慢不扣次數。</li>
         <li>每座島每天的總量隨機 90～240 份，大家一起採，採光了要等明天重新長出來。</li>
         <li>每人每座島每天最多採 <b>8 次</b>；<b>每座島的數量和冷卻都不一樣</b>：每次採 1～8 個不等，採完要等 30～120 秒才能再採同一座島。</li>
         <li>💎 每座島每天隨機藏 0～2 顆鑽石，採集時有機會撿到，被撿走就沒了。</li>
@@ -1725,7 +1725,7 @@ var RGOLD={k:'res',n:9,rk:'gold',e:'🪙',it:'🪙',item:'金幣',name:'金礦�
   taps:10,art:'🪙',tool:'⛏️',parts:['✨','🪙','💫','🪙'],fin:['🪙','💰','✨','🪙'],snd:'clink',
   st:{land:'#e9c46a',deep:'#a16207',tree:'#7a6a1a',leaf:'#d9c46a',sand:['#b8892f','#e2b957','#f7e0a1'],dirt:'#78501a',n:3,glow:'#facc15'}};
 /* 20 座物資島（代號、種類、名稱、再採間隔秒、每次最少、每次最多）：和後台 tools/coin-server.gs 的 ISL 是同一份，要一起改 */
-var ISLT=[['r0','fruit','果園島',100,3,5],['r1','iron','礦山島',90,3,6],['r2','wood','森林島',80,3,7],['r3','stone','採石島',70,2,4],['r4','fruit','蘋果灣',80,3,6],['r5','iron','鐵砧島',60,2,6],['r6','wood','松林島',30,1,3],['r7','stone','石灰岩',30,1,4],['r8','wood','楓樹林',40,1,5],['r9','iron','紅岩礦坑',70,2,4],['r10','gold','金礦島',110,1,2],['r11','gold','金沙灣',110,1,2],['r12','gold','黃金谷',120,1,2],['r13','iron','黑曜礦脈',50,2,5],['r14','wood','竹林灣',50,2,6],['r15','stone','大理石岸',100,3,5],['r16','wood','橡木谷',40,1,4],['r17','gold','淘金河',120,1,2],['r18','wood','神木島',60,2,4],['r19','stone','礫石灘',90,3,6]];
+var ISLT=[['r0','stone','花崗岩島',100,3,5],['r1','iron','礦山島',90,3,6],['r2','wood','森林島',80,3,7],['r3','stone','採石島',70,2,4],['r4','iron','銅礦灣',80,3,6],['r5','iron','鐵砧島',60,2,6],['r6','wood','松林島',30,1,3],['r7','stone','石灰岩',30,1,4],['r8','wood','楓樹林',40,1,5],['r9','iron','紅岩礦坑',70,2,4],['r10','gold','金礦島',110,1,2],['r11','gold','金沙灣',110,1,2],['r12','gold','黃金谷',120,1,2],['r13','iron','黑曜礦脈',50,2,5],['r14','wood','竹林灣',50,2,6],['r15','stone','大理石岸',100,3,5],['r16','wood','橡木谷',40,1,4],['r17','gold','淘金河',120,1,2],['r18','wood','神木島',60,2,4],['r19','stone','礫石灘',90,3,6]];
 var RESI=ISLT.map(function(a,i){
   var T=a[1]==='gold'?RGOLD:RTYPE[['fruit','iron','wood','stone'].indexOf(a[1])],o={};
   for(var k in T)o[k]=T[k];
@@ -1741,8 +1741,8 @@ SP.splice(2,0,MSG_SPOT);
   function rr(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}
   var by={fruit:[],iron:[],wood:[],stone:[],gold:[]};RESI.forEach(function(s){by[s.rk].push(s)});
   /* 每個位置放哪一種：用地圖上的實際座標算過（螺旋排列），讓同種類的島、尤其是 4 座金礦，彼此離得最遠 */
-  /* r8 楓樹林、r16 橡木谷原本是水果島（2026-11-22 改木材），用島號固定在原來的位置，其他島都不會移動 */
-  var PAT='stone wood iron gold wood shop iron fruit stone fruit wood iron r8 wood gold stone r16 gold stone iron gold'.split(' '),seq=[],fixed={};
+  /* 原本的 4 座水果島（2026-11-22 改型：r0 花崗岩島、r4 銅礦灣、r8 楓樹林、r16 橡木谷）用島號固定在原來的位置，其他島都不會移動 */
+  var PAT='stone wood iron gold wood shop iron r0 stone r4 wood iron r8 wood gold stone r16 gold stone iron gold'.split(' '),seq=[],fixed={};
   PAT.forEach(function(t){if(/^r\d+$/.test(t))fixed[t]=1});
   Object.keys(by).forEach(function(k){by[k]=by[k].filter(function(s){return !fixed[s.id]})});
   PAT.forEach(function(t){seq.push(t==='shop'?SHOP_SPOT:fixed[t]?RESI.filter(function(s){return s.id===t})[0]:by[t].shift())});
@@ -3170,7 +3170,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112201',GACHA_V='2026112101';
+var BET_V='2026112202',GACHA_V='2026112101';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3255,7 +3255,7 @@ function renderGame(n){
     '<p class="fav-note">'+(n?'手機玩跑酷建議轉成橫向。':'')+'遊戲有自己的全站排行榜，玩完可以留下名字。</p>'+
     '<div class="p-sec"><h4>另一座遊戲島</h4><div class="links"><button class="lk" type="button" data-ggo="'+(1-n)+'"><i>'+GAME_SPOTS[1-n].e+'</i><span><b>'+esc(GAME_SPOTS[1-n].name)+'</b><small>'+esc(o.name)+'</small></span></button></div></div>';
   $('pStep').textContent=sp.e+' '+sp.name;
-  footSimple('← 回地圖',n?'🍎 果園島 →':'🏃 指令跑酷島 →');
+  footSimple('← 回地圖',n?RESI[0].e+' '+RESI[0].name+' →':'🏃 指令跑酷島 →');
 }
 var readerBackTxt=$('readerBackT').textContent;
 function openGame(i){

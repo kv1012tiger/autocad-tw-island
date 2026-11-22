@@ -21,6 +21,11 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
   background:radial-gradient(circle at 50% 34%,#ffe7a3 0 46px,rgba(255,200,120,.5) 47px 80px,transparent 130px),linear-gradient(180deg,#ffb36b 0%,#ff7a59 30%,#b14a7a 46%,#2a5d8a 47%,#123a63 100%);
   box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 18px 40px rgba(0,0,0,.45)}
 .stage.shake{animation:shake .45s}
+.stage.fire::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:6;box-shadow:inset 0 0 46px rgba(255,120,0,.75);animation:fireglow .55s infinite alternate}
+@keyframes fireglow{to{box-shadow:inset 0 0 80px rgba(255,170,0,.95)}}
+.stage.douse::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:6;animation:douse .9s forwards}
+@keyframes douse{0%{box-shadow:inset 0 0 80px rgba(120,190,255,.95)}100%{box-shadow:none}}
+.streak.hot b{color:#ff8a2a;text-shadow:0 0 8px #ff6a00}
 @keyframes shake{20%{transform:translate(-7px,3px)}40%{transform:translate(7px,-3px)}60%{transform:translate(-5px,2px)}80%{transform:translate(4px,0)}}
 .sea{position:absolute;left:-10%;right:-10%;top:47%;height:30px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 26px,transparent 26px 60px);opacity:.5;animation:sea 5s linear infinite}
 @keyframes sea{to{transform:translateX(60px)}}
@@ -144,6 +149,7 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
   <div class="info"><span>下注 1 枚・這把贏 <b id="nw">3</b> 枚（連勝加倍）・平手回 1</span><span class="streak">連勝 <b id="streak">0</b></span></div>
   
 </div>
+<script src="bgm.js?v=2026112201"></script>
 <script>
 (function(){
 'use strict';
@@ -152,7 +158,7 @@ var HE={rock:'✊',paper:'✋',scissors:'✌️'},BEAT={rock:'scissors',paper:'r
 var coins=20,left=10,streak=0,busy=false,sfx=false;
 /* 贏 3 枚，連勝加倍，最多 24 枚（和後台 RPS_WIN／RPS_MAX 一致） */
 function winPay(s){return Math.min(24,3*Math.pow(2,s))}
-function showStreak(){$('streak').textContent=streak;$('nw').textContent=winPay(streak)}
+function showStreak(){$('streak').textContent=(streak>=2?'🔥':'')+streak;$('nw').textContent=winPay(streak);var hot=streak>=2;$('stage').classList.toggle('fire',hot);document.querySelector('.streak').classList.toggle('hot',hot);if(window.GBGM){GBGM.tempo(1+Math.min(streak,4)*.12);GBGM.heart(streak>=3)}}
 var cap=$('cap');
 function mood(m){cap.className='cap m-'+m}
 var LINES={
@@ -169,11 +175,14 @@ var bt=0;function say(t,ms){var b=$('bubble');b.textContent=t;b.classList.add('o
 /* 音效（預設關） */
 var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
 function tone(f,f2,d,type,vol,delay){if(!sfx)return;var a=ac();if(!a)return;var t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(vol||.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
-$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}};
+$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}bgmSync()};
 function restart(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
 /* 結果一律由伺服器決定（父頁面的 AIKB_BET）；單獨打開這頁時用假結果，方便測試 */
 var K='rps',API=null;try{API=parent!==window&&parent.AIKB_BET?parent.AIKB_BET:null}catch(e){}
 function fakeServer(h){return new Promise(function(r){setTimeout(function(){var c=['rock','paper','scissors'][Math.floor(Math.random()*3)];var w=BEAT[h]===c;r({ok:true,bet:{roll:[h,c],paid:h===c?1:w?winPay(streak):0,streak:h===c?streak:w?streak+1:0}})},400+Math.random()*600)})}
+/* 背景音樂：跟著 🔊 開關；第一次點畫面時再開（瀏覽器規定要有點擊才能出聲）；切到背景就停 */
+function bgmSync(){if(!window.GBGM)return;if(sfx&&!document.hidden)GBGM.start(K);else GBGM.stop()}
+document.addEventListener('pointerdown',bgmSync,{once:true});document.addEventListener('visibilitychange',bgmSync);setTimeout(bgmSync,300);
 var ST={login:true,coins:20,left:10,pending:false};
 function sync(){
   if(busy)return;
@@ -201,6 +210,7 @@ function play(h,retry){
   var srv=API?API.play(K,h,!!retry):fakeServer(h),calls=['剪刀！','石頭！','布！'];
   setTimeout(function(){
     restart(me,'shk');restart(cpu,'shk');
+    if(window.GBGM)GBGM.roll(1.05);   /* 鼓聲倒數，最後一下才揭曉 */
     calls.forEach(function(c,i){setTimeout(function(){$('call').textContent=c;restart($('call'),'on');tone(300+i*120,0,.1,'square',.06)},i*340)});
     setTimeout(function(){srv.then(function(res){
       if(!res||!res.ok||!res.bet){me.classList.remove('shk');cpu.classList.remove('shk');mood('shock');say('⚠️ '+((res&&res.msg)||'發生錯誤'),3500);busy=false;sync();return}
@@ -217,7 +227,8 @@ function reveal(bet){
   if(!API){ST.coins+=paid-1;ST.left--}
   setTimeout(function(){
     var res=$('res');
-    if(r==='win'){streak=bet.streak!=null?bet.streak:streak+1;me.classList.add('winr');cpu.classList.add('lose');
+    if(r==='win'){streak=bet.streak!=null?bet.streak:streak+1;me.classList.add('winr');cpu.classList.add('lose');if(window.GBGM)GBGM.boom();
+      if(streak>=2)setTimeout(function(){say('🔥 '+streak+' 連勝！下一把 '+winPay(streak)+' 枚',2600)},2500);
       res.textContent=(streak>=2?streak+' 連勝！+':'你贏了！+')+paid;res.style.color='#ffd166';
       mood(streak>=3?'shock':'angry');restart(cap,'knock');restart($('stars'),'on');restart($('stage'),'shake');
       say(pickLine(streak>=4?'win4':streak>=2?'win2':'win0'),2400);
@@ -226,7 +237,7 @@ function reveal(bet){
     }else if(r==='tie'){
       res.textContent='平手！+1';res.style.color='#9be7ff';mood('shock');say(pickLine('tie'));sparks();
       tone(880,440,.2,'sawtooth',.05);
-    }else{streak=bet.streak!=null?bet.streak:0;me.classList.add('lose');cpu.classList.add('winr');
+    }else{var wasHot=streak>=2;streak=bet.streak!=null?bet.streak:0;if(wasHot){var sg=$('stage');sg.classList.remove('douse');void sg.offsetWidth;sg.classList.add('douse')}me.classList.add('lose');cpu.classList.add('winr');
       res.textContent='你輸了…';res.style.color='#ff9aa8';mood('laugh');restart(cap,'laugh');say(pickLine('lose'));
       tone(392,196,.4,'sine',.07);[0,.12,.24].forEach(function(d){tone(300,0,.08,'square',.04,.3+d)});
     }

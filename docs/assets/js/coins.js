@@ -360,7 +360,7 @@
 
   /* ---------- 排行榜 ---------- */
   var TABS = [['coin', '🪙 金幣'], ['res', '🧺 物資'], ['dia', '💎 鑽石'], ['isle', '🏝️ 島主']];
-  var TAB_NOTE = { coin: '依目前金幣排名', res: '依累計採集的物資排名（兌換、送禮不會掉名次）', dia: '依「累計撿到」的鑽石排名（花掉、換掉的也算；你現在手上有幾顆看下面）', isle: '島主分＝小屋等級×10＋裝飾＋寵物親密度' };
+  var TAB_NOTE = { coin: '依目前金幣排名', res: '依累計採集的物資排名（兌換、送禮不會掉名次）', dia: '依你現在手上有幾顆鑽石排名（拉霸、扭蛋、撿到的都算；換成金幣或送人就會少）', isle: '島主分＝小屋等級×10＋裝飾＋寵物親密度' };
   /* 排行榜快取：三頁一次拿回來，存在這台裝置；打開時先顯示，再背景更新 */
   var TKEY = 'cw-top', TOPC = null, topReq = null;
   try { TOPC = JSON.parse(localStorage.getItem(TKEY) || 'null'); } catch (e) { TOPC = null; }
@@ -490,7 +490,7 @@
             RES_KEYS.map(function (k) { return '<div><i>' + RES[k][0] + '</i><b>' + (b[k] || 0) + '</b><small>' + RES[k][1] + '</small></div>'; }).join('') +
             '<div><i>💎</i><b>' + (P.dia || 0) + '</b><small>鑽石</small></div></div>' +
             '<small style="margin-top:6px">🥕 ' + ((P.veg || {}).carrot || 0) + '　🥬 ' + ((P.veg || {}).cabbage || 0) + '　🎃 ' + ((P.veg || {}).pumpkin || 0) + '（菜園收成，用來餵寵物）</small>' +
-            '<small>累計採集 ' + (P.tres || 0) + ' 個物資、撿到 ' + (P.tdia || 0) + ' 顆鑽石（排行榜用累計數字）。去地圖上的果園島、礦山島、森林島、採石島採集。</small></div>';
+            '<small>累計採集 ' + (P.tres || 0) + ' 個物資、撿到 ' + (P.tdia || 0) + ' 顆鑽石。去地圖上的礦山島、森林島、採石島採集；水果可以在扭蛋島抽、商店島買。</small></div>';
           h += '<div class="cw-sec"><h4>🏪 兌換所<small style="display:inline;margin-left:6px">物資今天還能換 ' + left + ' 次・💎 還能換 ' + dleft + ' 次</small></h4><div class="cw-trade">' +
             RES_KEYS.map(function (k) { return '<button type="button" data-trade="' + k + '"' + (left && (b[k] || 0) >= 10 ? '' : ' disabled') + '>10 ' + RES[k][0] + ' → 1 🪙</button>'; }).join('') +
             '<button type="button" data-trade="dia"' + (dleft && (P.dia || 0) >= 1 ? '' : ' disabled') + '>1 💎 → 10 🪙</button>' +

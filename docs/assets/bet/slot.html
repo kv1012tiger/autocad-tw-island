@@ -31,6 +31,8 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
 .bulbs i{position:absolute;width:11px;height:11px;margin:-5.5px;border-radius:50%;background:#ffe9a8;box-shadow:0 0 6px #ffcf4a,0 0 12px #ff9f1a;animation:chase 1.2s infinite steps(1)}
 @keyframes chase{0%,49%{opacity:1}50%,100%{opacity:.25;box-shadow:none}}
 .win .bulbs i{animation-duration:.24s;background:#fff}
+.hot .bulbs i{animation-duration:.16s}.party .bulbs i{animation-duration:.09s;background:#fff}
+.machine.party{animation:party .28s 9 alternate}@keyframes party{to{box-shadow:0 0 0 4px #ffd166,0 0 46px #ffd166,0 0 90px #ff4d6d}}
 .flag{position:absolute;top:-30px;font-size:30px;animation:wave 2s ease-in-out infinite;transform-origin:20% 100%}
 .flag.l{left:6px}.flag.r{right:6px;animation-delay:-1s}
 @keyframes wave{50%{transform:rotate(-8deg)}}
@@ -109,6 +111,7 @@ body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:
   
 </div>
 <div class="jp" id="jp"><div class="rays"></div><b>JACKPOT!</b></div>
+<script src="bgm.js?v=2026112201"></script>
 <script>
 (function(){
 'use strict';
@@ -136,7 +139,7 @@ function draw(r){
 /* 音效（預設關） */
 var AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return AC}
 function tone(f,f2,d,type,vol,delay){if(!sfx)return;var a=ac();if(!a)return;var t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(vol||.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
-$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}};
+$('sfx').onclick=function(){sfx=!sfx;this.textContent=sfx?'🔊':'🔇';if(sfx){ac();tone(660,0,.08,'sine',.06)}bgmSync()};
 /* 動畫迴圈 */
 var last=0,lastTick=[0,0,0];
 function loop(t){
@@ -174,6 +177,10 @@ function sync(){
 }
 window.betSync=sync;
 if(API){try{sfx=!!API.state(K).sfx;$('sfx').textContent=sfx?'🔊':'🔇'}catch(e){}}
+/* 背景音樂：跟著 🔊 開關；第一次點畫面時再開（瀏覽器規定要有點擊才能出聲）；切到背景就停 */
+function bgmSync(){if(!window.GBGM)return;if(sfx&&!document.hidden)GBGM.start(K);else GBGM.stop()}
+document.addEventListener('pointerdown',bgmSync,{once:true});document.addEventListener('visibilitychange',bgmSync);setTimeout(bgmSync,300);
+
 function play(retry){
   if(busy)return;
   if(!retry&&(!ST.login||ST.pending||ST.left==null||ST.left<=0||ST.coins<1))return;
@@ -183,19 +190,20 @@ function play(retry){
   $('msg').innerHTML=(retry?'確認上一局……':'轉轉轉……')+'<small>祝你好運，船長！</small>';
   tone(220,880,.35,'sawtooth',.04);
   reels.forEach(function(r,i){r.mode='spin';r.v=0;setTimeout(function(){r.v=26+i*2},i*90)});
+  if(window.GBGM){GBGM.tempo(1.4);GBGM.riser(1.2)}$('machine').classList.add('hot');   /* 轉動中：音樂加快、燈跑快、音調往上爬 */
   var t0=performance.now();
   (API?API.play(K,'spin',!!retry):fakeServer()).then(function(res){
     var wait=Math.max(0,1100-(performance.now()-t0));
     setTimeout(function(){
       if(!res||!res.ok||!res.bet){
         /* 失敗：滾輪隨便停下，顯示原因，不扣錢（伺服器沒有成立這一局，或要再確認） */
-        var n=0;reels.forEach(function(r,i){setTimeout(function(){stopAt(r,Math.floor(Math.random()*5),5,1,function(){if(++n===3){$('msg').innerHTML='⚠️ '+((res&&res.msg)||'發生錯誤')+'<small>金幣以錢包顯示為準</small>';busy=false;sync()}})},i*150)});
+        var n=0;reels.forEach(function(r,i){setTimeout(function(){stopAt(r,Math.floor(Math.random()*5),5,1,function(){if(++n===3){$('machine').classList.remove('hot');if(window.GBGM){GBGM.tempo(1);GBGM.heart(false)}$('msg').innerHTML='⚠️ '+((res&&res.msg)||'發生錯誤')+'<small>金幣以錢包顯示為準</small>';busy=false;sync()}})},i*150)});
         return;
       }
       var roll=res.bet.roll,near=roll[0]===roll[1];
       stopAt(reels[0],roll[0],7,1,function(){
         setTimeout(function(){stopAt(reels[1],roll[1],7,1,function(){
-          if(near){reels[2].el.classList.add('tense');$('near').classList.add('on');tone(330,660,.5,'triangle',.05)}
+          if(near){reels[2].el.classList.add('tense');$('near').classList.add('on');tone(330,660,.5,'triangle',.05);if(window.GBGM)GBGM.heart(true)}
           setTimeout(function(){stopAt(reels[2],roll[2],near?14:7,near?1.5:1,function(){$('near').classList.remove('on');finish(res.bet)})},near?150:120);
         })},120);
       });
@@ -203,6 +211,7 @@ function play(retry){
   });
 }
 function finish(bet){
+  $('machine').classList.remove('hot');if(window.GBGM){GBGM.tempo(1);GBGM.heart(false)}
   if(!API){ST.coins+=bet.paid-1;ST.left--}
   var dia=bet.dia||0,win=bet.paid+dia;
   if(win>=10){
@@ -210,7 +219,8 @@ function finish(bet){
     $('jp').classList.remove('on');void $('jp').offsetWidth;$('jp').classList.add('on');
     $('msg').innerHTML=dia?'💎 三顆鑽石！得到 '+dia+' 顆鑽石！<small>傳說中的鑽石寶藏！</small>':'🎉 三個一樣！回得 '+bet.paid+' 枚！<small>大豐收！寶藏都是你的</small>';
     [523,659,784,1047,1319,1568].forEach(function(f,i){tone(f,0,.25,'triangle',.08,i*.09)});
-    burst(26,dia?'💎':'🪙');
+    burst(44,dia?'💎':'🪙');if(window.GBGM)GBGM.boom();
+    var mc=$('machine');mc.classList.remove('party');void mc.offsetWidth;mc.classList.add('party');setTimeout(function(){mc.classList.remove('party')},2600);
   }else if(win>=1){
     var r=bet.roll,pair=r[0]===r[1]?[0,1]:r[0]===r[2]?[0,2]:[1,2];pair.forEach(function(i){reels[i].el.classList.add('hit')});
     $('machine').classList.add('win');

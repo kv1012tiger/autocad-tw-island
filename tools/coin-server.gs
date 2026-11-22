@@ -62,7 +62,7 @@ var RES = {
 };
 var RES_KEYS = ['fruit', 'iron', 'wood', 'stone'];
 /* 20 座物資島：[代號, 種類, 名稱, 再採間隔秒, 每次最少, 每次最多]（網頁 templates/island-home.html 有同一份，要一起改） */
-var ISL = [['r0','fruit','果園島',100,3,5],['r1','iron','礦山島',90,3,6],['r2','wood','森林島',80,3,7],['r3','stone','採石島',70,2,4],['r4','fruit','蘋果灣',80,3,6],['r5','iron','鐵砧島',60,2,6],['r6','wood','松林島',30,1,3],['r7','stone','石灰岩',30,1,4],['r8','wood','楓樹林',40,1,5],['r9','iron','紅岩礦坑',70,2,4],['r10','gold','金礦島',110,1,2],['r11','gold','金沙灣',110,1,2],['r12','gold','黃金谷',120,1,2],['r13','iron','黑曜礦脈',50,2,5],['r14','wood','竹林灣',50,2,6],['r15','stone','大理石岸',100,3,5],['r16','wood','橡木谷',40,1,4],['r17','gold','淘金河',120,1,2],['r18','wood','神木島',60,2,4],['r19','stone','礫石灘',90,3,6]].map(function (a) { return { id: a[0], t: a[1], name: a[2], gap: a[3], lo: a[4], hi: a[5] }; });
+var ISL = [['r0','stone','花崗岩島',100,3,5],['r1','iron','礦山島',90,3,6],['r2','wood','森林島',80,3,7],['r3','stone','採石島',70,2,4],['r4','iron','銅礦灣',80,3,6],['r5','iron','鐵砧島',60,2,6],['r6','wood','松林島',30,1,3],['r7','stone','石灰岩',30,1,4],['r8','wood','楓樹林',40,1,5],['r9','iron','紅岩礦坑',70,2,4],['r10','gold','金礦島',110,1,2],['r11','gold','金沙灣',110,1,2],['r12','gold','黃金谷',120,1,2],['r13','iron','黑曜礦脈',50,2,5],['r14','wood','竹林灣',50,2,6],['r15','stone','大理石岸',100,3,5],['r16','wood','橡木谷',40,1,4],['r17','gold','淘金河',120,1,2],['r18','wood','神木島',60,2,4],['r19','stone','礫石灘',90,3,6]].map(function (a) { return { id: a[0], t: a[1], name: a[2], gap: a[3], lo: a[4], hi: a[5] }; });
 var ISL_MAP = {};
 ISL.forEach(function (x) { ISL_MAP[x.id] = x; });
 /* 金礦島（t:'gold'）：採集拿的是金幣，不是物資。全島每天只有 GOLD_STOCK 枚（大家搶），每人每座每天最多採 GOLD_MAX 次，不會藏鑽石 */
@@ -1096,7 +1096,7 @@ function visStats_() {
 }
 function visitors_(isle) { return (isle && visStats_()[isle]) || { list: [], total: 0 }; }
 
-/* 排行榜：coin（目前金幣）、res（累計採集的物資）、dia（累計撿到的鑽石）。
+/* 排行榜：coin（目前金幣）、res（累計採集的物資）、dia（v61 起：手上現有的鑽石）。
    三份名單一起算好，在 Google 快取放 60 秒，期間不用重讀整張玩家表。 */
 var TOP_TTL = 60;
 function topLists_() {
@@ -1104,7 +1104,7 @@ function topLists_() {
   if (hit) return JSON.parse(hit);
   var rows = rows_(players_()), out = {}, isl = rows.map(isleOf_), scoreOf = {}; var nowT = Date.now();
   rows.forEach(function (r, x) { scoreOf[x] = isleScore_(isl[x]); });
-  [['coin', C.bal], ['res', C.tres], ['dia', C.tdia], ['isle', -1]].forEach(function (kc) {
+  [['coin', C.bal], ['res', C.tres], ['dia', C.dia], ['isle', -1]].forEach(function (kc) {   // v61：鑽石榜改看手上現有的鑽石
     var k = kc[0], col = kc[1];
     var val = function (r) { return col < 0 ? scoreOf[rows.indexOf(r)] : num_(r[col]); };
     out[k] = rows
