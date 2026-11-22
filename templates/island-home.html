@@ -1538,7 +1538,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
     <div class="help-body" id="helpBody">
       <section class="hp" data-p="0"><ul>
         <li>📅 <b>每天登島</b>送 3 枚 🪙；連續第 2 天 4 枚，第 3 天起每天 5 枚。同一帳號一天只算一次，換手機也一樣。</li>
-        <li>🎮 <b>打遊戲</b>：遊戲島的兩款遊戲，每場分數 150 分送 1 枚、500 分 2 枚、1000 分 3 枚（每個遊戲每天最多 8 枚）。</li>
+        <li>🎮 <b>打遊戲</b>：指令快打島、指令跑酷島的遊戲，每場分數 150 分送 1 枚、500 分 2 枚、1000 分 3 枚（每個遊戲每天最多 8 枚）。</li>
         <li>📖 <b>爬文</b>：每看 2 篇不同文章，有 7 成機率再送 1 枚（每天最多 6 枚）。</li>
         <li>⏱️ <b>在線</b>：在島上每待 5 分鐘送 1 枚（每天最多 3 枚）。</li>
         <li>💬 <b>問答島</b>：翻開一座島的 3 張問答卡，拿 1 枚（每座島每個帳號一次）。</li>
@@ -1581,7 +1581,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
         <li>🏆 <b>排行榜</b>有四頁：金幣、物資、鑽石、島主。</li>
       </ul></section>
       <section class="hp" data-p="5" hidden><ul>
-        <li>🎮 <b>遊戲島</b>有兩個 AutoCAD 指令遊戲：指令快打（60 秒）和指令跑酷（連擊），各自有全站排行榜。</li>
+        <li>🎮 <b>指令快打島</b>（60 秒點指令）和 <b>指令跑酷島</b>（看提示跑向正確指令）各有一個 AutoCAD 指令遊戲和全站排行榜。</li>
         <li>🔮 占卜島可以搜尋全部文章與問答，還能每天各抽一張六種運勢的塔羅牌（附 78 張牌義說明）；🏰 城堡和 ⛵ 報名碼頭有課程介紹與報名方式。</li>
         <li>🎯 想再看這份說明，按上方的 📖 就能隨時打開。</li>
       </ul></section>
@@ -1710,7 +1710,9 @@ var RTYPE=[
   taps:10,art:'🪨',tool:'🔨',parts:['💥','▪️','💥','▫️'],fin:['🪨','🪨','💥','✨'],snd:'crack',
   st:{land:'#e3cf98',deep:'#b0905a',tree:'#7a8a3a',leaf:'#b8c46a',sand:['#c9a464','#e2c78a','#f7e6bb'],dirt:'#8a6a3a',n:3,glow:'#eab308'}}
 ];
-var GAME_SPOT={k:'game',e:'🎮',name:'遊戲島',sub:'指令快打・指令跑酷',c:'#38bdf8',g:['#7dd3fc','#1e3a8a'],dc:['🕹️','🏆','⭐'],res:[['🤖','w'],['👾','w'],['🦜','f']]};
+/* 遊戲島拆成兩座：n=0 指令快打島（網址 #game，舊連結照樣能用）、n=1 指令跑酷島（#game-2） */
+var GAME_SPOTS=[{k:'game',n:0,e:'⌨️',name:'指令快打島',sub:'60 秒點出正確指令',c:'#fbbf24',g:['#fde68a','#1e3a8a'],dc:['⌨️','🏆','⭐'],res:[['🤖','w'],['👾','w'],['🦜','f']]},
+  {k:'game',n:1,e:'🏃',name:'指令跑酷島',sub:'看提示跑向正確指令',c:'#38bdf8',g:['#7dd3fc','#1e3a8a'],dc:['🏃','🏆','⭐'],res:[['🤖','w'],['👾','w'],['🦜','f']]}];
 var GAME_BASE='https://kv1012tiger.github.io/autocad-game/';
 var GAMES=[
  {e:'⌨️',name:'AutoCAD 指令快打',url:GAME_BASE,img:GAME_BASE+'thumb.jpg',c:'#ffd166',tags:['60 秒','點選指令','全站排行榜'],
@@ -1746,7 +1748,7 @@ SP.splice(2,0,MSG_SPOT);
   for(var p=0;p<total;p++){if(at[p])SP.push(at[p]);else if(bi<base.length)SP.push(base[bi++])}
   while(bi<base.length)SP.push(base[bi++]);
 })();
-SP.splice(9,0,GAME_SPOT);
+SP.splice(9,0,GAME_SPOTS[0]);SP.splice(Math.min(SP.length,17),0,GAME_SPOTS[1]);
 var MINE_SPOT={k:'mine',e:'🏝️',name:'我的小島',sub:'蓋房子・種菜・養寵物',c:'#fde047',g:['#bef264','#4d7c0f'],dc:['🏠','🥕','🌻'],res:[['🐔','w'],['🐑','w'],['🦋','f']]};
 var PET_SPOT={k:'pets',e:'🐾',name:'寵物島',sub:'領養狗狗・貓貓・動物',c:'#fb7185',g:['#fda4af','#9f1239'],dc:['🦴','🧶','💕'],res:[['🐶','w'],['🐱','w'],['🦜','f']]};
 SP.splice(1,0,MINE_SPOT);SP.splice(13,0,PET_SPOT);
@@ -2137,7 +2139,7 @@ function visit(i,after){
   busy=true;centerOn(i,true);placeBoat(i);playSfx('row');
   setTimeout(function(){busy=false;go()},900);
 }
-function openSpot(i){var s=SP[i];if(s.k==='forum'){location.hash='isle-'+encodeURIComponent(s.id);return}if(s.k==='isle'||s.k==='res'||s.k==='link')openPanel(s.k,s.n);else openPanel(s.k,0)}
+function openSpot(i){var s=SP[i];if(s.k==='forum'){location.hash='isle-'+encodeURIComponent(s.id);return}if(s.k==='isle'||s.k==='res'||s.k==='link'||s.k==='game')openPanel(s.k,s.n);else openPanel(s.k,0)}
 /* 縮放：手勢進行中只做 GPU 變形，放開後才一次更新版面；最小可看整張地圖 */
 var TKN=10.2,Z=1,Zmin=.3,Zmax=1.6,baseFont=20,zRaf=0,pinch=null,zg=null,wheelT=0;
 function fitZoom(){Zmin=Math.min(world.clientWidth/G.w,world.clientHeight/G.h)}
@@ -2354,6 +2356,7 @@ function route(){
   hideScene();
   if((m=h.match(/^qa-(\d+)$/))&&ISLES[+m[1]]){openPanel('isle',+m[1]);placeBoat(ISLES[+m[1]].si,true)}
   else if(h==='tarot'){openPanel('search',1);placeBoat(spotIdx('search'),true)}
+  else if(h==='game-2'){openPanel('game',1);placeBoat(GAME_SPOTS[1].si,true)}
   else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'){openPanel(h);placeBoat(spotIdx(h),true)}
   else if((m=h.match(/^res-(\d+)$/))&&RESI[+m[1]]){openPanel('res',+m[1]);placeBoat(RESI[+m[1]].si,true)}
   else if((m=h.match(/^link-(\d+)$/))&&LINK_SPOTS[+m[1]]){openPanel('link',+m[1]);placeBoat(LINK_SPOTS[+m[1]].si,true)}
@@ -2364,7 +2367,7 @@ $('sceneBack').addEventListener('click',function(){location.hash=''});
 $('sceneBackBottom').addEventListener('click',function(){location.hash=''});
 
 /* ---------- 分享連結與收藏島 ---------- */
-function spotHash(s){return s.k==='forum'?'isle-'+s.id:s.k==='isle'?'qa-'+s.n:s.k==='res'?'res-'+s.n:s.k==='link'?'link-'+s.n:s.k}
+function spotHash(s){return s.k==='forum'?'isle-'+s.id:s.k==='isle'?'qa-'+s.n:s.k==='res'?'res-'+s.n:s.k==='link'?'link-'+s.n:s.k==='game'&&s.n?'game-2':s.k}
 function shareHash(hash,title){
   var url=location.href.split('#')[0]+'#'+hash;
   if(navigator.share&&matchMedia('(pointer: coarse)').matches){navigator.share({title:title+'｜論壇資源島',url:url}).catch(function(){});return}
@@ -3233,27 +3236,29 @@ function betPlay(k,choice,retry){
   }).catch(function(){state.busy=false;return {ok:false,msg:'網路中斷，請按「確認上一局結果」'}});
 }
 pBody.addEventListener('click',function(e){var t=e.target.closest('button');if(!t||(V.t!=='slot'&&V.t!=='rps'))return;var k=V.t;if(t.hasAttribute('data-bet-login')){COINS.need(function(){renderBet(k)});return}if(t.hasAttribute('data-bet-retry')){betPlay(k,'',true);return}if(t.dataset.betChoice)betPlay(k,t.dataset.betChoice,false)});
-function renderGame(){
-  pBody.innerHTML='<div class="ph" style="--c:#38bdf8"><span class="ph-e">🎮</span><div><div class="p-kicker">GAME ISLAND・遊戲島</div><h3 id="pTitle">遊戲島</h3><p>邊玩邊記 AutoCAD 指令，挑戰全站排行榜</p></div></div>'+
-    GAMES.map(function(g,i){
-      return '<div class="gm" style="--gc:'+g.c+'"><button class="gm-img" type="button" data-play="'+i+'" aria-label="開始玩 '+esc(g.name)+'"><img src="'+g.img+'" alt="" loading="lazy"><span>▶</span></button>'+
-        '<div class="gm-b"><h4>'+g.e+' '+esc(g.name)+'</h4><p>'+esc(g.desc)+'</p><div class="gm-tags">'+g.tags.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>'+
-        '<div class="row2"><button class="btn btn-primary btn-sm" type="button" data-play="'+i+'">▶ 開始遊戲</button><a class="btn btn-ghost btn-sm" href="'+g.url+'" target="_blank" rel="noopener">↗ 另開視窗</a></div></div></div>';
-    }).join('')+
-    '<div class="gm-reward">🪙 <b>打遊戲賺金幣</b>：每玩完一場，分數 150 分以上送 1 枚、500 分以上 2 枚、1000 分以上 3 枚；每個遊戲每天最多 8 枚（要先登島，遊戲結束後按「領取金幣獎勵」）。</div><p class="fav-note">兩個遊戲各有自己的排行榜，玩完可以留下名字。手機玩跑酷建議轉成橫向。</p>';
-  $('pStep').textContent='🎮 遊戲島';
-  footSimple('← 回地圖','🍎 果園島 →');
+function renderGame(n){
+  n=n?1:0;var g=GAMES[n],o=GAMES[1-n],sp=GAME_SPOTS[n];
+  pBody.innerHTML='<div class="ph" style="--c:'+sp.c+'"><span class="ph-e">'+sp.e+'</span><div><div class="p-kicker">GAME ISLAND・遊戲島</div><h3 id="pTitle">'+esc(sp.name)+'</h3><p>'+esc(g.desc)+'</p></div></div>'+
+    '<div class="gm" style="--gc:'+g.c+'"><button class="gm-img" type="button" data-play="'+n+'" aria-label="開始玩 '+esc(g.name)+'"><img src="'+g.img+'" alt="" loading="lazy"><span>▶</span></button>'+
+      '<div class="gm-b"><h4>'+g.e+' '+esc(g.name)+'</h4><div class="gm-tags">'+g.tags.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>'+
+      '<div class="row2"><button class="btn btn-primary btn-sm" type="button" data-play="'+n+'">▶ 開始遊戲</button><a class="btn btn-ghost btn-sm" href="'+g.url+'" target="_blank" rel="noopener">↗ 另開視窗</a></div></div></div>'+
+    '<div class="gm-reward">🪙 <b>打遊戲賺金幣</b>：每玩完一場，分數 150 分以上送 1 枚、500 分以上 2 枚、1000 分以上 3 枚；這個遊戲每天最多 8 枚（要先登島，遊戲結束後按「領取金幣獎勵」）。</div>'+
+    '<p class="fav-note">'+(n?'手機玩跑酷建議轉成橫向。':'')+'遊戲有自己的全站排行榜，玩完可以留下名字。</p>'+
+    '<div class="p-sec"><h4>另一座遊戲島</h4><div class="links"><button class="lk" type="button" data-ggo="'+(1-n)+'"><i>'+GAME_SPOTS[1-n].e+'</i><span><b>'+esc(GAME_SPOTS[1-n].name)+'</b><small>'+esc(o.name)+'</small></span></button></div></div>';
+  $('pStep').textContent=sp.e+' '+sp.name;
+  footSimple('← 回地圖',n?'🍎 果園島 →':'🏃 指令跑酷島 →');
 }
 var readerBackTxt=$('readerBackT').textContent;
 function openGame(i){
   var g=GAMES[i];if(!g)return;
   bgmStop();
-  $('readerBackT').textContent='回遊戲島';readerT.textContent=g.e+' '+g.name;reader.hidden=false;reader.classList.add('game');
+  $('readerBackT').textContent='回'+(GAME_SPOTS[i]?GAME_SPOTS[i].name:'遊戲島');readerT.textContent=g.e+' '+g.name;reader.hidden=false;reader.classList.add('game');
   readerF.contentWindow.location.replace(g.url);
   history.pushState({reader:1},'');
 }
 window.addEventListener('popstate',function(){$('readerBackT').textContent=readerBackTxt;reader.classList.remove('game')});
 pBody.addEventListener('click',function(e){
+  var gg=e.target.closest('[data-ggo]');if(gg&&V.t==='game'){var gk=+gg.dataset.ggo;openPanel('game',gk);placeBoat(GAME_SPOTS[gk].si);return}
   var t=e.target.closest('[data-play]');if(!t||V.t!=='game')return;
   openGame(+t.dataset.play);
 });
@@ -4710,7 +4715,7 @@ function applySync(code){
 }
 function actsHTML(){
   var s=null,h='',title='';
-  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='game'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
+  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='game')s=GAME_SPOTS[V.i]||GAME_SPOTS[0];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
   if(V.t==='hut'&&SCN){h=spotHash(SCN)+'/'+V.i;title=SCN.name+'・'+SCN.huts[V.i].name}
   else if(s){h=spotHash(s);title=s.name}
   if(!h)return '';
@@ -4719,7 +4724,7 @@ function actsHTML(){
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
-  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame();else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
+  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame(V.i);else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
   pBody.scrollTop=0;
@@ -4728,7 +4733,7 @@ function render(dir){
 function openPanel(t,i,dir){
   var wasBet=panel.classList.contains('open')&&(V.t==='slot'||V.t==='rps'||V.t==='gacha'),isBet=t==='slot'||t==='rps'||t==='gacha';
   V={t:t,i:i||0};render(dir);
-  var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?['game','遊戲島']:t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='link'?['link-'+V.i,LINK_SPOTS[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
+  var vk=t==='isle'?['qa-'+V.i,ISLES[V.i].name]:t==='home'?['home','蘋果爸小島']:t==='castle'?['castle','AI課程城堡']:t==='dock'?['dock','報名碼頭']:t==='msg'?['msg','留言碼頭']:t==='game'?(V.i?['game-2','指令跑酷島']:['game','指令快打島']):t==='pets'?['pets','寵物島']:t==='res'?['res-'+RESI[V.i].n,RESI[V.i].name]:t==='link'?['link-'+V.i,LINK_SPOTS[V.i].name]:t==='shop'?['shop','商店島']:t==='search'?['search','占卜島']:null;
   if(vk){var rv=t==='res'&&$('rsVis');if(rv)COINS.visit(vk[0],vk[1],rv);else{var ph=pBody.querySelector('.ph,.home-top');if(ph){var vd=document.createElement('div');ph.parentNode.insertBefore(vd,ph.nextSibling);COINS.visit(vk[0],vk[1],vd)}}}
   if(!panel.classList.contains('open')){
     opener=document.activeElement;
@@ -4765,6 +4770,7 @@ pNext.addEventListener('click',function(){
   else if(V.t==='res'){openPanel('res',(V.i+1)%RESI.length);placeBoat(RESI[V.i].si)}
   else if(V.t==='link'){openPanel('link',(V.i+1)%LINK_SPOTS.length);placeBoat(LINK_SPOTS[V.i].si)}
   else if(V.t==='msg')openPanel('home');
+  else if(V.t==='game'&&!V.i){openPanel('game',1);placeBoat(GAME_SPOTS[1].si)}
   else if(V.t==='game'){openPanel('res',0);placeBoat(RESI[0].si)}
   else if(V.t==='voyage')voyageRandom();
   else if(V.t==='mine'){if(V.i===1)openPanel('mine',0);else{openPanel('pets');placeBoat(PET_SPOT.si)}}
@@ -4948,6 +4954,7 @@ var seen=false;try{seen=sessionStorage.getItem('aikb-intro')==='1'}catch(e){}
 var HASH=location.hash.replace(/^#/,''),HASH_SP=-1,hm;
 if((hm=HASH.match(/^isle-([^/]+)/)))SP.forEach(function(s){if(s.k==='forum'&&s.id===decodeURIComponent(hm[1]))HASH_SP=s.si});
 else if((hm=HASH.match(/^qa-(\d+)$/))&&ISLES[+hm[1]])HASH_SP=ISLES[+hm[1]].si;
+else if(HASH==='game-2')HASH_SP=GAME_SPOTS[1].si;
 else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='gacha'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
 else if(HASH==='tarot')HASH_SP=spotIdx('search');
 else if((hm=HASH.match(/^res-(\d+)$/))&&RESI[+hm[1]])HASH_SP=RESI[+hm[1]].si;
