@@ -1084,8 +1084,20 @@ button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 /* 我的小島 */
 /* 我的小島：跟資源島同一種畫法——方形羊皮紙陸地（草地＋咖啡土＋米色沙邊），底部木棧橋，旁邊停著自己的船 */
 .mi-sea{position:relative;margin:12px 0 6px;padding-bottom:112px;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 100%,#1f8fbf,#0b4f78 75%)}
-.mi-scene{position:relative;height:430px;margin:0}
-@media (max-width:560px){.mi-scene{height:392px}}
+.mi-scene{position:relative;height:540px;margin:0}
+@media (max-width:560px){.mi-scene{height:500px}}
+/* 五行神殿：島的右上角，擁有哪一種神獸就點亮那顆光球；沒有神獸時整座是灰暗的石頭，五種到齊整座發金光 */
+.mi-temple{position:absolute;left:75%;top:7%;width:150px;margin-left:-75px;text-align:center;line-height:1;pointer-events:none;z-index:1}
+.mi-temple svg{display:block;width:150px;height:auto;overflow:visible;filter:drop-shadow(0 6px 5px rgba(0,0,0,.35))}
+.mi-temple.dim svg .tp{filter:grayscale(1) brightness(.72)}
+.mi-temple .orb{fill:#3d434b;stroke:#23272d;stroke-width:1}
+.mi-temple .orb.on{fill:var(--oc);stroke:#fff;stroke-width:1.2;filter:drop-shadow(0 0 5px var(--oc)) drop-shadow(0 0 9px var(--oc));animation:tpGlow 2.4s ease-in-out infinite alternate}
+@keyframes tpGlow{to{opacity:.72}}
+.mi-temple.full svg{filter:drop-shadow(0 0 14px #ffd54f) drop-shadow(0 6px 5px rgba(0,0,0,.35))}
+.mi-temple em{position:relative;display:inline-block;margin-top:2px;padding:1px 8px;border-radius:8px;font-style:normal;font-size:12px;font-weight:800;color:#1f3d12;background:rgba(255,255,255,.82);white-space:nowrap}
+.mi-temple.dim em{color:#4b5563}
+@media (prefers-reduced-motion:reduce){.mi-temple .orb.on{animation:none}}
+@media (max-width:560px){.mi-temple{left:79%;width:112px;margin-left:-56px;top:8%}.mi-temple svg{width:112px}.mi-temple em{font-size:11px;padding:1px 6px}}
 /* .mi-land 只是「活動範圍」（果樹、木材樹、寵物都排在這裡面，剛好縮在畫出來的草地內）；島的外形由 .mi-shape 這張 SVG 畫（跟資源島同一套畫法：不規則外緣、沙灘、土層、草地，邊緣一叢一叢的樹） */
 .mi-land{position:absolute;left:12%;right:12%;top:10%;bottom:13%;pointer-events:none}
 .mi-shape{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -3658,11 +3670,29 @@ function mineTop(d){return '<div class="mi-top"><button class="btn btn-primary b
 function strangerBox(){return '<div class="p-sec"><h4>🤝 先成為好友</h4><p class="mi-note">你是第一次來這座島。加好友後就能幫他澆水、送禮、傳悄悄話；不是好友只能參觀。</p><button class="btn btn-primary btn-sm" type="button" data-maddfriend>➕ 加好友</button></div>'}
 var TIERN=['空地','小島','中型島','大島'];
 function landTier(d){var n=d.h+Math.min(3,d.fields||0)+d.deco.length+Math.min(2,(d.trees||[]).length),t=n<1?0:n<3?1:n<6?2:3;if(d.deco.indexOf('tower')>=0)t=Math.max(t,2);return t}
+/* 五行神殿（我的小島右上角）：依島上有的神獸點亮水火木金土五顆光球 */
+var TEMPLE_EL=[['water','#4fc3f7','水'],['fire','#ff7043','火'],['wood','#66bb6a','木'],['metal','#ffd54f','金'],['earth','#d7a86e','土']];
+function templeHTML(d){
+  var have={};(d.pets||[]).forEach(function(p){var e=PV_BEAST[p.k];if(e)have[e]=1});
+  var n=TEMPLE_EL.filter(function(e){return have[e[0]]}).length,gold=n===5,st=gold?'#f3d27a':'#c9cdd3',sh=gold?'#c9a24a':'#8d939b',dk=gold?'#8a6a24':'#5f656d';
+  var o='<svg viewBox="0 0 150 128" aria-hidden="true"><g class="tp">'+
+    '<path d="M6 104h138l-6 10H12z" fill="'+sh+'"/><path d="M14 96h122v8H14z" fill="'+st+'"/><path d="M22 89h106v7H22z" fill="'+sh+'"/>'+
+    '<path d="M18 38L75 8l57 30z" fill="'+st+'" stroke="'+dk+'" stroke-width="2" stroke-linejoin="round"/>'+
+    '<path d="M38 34L75 15l37 19z" fill="'+sh+'"/>'+
+    '<path d="M20 38h110v8H20z" fill="'+st+'" stroke="'+dk+'" stroke-width="1.5"/>'+
+    '<path d="M62 56h26v33H62z" fill="#2b2f36"/><path d="M62 56a13 10 0 0 1 26 0z" fill="#2b2f36"/>';
+  [30,50,100,120].forEach(function(x){o+='<path d="M'+(x-6)+' 46h12v43h-12z" fill="'+st+'" stroke="'+dk+'" stroke-width="1.2"/><path d="M'+(x-2)+' 48v39" stroke="'+sh+'" stroke-width="1.5"/><path d="M'+(x-8)+' 46h16v3h-16zM'+(x-8)+' 86h16v3h-16z" fill="'+sh+'"/>'});
+  o+='</g>';
+  TEMPLE_EL.forEach(function(e,i){var x=19+i*28,on=have[e[0]];
+    o+='<path d="M'+(x-5)+' 116h10v8h-10z" fill="'+(gold?'#c9a24a':'#7b8189')+'"/><circle class="orb'+(on?' on':'')+'" style="--oc:'+e[1]+'" cx="'+x+'" cy="111" r="6"/>'});
+  return '<div class="mi-temple'+(n?'':' dim')+(gold?' full':'')+'" title="五行神殿：取得神獸就會點亮對應的光球">'+o+'</svg><em>⛩️ 五行神殿 '+n+' / 5</em></div>';
+}
 function sceneHTML(d){
   var t=3,o='<div class="mi-sea"><div class="mi-scene"><div class="mi-land t3"></div>';   /* 陸地一律是整片大陸地（不再依等級由小變大） */
   if(t>=1)o+='<span class="mi-sc" style="left:20%;top:80%;font-size:20px">🌼</span><span class="mi-sc" style="left:70%;top:82%;font-size:18px">🌿</span>';
   if(t>=2)o+='<span class="mi-sc" style="left:40%;top:76%;font-size:22px">🌸</span><span class="mi-sc" style="left:79%;top:66%;font-size:26px">🪨</span>';
-  if(t>=3)o+='<span class="mi-sc" style="left:73%;top:42%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
+  if(t>=3)o+='<span class="mi-sc" style="left:88%;top:46%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
+  o+=templeHTML(d);
   o+='<div class="mi-house lv'+d.h+'"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
   var dp={tower:[52,8],fountain:[14,54]},dl=d.dl||{};   /* 瞭望塔在小屋右上、噴水池在小屋正下方，都緊靠小屋 */
@@ -3742,7 +3772,7 @@ var PV_SPD={hamster:30,rabbit:40,turtle:10,dog:44,cat:30,parrot:26,fox:42,panda:
 var PW={sel:null,selId:null,st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 function pwGeom(sc,t){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect(),o=[];
-  sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
+  sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco,.mi-temple').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
   return {sc:sc,t:t,w:b.width,h:b.height,cx:l.left-b.left+l.width/2,cy:l.top-b.top+l.height/2,a:l.width/2*.9,b:l.height/2*.88,r:o};
 }
 function inLand(u,v){return Math.pow(Math.abs(u),6)+Math.pow(Math.abs(v),6)<=1}   /* 圓角方形陸地（比橢圓寬很多，四個角也能用） */
@@ -4054,7 +4084,7 @@ function fitIslandItems(){
   var farm=sc.querySelector('.mi-fields'),farmBox=farm?rect(farm):null;
   var trees=Array.from(sc.querySelectorAll('.mi-fruit')),house=sc.querySelector('.mi-house'),houseBox=house?rect(house):null;
   /* 噴水池、瞭望塔（含等級徽章、施工中）：果樹一定要讓開，不可蓋住 */
-  var decoBoxes=Array.from(sc.querySelectorAll('.mi-deco:not(.mi-fruit),.mi-deco:not(.mi-fruit) .mi-lv')).map(rect);
+  var decoBoxes=Array.from(sc.querySelectorAll('.mi-deco:not(.mi-fruit),.mi-deco:not(.mi-fruit) .mi-lv,.mi-temple')).map(rect);
   var base=trees.map(function(el){return {x:parseFloat(el.style.left),y:parseFloat(el.style.top),size:parseFloat(el.style.fontSize)}});
   /* 位置記憶：只要「結構」沒變（島、版面寬度、田／設施／房子、果樹的棵數與大小），重畫時就沿用上次排好的位置。
      摘果、果實長出、倒數文字、每 30 秒重畫都不會讓樹跑掉；蓋新東西或樹長大才重新排。 */
@@ -4089,7 +4119,7 @@ function fitIslandItems(){
     if(success)break;
   }
   if(!fruitCached)trees.forEach(function(el){FIT.t[el.dataset.ti]=[parseFloat(el.style.left),parseFloat(el.style.top),parseFloat(el.style.fontSize)]});
-  var fruit=trees.map(function(el){var r=rect(el);return [r[0],r[1]-12,r[2]+10,r[3]]}),obstacles=Array.from(sc.querySelectorAll('.mi-house,.mi-deco:not(.mi-fruit),.mi-deco:not(.mi-fruit) .mi-lv')).map(rect),placed=[],angles=[-110,-45,5,45,95];
+  var fruit=trees.map(function(el){var r=rect(el);return [r[0],r[1]-12,r[2]+10,r[3]]}),obstacles=Array.from(sc.querySelectorAll('.mi-house,.mi-temple,.mi-deco:not(.mi-fruit),.mi-deco:not(.mi-fruit) .mi-lv')).map(rect),placed=[],angles=[-110,-45,5,45,95];
   var overflow=[],liveW={};
   function wildOk(box){
     var ok=true;
