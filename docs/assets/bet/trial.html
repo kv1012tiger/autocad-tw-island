@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>神獸試煉島</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Chakra+Petch:wght@600;700&display=swap">
+<style>
+/* 版面：深海夜色的一欄手機遊戲畫面；上方神獸卡、下方分頁（關卡／碎片／合成／圖鑑） */
+:root{
+  --sea:#08202e; --sea2:#0e3346; --panel:#123e55; --line:#2a6683;
+  --fg:#eaf6fb; --muted:#9cc3d4; --gold:#ffc94a; --gold2:#ff9f1c;
+  --ok:#5ee08a; --bad:#ff6b6b;
+  --water:#4fc3f7; --fire:#ff7043; --wood:#66bb6a; --metal:#ffd54f; --earth:#c49a6c;
+  --f-body:"Noto Sans TC",system-ui,sans-serif; --f-num:"Chakra Petch","Noto Sans TC",monospace;
+  color-scheme:dark;
+}
+html,body{background:transparent;color:var(--fg);margin:0}
+body{font-family:var(--f-body);font-size:15px;line-height:1.55;
+  }
+.wrap{max-width:640px;margin:0 auto;padding-block:4px 16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.35rem;margin:0;font-weight:900;letter-spacing:.02em;text-wrap:balance}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:900}
+.beta{display:inline-block;font-size:.72rem;font-weight:700;color:var(--sea);background:var(--gold);border-radius:99px;padding:1px 8px;margin-left:6px;vertical-align:3px}
+.sub{color:var(--muted);font-size:.86rem;margin:2px 0 0}
+.box{background:linear-gradient(180deg,var(--panel),var(--sea2));border:1px solid var(--line);border-radius:16px;padding:14px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;color:#3a2200;
+  background:linear-gradient(180deg,var(--gold),var(--gold2));box-shadow:0 3px 0 #b86a00}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b86a00}
+.btn:disabled{filter:grayscale(1) brightness(.6);cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);box-shadow:none}
+.btn:focus-visible,.tab:focus-visible,.opt:focus-visible{outline:3px solid #fff;outline-offset:2px}
+/* 分頁 */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;
+  background:var(--sea);padding:6px 0}
+
+.tab{font:inherit;font-weight:700;font-size:.88rem;padding:9px 2px;border-radius:12px;border:1px solid var(--line);background:var(--sea2);color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--gold);color:#3a2200;border-color:var(--gold)}
+.tab .dot{display:inline-block;min-width:18px;font-size:.72rem;background:var(--bad);color:#fff;border-radius:99px;margin-left:3px}
+/* 今日狀態 */
+.stat{display:flex;gap:10px;flex-wrap:wrap}
+.stat>div{flex:1 1 120px;background:var(--sea);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat b{font-size:1.25rem}
+.stat small{display:block;color:var(--muted);font-size:.76rem}
+/* 碎片（神獸圖切三段：頭＝上、身＝中、腳＝下） */
+.part{position:relative;width:52px;height:52px;border-radius:10px;background:var(--sea);border:1px solid var(--line);flex:none;overflow:hidden}
+.part .ghost{opacity:.18;filter:grayscale(1)}
+.part.head .lit{clip-path:inset(0 0 55% 0)}.part.body .lit{clip-path:inset(28% 0 28% 0)}.part.foot .lit{clip-path:inset(55% 0 0 0)}
+.part::after{content:"";position:absolute;left:3px;right:3px;border:2px dashed var(--gold);border-radius:6px;pointer-events:none}
+.part.head::after{top:3px;height:22px}.part.body::after{top:15px;height:22px}.part.foot::after{bottom:3px;height:22px}
+.part.none .lit{display:none}.part.none::after{border-color:var(--line)}
+.prow{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.prow:first-of-type{border-top:0}
+.pname{font-weight:900}.pname small{font-weight:400;color:var(--muted);margin-left:4px}
+.pcells{display:flex;gap:8px;flex-wrap:wrap}
+.pcell{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.74rem;color:var(--muted)}
+.pcell b{color:var(--fg)}
+.emo{font-size:40px;width:56px;height:56px;display:grid;place-items:center;border-radius:14px;background:var(--sea);border:2px solid var(--line)}
+/* 關卡 */
+.q{font-size:1.15rem;font-weight:900;margin:6px 0 12px;min-height:3em;text-wrap:balance}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{font:inherit;font-family:var(--f-num);font-size:1.05rem;letter-spacing:.04em;padding:14px 6px;border-radius:12px;border:1px solid var(--line);background:var(--sea);color:var(--fg);cursor:pointer}
+.opt.txt{font-family:var(--f-body);font-size:.92rem;letter-spacing:0}
+.diffbar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:var(--sea);border:1px solid var(--gold);border-radius:12px;padding:8px 10px;margin:6px 0}
+.opt.right{background:#1e5c3a;border-color:var(--ok)}.opt.wrong{background:#5c1e1e;border-color:var(--bad)}
+.timer{height:8px;border-radius:99px;background:var(--sea);overflow:hidden;margin:6px 0}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--gold),var(--bad));transform-origin:left}
+.prog{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem}
+.drop{display:flex;align-items:center;gap:12px;background:var(--sea);border:1px dashed var(--gold);border-radius:14px;padding:12px;margin-top:10px}
+/* 合成 */
+.forge{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.fcard{background:var(--sea);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.fcard.ready{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.stack{display:flex;flex-direction:column;gap:2px}
+.rate{font-size:.8rem;color:var(--muted)}.rate b{color:var(--gold);font-size:1rem}
+.seal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(3,14,20,.86);padding:20px}
+.seal-in{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:340px}
+.orb{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;font-size:84px;
+  background:radial-gradient(circle at 35% 30%,#fff6,transparent 45%),radial-gradient(circle,var(--c,var(--gold)) 0,transparent 70%)}
+.orb.spin{animation:spin 1.6s ease-in-out}
+@keyframes spin{0%{transform:scale(.6) rotate(0)}60%{transform:scale(1.15) rotate(540deg)}100%{transform:scale(1) rotate(720deg)}}
+.big{font-size:1.4rem;font-weight:900}
+/* 神獸卡 */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.bcard{--c:var(--gold);position:relative;border-radius:18px;padding:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 30%,var(--panel)),var(--sea2) 70%);border:2px solid var(--c);display:flex;flex-direction:column;gap:8px}
+.bhead{display:flex;gap:12px;align-items:center}
+.bhead .emo{border-color:var(--c);font-size:44px}
+.stars{color:var(--gold);letter-spacing:2px}
+.hp{display:flex;align-items:baseline;gap:6px}.hp b{font-size:1.9rem;color:var(--ok)}
+.affl{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:3px}.hpbar.aff i{background:linear-gradient(90deg,#ff8fb1,#ffc1d6)}
+.hpbar{height:10px;border-radius:99px;background:var(--sea);overflow:hidden}.hpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),#b6ff8a)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.84rem;color:var(--muted)}.kv b{color:var(--fg)}
+.formula{font-size:.78rem;color:var(--muted);background:var(--sea);border-radius:10px;padding:6px 8px;overflow-x:auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn small{font-weight:400;font-size:.75rem;opacity:.85}
+.btn.sm0{padding:6px 12px;font-size:.85rem}
+.btn.sm{padding:5px 10px;font-size:.8rem;margin-left:auto}
+.clist{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:8px;font-size:.84rem}
+.citem{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--sea);border-radius:10px;padding:6px 8px}
+.citem .stars{font-size:.78rem;letter-spacing:1px}
+.cbtns{display:flex;gap:6px;margin-left:auto}.cbtns .btn.sm{margin-left:0}
+.reels{display:flex;gap:8px;justify-content:center;font-size:2.4rem;margin:6px 0 10px}.reels span{width:64px;height:64px;display:grid;place-items:center;background:var(--sea);border:2px solid var(--line);border-radius:14px}
+.resline{font-size:.85rem;color:var(--muted);margin-top:6px}
+.coll{font-size:.85rem;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem}.tbl td,.tbl th{border-bottom:1px solid var(--line);padding:5px 4px;text-align:left}
+.tblw{overflow-x:auto}
+.log{font-size:.8rem;color:var(--muted);max-height:150px;overflow:auto;margin:0;padding-left:18px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:#3a2200;font-weight:900;padding:10px 18px;border-radius:99px;z-index:30;max-width:90vw;text-align:center}
+.empty{color:var(--muted);text-align:center;padding:18px 6px}
+/* 神獸圖（取自扭蛋島） */
+.bfx{animation:bfx 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes bfx{0%,100%{opacity:.25;transform:translateY(2px) scale(.7)}50%{opacity:1;transform:translateY(-3px) scale(1.1)}}
+.wg{transform-box:fill-box;transform-origin:70% 10%;animation:flap .3s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(-.6) rotate(-16deg)}}
+.flt{animation:flt 2s ease-in-out infinite alternate}
+@keyframes flt{to{transform:translateY(-8px)}}
+.part svg,.emo svg,.orb svg{overflow:visible}
+.part .ghost,.part .lit{position:absolute;inset:3px}
+.part .ghost svg,.part .lit svg{width:100%;height:100%}
+.emo svg{width:52px;height:auto}.bhead .emo svg{width:60px}
+.orb svg{width:120px;height:auto}
+@media (prefers-reduced-motion:reduce){.flt,.bfx{animation:none}}
+@media (prefers-reduced-motion:reduce){.orb.spin{animation:none}.timer i{transition:none!important}}
+
+.dot{display:inline-block;min-width:18px;font-size:.72rem;background:var(--bad);color:#fff;border-radius:99px;margin-left:3px}
+</style></head><body>
+<div class="wrap">
+  <section class="box stat" aria-label="今日狀態">
+    <div><small>今天拿到的碎片</small><b class="num" id="sToday">0</b><span class="num"> / <span id="sMax">3</span></span></div>
+    <div><small>碎片總數</small><b class="num" id="sShards">0</b></div>
+    <div><small>擁有神獸</small><b class="num" id="sBeasts">0</b><span class="num"> / 5</span></div>
+    <div><small>🍑 神獸果</small><b class="num" id="sFruit">0</b></div>
+  </section>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-play" data-v="play">⚔️ 關卡</button>
+    <button class="tab" role="tab" id="t-bag" data-v="bag">🧩 碎片</button>
+    <button class="tab" role="tab" id="t-forge" data-v="forge">🔮 合成</button>
+    <button class="tab" role="tab" id="t-dex" data-v="dex">📖 神獸</button>
+  </nav>
+  <main id="view"></main>
+</div>
+<script>
+(function(){
+'use strict';
+var PV_UID=0;
+function pvEye(x,y,dark){return '<circle cx="'+x+'" cy="'+y+'" r="2.4" fill="'+(dark?'#f4f4f4':'#1d1d1d')+'"/><circle cx="'+(x+.8)+'" cy="'+(y-.8)+'" r=".8" fill="'+(dark?'#222':'#fff')+'"/>'}
+function pvCrown(x,y){return '<g><path d="M'+(x-7)+' '+y+'l2-8 3.5 4.5 1.5-6.5 1.5 6.5 3.5-4.5 2 8z" fill="#ffd54f" stroke="#b7791f" stroke-width="1"/><circle cx="'+x+'" cy="'+(y-3)+'" r="1.4" fill="#e53935"/></g>'}
+/* 神獸外觀（水靈龍、火鳳凰、木麒麟、金白虎、土靈龜）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
+function pvBeastFx(el,st){
+  if(st<2)return '';
+  var o='';
+  if(el==='water')[[8,18,2.6],[74,10,2],[30,8,1.8],[80,48,2.2]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-c[2]*1.6)+' Q'+(c[0]+c[2])+' '+c[1]+' '+c[0]+' '+(c[1]+c[2])+' Q'+(c[0]-c[2])+' '+c[1]+' '+c[0]+' '+(c[1]-c[2]*1.6)+'Z" fill="#81d4fa"/>'});
+  if(el==='fire')[[6,20],[70,6],[26,10],[82,40]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.35)+'s" d="M'+c[0]+' '+(c[1]-5)+' Q'+(c[0]+3.5)+' '+c[1]+' '+c[0]+' '+(c[1]+3)+' Q'+(c[0]-3.5)+' '+c[1]+' '+c[0]+' '+(c[1]-5)+'Z" fill="#ffb74d"/>'});
+  if(el==='wood')[[8,22,'#f48fb1'],[76,8,'#a5d6a7'],[28,8,'#fff59d'],[80,46,'#f48fb1']].forEach(function(c,i){o+='<g class="bfx" style="animation-delay:'+(i*.45)+'s"><circle cx="'+c[0]+'" cy="'+c[1]+'" r="2.6" fill="'+c[2]+'"/><circle cx="'+c[0]+'" cy="'+c[1]+'" r="1" fill="#fff"/></g>'});
+  if(el==='metal')[[8,20],[76,8],[28,8],[82,44]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.4)+'s" d="M'+c[0]+' '+(c[1]-4)+' L'+(c[0]+1.2)+' '+(c[1]-1.2)+' L'+(c[0]+4)+' '+c[1]+' L'+(c[0]+1.2)+' '+(c[1]+1.2)+' L'+c[0]+' '+(c[1]+4)+' L'+(c[0]-1.2)+' '+(c[1]+1.2)+' L'+(c[0]-4)+' '+c[1]+' L'+(c[0]-1.2)+' '+(c[1]-1.2)+'Z" fill="#ffe082"/>'});
+  if(el==='earth')[[6,24],[78,10],[26,10],[82,46]].forEach(function(c,i){o+='<path class="bfx" style="animation-delay:'+(i*.45)+'s" d="M'+(c[0]-3)+' '+(c[1]+2)+' L'+(c[0]-1)+' '+(c[1]-3)+' L'+(c[0]+3)+' '+(c[1]-2)+' L'+(c[0]+3)+' '+(c[1]+2)+'Z" fill="#bcaaa4" stroke="#6d4c41" stroke-width=".6"/>'});
+  return o;
+}
+function pvDragon(st,id){
+  var o='',b=st===3?'url(#dg'+id+')':'#0288d1';
+  o+='<path d="M12 46 L2 37 L6 47 L1 56Z" fill="#4fc3f7"/>';
+  o+='<path class="lg a" d="M30 46 l-2 10 h5 l1-9z" fill="#0277bd"/><path class="lg b" d="M47 41 l-1 11 h5 l0-10z" fill="#0277bd"/>';
+  o+='<path d="M10 45 C18 31 28 56 40 43 S57 29 63 34" stroke="'+b+'" stroke-width="12" fill="none" stroke-linecap="round"/>';
+  o+='<path d="M11 48 C19 35 28 59 40 47 S56 33 62 38" stroke="#b3e5fc" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  [[18,33],[29,45],[43,35],[54,30]].forEach(function(c){o+='<path d="M'+(c[0]-3)+' '+c[1]+' l3-7 l3 7z" fill="#e1f5fe"/>'});
+  var hd='<path d="M62 23 L57 10 M67 22 L66 8" stroke="#fff59d" stroke-width="2.8" stroke-linecap="round"/>'+
+    '<ellipse cx="66" cy="30" rx="11" ry="8.5" fill="#29b6f6"/><ellipse cx="74" cy="33" rx="7" ry="5" fill="#4fc3f7"/>'+
+    '<circle cx="66" cy="27" r="3.2" fill="#fff"/>'+pvEye(66.5,27)+'<circle cx="79" cy="31" r="1.2" fill="#01579b"/>'+
+    '<path d="M77 36 Q86 39 83 47 M74 37 Q78 44 74 49" stroke="#b3e5fc" stroke-width="1.6" fill="none" stroke-linecap="round"/>'+
+    (st===3?pvCrown(64,20):'');
+  if(st>=2)o+='<circle cx="80" cy="52" r="4" fill="#e1f5fe" stroke="#4fc3f7"/><circle cx="79" cy="51" r="1.3" fill="#fff"/>';
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvPhoenix(st,id){
+  var o='',w=st===3?'url(#ph'+id+')':'#ff9800';
+  o+='<path d="M40 56 L37 61 M46 56 L49 61" stroke="#8d6e63" stroke-width="2.4" stroke-linecap="round"/>';
+  o+='<g class="tl"><path d="M32 46 Q14 46 4 62 Q18 54 34 50Z" fill="#ff5722"/><path d="M33 48 Q20 56 14 64 Q26 58 36 51Z" fill="#ffc107"/><path d="M31 44 Q12 38 2 46 Q16 44 32 48Z" fill="#ff7043"/></g>';
+  o+='<ellipse cx="42" cy="38" rx="13" ry="17" fill="#ff7043" transform="rotate(-18 42 38)"/>';
+  o+='<ellipse cx="47" cy="42" rx="7" ry="11" fill="#ffcc80" transform="rotate(-18 47 42)"/>';
+  o+='<g class="wg"><path d="M32 28 Q20 44 34 54 Q44 44 40 28Z" fill="'+w+'"/><path d="M27 42 Q29 52 34 54 Q31 47 32 41Z" fill="#ffeb3b"/></g>';
+  var hd='<path d="M46 11 Q44 3 49 1 Q48 6 51 9 Q52 2 57 2 Q53 7 54 11Z" fill="#ffc107"/>'+
+    '<circle cx="50" cy="20" r="11" fill="#ff7043"/><circle cx="53" cy="18" r="3.4" fill="#fff"/>'+pvEye(53.5,18)+
+    '<path d="M58 16 Q67 18 61 27 Q60 23 57 23Z" fill="#ffd54f" stroke="#6d4c41" stroke-width="1"/><circle cx="46" cy="23" r="2.4" fill="#ffab91" opacity=".7"/>'+
+    (st===3?pvCrown(50,8):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvQilin(st,id){
+  var o='',b=st===3?'url(#ql'+id+')':'#66bb6a',d='#2e7d32';
+  o+='<g class="tl"><path d="M21 38 Q10 34 8 26" stroke="'+b+'" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M8 26 Q2 22 6 16 Q10 20 12 18 Q12 24 8 26Z" fill="'+d+'"/></g>';
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="44" width="6" height="14" rx="3" fill="#43a047"/><rect class="lg '+l[1]+'" x="'+l[0]+'" y="54" width="6" height="4" rx="1.5" fill="#3e2723"/>'});
+  o+='<ellipse cx="40" cy="42" rx="21" ry="12" fill="'+b+'"/>';
+  [[30,38],[38,36],[46,38],[34,44],[42,43]].forEach(function(c){o+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="2" fill="#a5d6a7"/>'});
+  o+='<ellipse cx="44" cy="48" rx="13" ry="5" fill="#c5e1a5"/>';
+  var hd='<path d="M50 30 Q52 16 60 14 Q58 24 56 32Z" fill="'+d+'"/>'+
+    '<path d="M60 18 L56 6 M58 11 L53 9 M66 17 L70 5 M68 10 L73 8" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>'+
+    '<ellipse cx="55" cy="6" rx="3" ry="1.8" fill="#81c784"/><ellipse cx="71" cy="4" rx="3" ry="1.8" fill="#81c784"/>'+
+    '<circle cx="63" cy="26" r="11" fill="'+b+'"/><ellipse cx="71" cy="30" rx="7" ry="5" fill="#c5e1a5"/>'+pvEye(65,23)+
+    '<circle cx="76" cy="28" r="1.8" fill="#1b5e20"/><circle cx="60" cy="30" r="2.4" fill="#ff8fa3" opacity=".45"/>'+
+    (st>=2?'<path d="M58 34 Q64 39 70 35" stroke="#f48fb1" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="64" cy="38" r="2.4" fill="#fff59d"/>':'')+
+    (st===3?pvCrown(63,13):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvBeastDefs(k,id){
+  if(k==='dragon')return '<linearGradient id="dg'+id+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4dd0e1"/><stop offset=".5" stop-color="#7c4dff"/><stop offset="1" stop-color="#29b6f6"/></linearGradient>';
+  if(k==='phoenix')return '<linearGradient id="ph'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeb3b"/><stop offset=".5" stop-color="#ff9800"/><stop offset="1" stop-color="#e53935"/></linearGradient>';
+  if(k==='tiger')return '<linearGradient id="tg'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffd54f"/></linearGradient>';
+  if(k==='tortoise')return '<linearGradient id="tt'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a1887f"/><stop offset=".5" stop-color="#ffb74d"/><stop offset="1" stop-color="#6d4c41"/></linearGradient>';
+  if(k==='qilin')return '<linearGradient id="ql'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ccc65"/><stop offset=".6" stop-color="#ffd54f"/><stop offset="1" stop-color="#43a047"/></linearGradient>';
+  return '';
+}
+function pvTiger(st,id){
+  var o='',b=st===3?'url(#tg'+id+')':'#f5f5f0',d='#37474f';
+  o+='<path class="tl" d="M21 38 Q6 36 8 22 Q9 16 14 17" stroke="'+b+'" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M9 26 l4 1 M8 21 l4 0" stroke="'+d+'" stroke-width="1.6"/>';
+  [[22,'a'],[30,'b'],[48,'b'],[56,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="44" width="7.5" height="14" rx="3.5" fill="#eceff1"/>'});
+  o+='<ellipse cx="40" cy="42" rx="21" ry="13" fill="'+b+'"/>';
+  o+='<path d="M28 31 q3 6 0 13 M35 30 q3 7 0 14 M42 30 q3 7 0 14 M49 31 q3 6 0 12" stroke="'+d+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+  o+='<ellipse cx="44" cy="49" rx="13" ry="5.5" fill="#ffffff"/>';
+  if(st>=2)o+='<path d="M52 34 Q59 41 67 36" stroke="#ffc107" stroke-width="3.6" fill="none" stroke-linecap="round"/><circle cx="59" cy="40" r="2.6" fill="#ffd54f" stroke="#b7791f" stroke-width=".8"/>';
+  var hd='<circle cx="54" cy="18" r="4.6" fill="'+b+'"/><circle cx="54" cy="18" r="2.2" fill="#ffb3c1"/><circle cx="70" cy="16" r="4.6" fill="'+b+'"/><circle cx="70" cy="16" r="2.2" fill="#ffb3c1"/>'+
+    '<circle cx="62" cy="28" r="13" fill="'+b+'"/><path d="M58 17 l2 5 M62 15 v5 M66 17 l-2 5" stroke="'+d+'" stroke-width="1.8" stroke-linecap="round"/>'+
+    '<path d="M50 27 l5 1 M50 31 l5 0" stroke="'+d+'" stroke-width="1.6" stroke-linecap="round"/>'+
+    '<ellipse cx="70" cy="32" rx="7" ry="5" fill="#ffffff"/>'+pvEye(64,25)+'<path d="M74 28 l3 2 l-3 2z" fill="#f48fb1"/>'+
+    '<path d="M70 35 q3 2 6 0" stroke="#5d4037" stroke-width="1" fill="none"/><path d="M73 33 l8 -1 M73 35 l8 1" stroke="#90a4ae" stroke-width=".7"/>'+
+    (st===3?pvCrown(62,15):'');
+  o+='<g class="hd">'+hd+'</g>';
+  return o;
+}
+function pvTortoise(st,id){
+  var o='',sh=st===3?'url(#tt'+id+')':'#8d6e63';
+  [[16,'a'],[27,'b'],[50,'b'],[60,'a']].forEach(function(l){o+='<rect class="lg '+l[1]+'" x="'+l[0]+'" y="45" width="10" height="12" rx="4" fill="#a1887f"/>'});
+  o+='<path d="M12 48 Q8 44 4 46" stroke="#a1887f" stroke-width="4.5" stroke-linecap="round" fill="none"/>';
+  var hd='<ellipse cx="70" cy="40" rx="10.5" ry="8.5" fill="#bcaaa4"/>'+pvEye(73,37)+'<path d="M76 43 q3 1 5 -1" stroke="#4e342e" stroke-width="1.2" fill="none"/>'+(st===3?pvCrown(70,31):'');
+  o+='<g class="hd">'+hd+'</g>';
+  o+='<path d="M10 48 Q12 18 40 16 Q68 18 68 48Z" fill="'+sh+'" stroke="#4e342e" stroke-width="1.6"/>';
+  o+='<path d="M22 34 L30 24 L38 32 L46 20 L56 34" fill="none" stroke="'+(st===3?'#fff59d':'#d7ccc8')+'" stroke-width="1.8" stroke-linejoin="round"/>';
+  o+='<path d="M28 18 L34 6 L40 14 L46 4 L54 18Z" fill="#78909c" stroke="#455a64" stroke-width="1.2" stroke-linejoin="round"/><path d="M40 14 L46 4 L49 9Z" fill="#eceff1"/>';
+  if(st>=2)o+='<circle cx="30" cy="16" r="2.4" fill="#66bb6a"/><circle cx="54" cy="17" r="2.4" fill="#66bb6a"/><circle cx="33" cy="14" r="1.6" fill="#81c784"/>';
+  o+='<rect x="8" y="45" width="62" height="6" rx="3" fill="#5d4037"/>';
+  return o;
+}
+var PV_BEAST={dragon:'water',phoenix:'fire',qilin:'wood',tiger:'metal',tortoise:'earth'};
+
+function beastSVG(k,st){var id=++PV_UID,b=k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):k==='tiger'?pvTiger(st,id):k==='tortoise'?pvTortoise(st,id):pvQilin(st,id);
+  return '<svg viewBox="-4 -8 92 76" aria-hidden="true">'+(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':'')+'<g class="'+(k==='dragon'||k==='phoenix'?'flt':'')+'">'+b+'</g>'+pvBeastFx(PV_BEAST[k],st)+'</svg>'}
+var BN={dragon:['水靈龍','💧 水','#4fc3f7'],phoenix:['火鳳凰','🔥 火','#ff9800'],qilin:['木麒麟','🌿 木','#9ccc65'],tiger:['金白虎','✨ 金','#ffe082'],tortoise:['土靈龜','🪨 土','#bcaaa4']};
+/* ---- 神獸試煉島（正式版）：結果都由伺服器決定，這裡只負責畫面與出題 ---- */
+var API=null;try{API=parent!==window&&parent.AIKB_TRIAL?parent.AIKB_TRIAL:null}catch(e){}
+var B=[
+ {k:'dragon',  e:'🐉',n:'水靈龍',el:'水',c:'var(--water)',base:105},
+ {k:'phoenix', e:'🔥',n:'火鳳凰',el:'火',c:'var(--fire)', base:85},
+ {k:'qilin',   e:'🦌',n:'木麒麟',el:'木',c:'var(--wood)', base:100},
+ {k:'tiger',   e:'🐯',n:'金白虎',el:'金',c:'var(--metal)',base:90},
+ {k:'tortoise',e:'🐢',n:'土靈龜',el:'土',c:'var(--earth)',base:120}];
+var BK={};B.forEach(function(b){BK[b.k]=b});
+var PART=[['head','頭'],['body','身'],['foot','腳']],PN={head:'頭',body:'身',foot:'腳'};
+var Q=[['畫直線','LINE'],['畫圓','CIRCLE'],['把物件平行偏移一段距離','OFFSET'],['修剪超出邊界的線','TRIM'],['把線延伸到邊界','EXTEND'],
+ ['鏡射物件','MIRROR'],['排列陣列','ARRAY'],['填充線','HATCH'],['開啟圖層管理員','LAYER'],['複製物件','COPY'],['移動物件','MOVE'],
+ ['旋轉物件','ROTATE'],['比例縮放','SCALE'],['兩線接成圓角','FILLET'],['兩線倒角','CHAMFER'],['分解圖塊或聚合線','EXPLODE'],
+ ['建立圖塊','BLOCK'],['插入圖塊','INSERT'],['線性標註','DIMLINEAR'],['多行文字','MTEXT'],['畫聚合線','PLINE'],['畫矩形','RECTANG'],
+ ['拉伸物件','STRETCH'],['把線段接合','JOIN'],['清除沒用到的圖層、圖塊','PURGE'],['載入 LISP 程式','APPLOAD'],['複製物件性質','MATCHPROP'],
+ ['附著外部參考','XREF'],['量測距離','DIST'],['打斷物件','BREAK']];
+var DIFF=[null,{n:'入門',sec:8,kinds:['desc'],t:'看說明選指令'},{n:'初階',sec:7,kinds:['desc','alias'],t:'加入快捷鍵題'},{n:'中階',sec:6,kinds:['alias','rev'],t:'快捷鍵＋反過來考說明'},{n:'高階',sec:5,kinds:['alias','rev','var'],t:'再加系統變數'},{n:'大師',sec:4,kinds:['rev','var','alias'],t:'全部混合、只有 4 秒'}];
+var AL=[['L','LINE'],['C','CIRCLE'],['O','OFFSET'],['TR','TRIM'],['EX','EXTEND'],['MI','MIRROR'],['AR','ARRAY'],['H','HATCH'],['LA','LAYER'],['CO','COPY'],['M','MOVE'],['RO','ROTATE'],['SC','SCALE'],['F','FILLET'],['CHA','CHAMFER'],['X','EXPLODE'],['B','BLOCK'],['I','INSERT'],['DLI','DIMLINEAR'],['T','MTEXT'],['PL','PLINE'],['REC','RECTANG'],['S','STRETCH'],['J','JOIN'],['PU','PURGE'],['MA','MATCHPROP'],['XR','XREF'],['DI','DIST'],['BR','BREAK'],['E','ERASE']];
+var VAR=[['控制物件鎖點（OSNAP）設定','OSMODE'],['開啟或關閉檔案對話框','FILEDIA'],['線型比例（全域）','LTSCALE'],['PEDIT 是否自動轉成聚合線','PEDITACCEPT'],['十字游標大小','CURSORSIZE'],['選取框大小','PICKBOX'],['是否顯示指令對話框','CMDDIA'],['圓弧顯示的平滑度','VIEWRES'],['填充線是否關聯','HPASSOC'],['點的樣式','PDMODE'],['文字鏡射後是否反轉','MIRRTEXT'],['正交模式','ORTHOMODE'],['圖紙空間線型比例','PSLTSCALE'],['尺寸標註的整體比例','DIMSCALE']];
+var $=function(id){return document.getElementById(id)};
+var D={p:null,isl:null,busy:false},view='play',game=null,timer=null;
+function rnd(n){return Math.floor(Math.random()*n)}
+function pick(a){return a[rnd(a.length)]}
+function sh4(a){return a.slice().sort(function(){return Math.random()-.5})}
+function stars(iv){return iv>=28?5:iv>=22?4:iv>=15?3:iv>=8?2:1}
+function starHTML(n){return '★'.repeat(n)+'<span style="opacity:.3">'+'★'.repeat(5-n)+'</span>'}
+function hp(b,iv,lv){return Math.round(b.base*(1+iv/31*0.5)*(1+(lv-1)*0.15))}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function art(k,st){return beastSVG(k,st==null?2:st)}
+function partEl(b,p,none){return '<div class="part '+p+(none?' none':'')+'" aria-hidden="true"><div class="ghost">'+art(b.k,0)+'</div><div class="lit">'+art(b.k,0)+'</div></div>'}
+function nid(){return Math.random().toString(36).slice(2,12)+'-'+Date.now().toString(36)}
+function toast(t){if(API&&API.toast){API.toast(t);return}var d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},2200)}
+function bt(){return (D.p&&D.p.bt)||{sh:{},fr:0,pity:{},st:0,ft:0,sf:0,kinds:0,max:{shard:3,fruit:5,slot:3,feed:2,lv:10},forge:40,pityStep:20}}
+function sh(k,p){return (bt().sh||{})[k+'.'+p]||0}
+function rate(k){var b=bt();return Math.min(100,(b.forge||40)+(b.pityStep||20)*((b.pity||{})[k]||0))}
+function beasts(){var o={};((D.isl&&D.isl.pets)||[]).forEach(function(p){if(BK[p.k])o[p.k]=p});return o}
+function coll(k){return ((D.p&&D.p.bcol)||{})[k]||[]}
+function diff(){return Math.min(5,(bt().kinds||0)+1)}
+function report(){try{if(API&&API.size)API.size(document.documentElement.scrollHeight)}catch(e){}}
+function api(q){
+  if(!API)return Promise.resolve({ok:false,msg:'請從論壇資源島的地圖進入神獸試煉島'});
+  return API.api(q).then(function(j){if(j&&j.p)D.p=j.p;if(j&&j.island)D.isl=j.island;return j}).catch(function(){return {ok:false,msg:'網路不穩，請再試一次'}});
+}
+function errMsg(j){return (j&&j.msg)||(API&&API.err?API.err(j):'發生錯誤，請再試一次')}
+function load(){
+  if(!API||!API.state().login){render();return}
+  Promise.all([api({a:'me'}),api({a:'island'})]).then(function(){render()});
+}
+function header(){
+  var b=bt();$('sToday').textContent=b.st||0;$('sMax').textContent=(b.max||{}).shard||3;$('sFruit').textContent=b.fr||0;
+  var n=0;for(var k in (b.sh||{}))n+=b.sh[k];$('sShards').textContent=n;$('sBeasts').textContent=Object.keys(beasts()).length;
+  document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected',t.dataset.v===view?'true':'false')});
+  var r=B.filter(function(x){return PART.every(function(p){return sh(x.k,p[0])>0})}).length;$('t-forge').innerHTML='🔮 合成'+(r?'<span class="dot">'+r+'</span>':'');
+}
+function render(){
+  if(!API||!API.state().login){$('view').innerHTML='<section class="box empty"><p>登島後才能挑戰試煉、收集神獸碎片。</p>'+(API?'<button class="btn" type="button" id="lg">🏝️ 登島</button>':'')+'</section>';if($('lg'))$('lg').onclick=function(){API.login()};report();return}
+  if(!D.p){$('view').innerHTML='<section class="box empty">讀取中…</section>';report();return}
+  header();({play:vPlay,bag:vBag,forge:vForge,dex:vDex})[view]();report();
+}
+
+/* ---------- 關卡 ---------- */
+function vPlay(){
+  if(game&&!game.done)return drawQ();
+  var d=diff(),Dd=DIFF[d],b=bt(),m=b.max||{};
+  $('view').innerHTML='<section class="box"><h2>⚔️ 指令快問快答</h2>'+
+   '<div class="diffbar"><span class="stars">'+starHTML(d)+'</span><b>難度 '+d+'・'+Dd.n+'</b><span class="sub">每題 '+Dd.sec+' 秒・'+Dd.t+'</span></div>'+
+   '<p class="sub">看題目選出正確答案，共 8 題。答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%），也送 🍑 神獸果（5 題 1 顆、全對 2 顆）。擁有的神獸種類愈多，難度愈高。</p>'+
+   (game&&game.done?resultHtml():'')+
+   '<div class="row" style="margin-top:12px"><button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>'+
+   '<span class="sub">今天碎片 '+(b.st||0)+' / '+(m.shard||3)+'・神獸果 '+(b.ft||0)+' / '+(m.fruit||5)+'</span></div></section>';
+  $('go').onclick=startGame;
+}
+function resultHtml(){
+  var g=game,h='<div class="drop"><div class="big">'+g.right+' / 8</div><div>';
+  if(g.err)h+='<b>⚠️ '+esc(g.err)+'</b><br><button class="btn ghost sm0" type="button" id="retry">再送一次結果</button>';
+  else if(!g.res)h+='結算中…';
+  else{var r=g.res;
+    if(r.shard){var b=BK[r.shard.k];h+=partEl(b,r.shard.p)+'<b>獲得 '+b.n+' 的「'+PN[r.shard.p]+'」碎片！</b>'}
+    else h+=r.full?'今天的碎片已經拿滿，明天再來。':r.chance?'這次掉落機率 '+r.chance+'%，可惜沒掉到。':'答對 5 題以上才有機會掉碎片。';
+    h+='<div class="sub" style="margin-top:4px">'+(r.fruit?'🍑 獲得神獸果 ×'+r.fruit:'🍑 這次沒有神獸果')+'</div>'}
+  return h+'</div></div>';
+}
+function startGame(){
+  var d=diff(),Dd=DIFF[d],qs=[];
+  function mk(list,qi,ai,fmt){var q=pick(list),w=sh4(list.filter(function(x){return x[ai]!==q[ai]})).slice(0,3).map(function(x){return x[ai]});return {t:fmt(q[qi]),a:q[ai],o:sh4(w.concat([q[ai]]))}}
+  while(qs.length<8){var kd=pick(Dd.kinds),q;
+    if(kd==='desc')q=mk(Q,0,1,function(t){return '「'+t+'」是哪個指令？'});
+    else if(kd==='alias')q=mk(AL,0,1,function(t){return '快捷鍵「'+t+'」是哪個指令？'});
+    else if(kd==='rev')q=mk(Q,1,0,function(t){return '指令「'+t+'」是做什麼的？'});
+    else q=mk(VAR,0,1,function(t){return t+'，是哪個系統變數？'});
+    if(qs.some(function(x){return x.t===q.t}))continue;qs.push(q)}
+  game={qs:qs,i:0,right:0,done:false,lock:false,d:d,sec:Dd.sec,id:nid()};drawQ();
+}
+function drawQ(){
+  var q=game.qs[game.i];
+  $('view').innerHTML='<section class="box"><div class="prog"><span>難度 '+game.d+'・第 <b>'+(game.i+1)+'</b> / 8 題</span><span>答對 <b>'+game.right+'</b></span></div>'+
+   '<div class="timer"><i id="tb"></i></div><div class="q">'+esc(q.t)+'</div><div class="opts">'+
+   q.o.map(function(o,j){return '<button class="opt'+(/[^\x00-\x7f]/.test(o)?' txt':'')+'" type="button" data-a="'+esc(o)+'">'+esc(o)+'</button>'}).join('')+'</div></section>';
+  document.querySelectorAll('.opt').forEach(function(b){b.onclick=function(){answer(b.dataset.a)}});
+  var tb=$('tb');tb.style.transition='none';tb.style.transform='scaleX(1)';tb.offsetWidth;tb.style.transition='transform '+game.sec+'s linear';tb.style.transform='scaleX(0)';
+  clearTimeout(timer);timer=setTimeout(function(){answer(null)},game.sec*1000);game.lock=false;report();
+}
+function answer(a){
+  if(!game||game.lock)return;game.lock=true;clearTimeout(timer);
+  var q=game.qs[game.i];if(a===q.a)game.right++;
+  document.querySelectorAll('.opt').forEach(function(b){if(b.dataset.a===q.a)b.classList.add('right');else if(b.dataset.a===a)b.classList.add('wrong');b.disabled=true});
+  setTimeout(function(){game.i++;if(game.i<8)drawQ();else finish()},a===q.a?450:1000);
+}
+function finish(){
+  game.done=true;game.err='';D.busy=true;render();
+  api({a:'trial',id:game.id,right:game.right}).then(function(j){
+    D.busy=false;
+    if(!j.ok){game.err=j.err==='gamecool'?'太快了，休息幾秒再送一次':errMsg(j)}
+    else{game.res=j.trial;if(j.trial.shard)toast('🧩 獲得 '+BK[j.trial.shard.k].n+' 的「'+PN[j.trial.shard.p]+'」碎片！');else if(j.trial.fruit)toast('🍑 獲得神獸果 ×'+j.trial.fruit)}
+    render();if($('retry'))$('retry').onclick=finish;
+  });
+}
+
+/* ---------- 碎片 ---------- */
+function vBag(){
+  $('view').innerHTML='<section class="box"><h2>🧩 我的碎片</h2><p class="sub">同一隻神獸的頭、身、腳各一片就能到「合成」。頭最稀有（20%）。碎片也可以從扭蛋島抽到。</p>'+
+   B.map(function(b){return '<div class="prow"><div class="emo" style="border-color:'+b.c+'">'+art(b.k)+'</div><div><div class="pname">'+b.n+'<small>'+b.el+'屬性・基礎 HP '+b.base+'</small></div><div class="pcells">'+
+   PART.map(function(p){var n=sh(b.k,p[0]);return '<div class="pcell">'+partEl(b,p[0],!n)+'<span>'+p[1]+' <b>×'+n+'</b></span></div>'}).join('')+'</div></div></div>'}).join('')+'</section>';
+}
+
+/* ---------- 合成 ---------- */
+function vForge(){
+  $('view').innerHTML='<section class="box"><h2>🔮 神獸合成</h2><p class="sub">消耗頭、身、腳各一片。失敗不會白費：同一隻神獸的成功率每次 +20%，最多失敗 3 次後必定成功。已經有同一種神獸時，個體值 IV 高的住小島，另一隻放進收藏。</p><div class="forge">'+
+   B.map(function(b){var ok=PART.every(function(p){return sh(b.k,p[0])>0}),pt=(bt().pity||{})[b.k]||0;
+    return '<div class="fcard'+(ok?' ready':'')+'"><div class="stack">'+PART.map(function(p){return partEl(b,p[0],!sh(b.k,p[0]))}).join('')+'</div><b>'+b.n+'</b>'+
+    '<div class="rate">成功率 <b>'+rate(b.k)+'%</b>'+(pt?'<br>（已失敗 '+pt+' 次）':'')+'</div>'+
+    '<button class="btn" type="button" data-f="'+b.k+'"'+(ok&&!D.busy?'':' disabled')+'>'+(ok?'合成':'碎片不足')+'</button></div>'}).join('')+'</div></section>';
+  document.querySelectorAll('[data-f]').forEach(function(x){x.onclick=function(){forge(x.dataset.f)}});
+}
+function forge(k){
+  var b=BK[k];if(D.busy)return;D.busy=true;
+  var key='aikb-forge-'+k,id;try{id=localStorage.getItem(key)}catch(e){}if(!id){id=nid();try{localStorage.setItem(key,id)}catch(e){}}
+  var ov=document.createElement('div');ov.className='seal';ov.innerHTML='<div class="seal-in"><div class="orb spin" style="--c:'+b.c+'">'+art(k)+'</div><div class="big">合成中…</div></div>';document.body.appendChild(ov);
+  /* iframe 會被撐到跟內容一樣高，視窗要放在使用者現在看得到的位置 */
+  try{var fr=frameElement.getBoundingClientRect(),vh=parent.innerHeight;ov.style.alignItems='start';ov.style.paddingTop=Math.max(20,Math.min(-fr.top+Math.max(20,(vh-420)/2),document.documentElement.scrollHeight-460))+'px'}catch(e){}
+  var t0=Date.now();
+  api({a:'forge',id:id,k:k}).then(function(j){
+    D.busy=false;
+    setTimeout(function(){
+      var inn=ov.querySelector('.seal-in');
+      if(!j.ok){if(j.err!=='bad'&&j.err!==undefined){try{localStorage.removeItem(key)}catch(e){}}inn.innerHTML='<div class="big">⚠️ '+esc(errMsg(j))+'</div><button class="btn" type="button" id="ovx">知道了</button>';$('ovx').onclick=function(){ov.remove();render()};return}
+      try{localStorage.removeItem(key)}catch(e){}
+      var r=j.forge;
+      if(!r.win){inn.innerHTML='<div class="orb" style="--c:#555;filter:grayscale(1)">'+art(k,0)+'</div><div class="big">合成失敗</div><p class="sub">碎片化成了靈氣，'+b.n+' 下次成功率提高到 <b style="color:var(--gold)">'+r.next+'%</b>。</p><button class="btn" type="button" id="ovx">知道了</button>';$('ovx').onclick=function(){ov.remove();render()};return}
+      var st=stars(r.iv),msg=r.where==='pet'?'住進你的小島了！':r.where==='swap'?'比原本那隻強，住進小島；原本那隻放進收藏。':'沒有比小島上那隻強，放進神獸收藏。';
+      inn.innerHTML='<div class="orb" style="--c:'+b.c+'">'+art(k,3)+'</div><div class="big">🎉 合成成功！'+b.n+'</div><div class="stars">'+starHTML(st)+'</div>'+
+        '<p class="sub">個體值 IV <b>'+r.iv+'</b>・Lv 1・HP <b style="color:var(--ok)">'+hp(b,r.iv,1)+'</b></p><p>'+msg+'</p><button class="btn" type="button" id="ovx">去看神獸</button>';
+      $('ovx').onclick=function(){ov.remove();view='dex';render()};
+    },Math.max(0,1700-(Date.now()-t0)));
+  });
+  render();
+}
+
+/* ---------- 神獸 ---------- */
+function vDex(){
+  var own=B.filter(function(b){return beasts()[b.k]}),maxHp=hp(BK.tortoise,31,10),b0=bt(),feedMax=(b0.max||{}).feed||2,sellIv=(D.p&&D.p.bsellIv)||2,sell=(D.p&&D.p.bsell)||{wood:66,stone:66,iron:66,dia:6};
+  $('view').innerHTML='<section class="box"><h2>📖 我的神獸</h2><p class="sub">每種神獸只有一隻住小島（預設 IV 最高的），其他放收藏，可以換上小島，或換成資源（IV 愈高換愈多）。🍑 神獸果：<b>'+(b0.fr||0)+'</b> 顆，每隻每天最多餵 '+feedMax+' 顆。</p>'+
+   (own.length?'<div class="cards">'+own.map(function(b){var x=beasts()[b.k],lv=x.lv||1,h=hp(b,x.iv||0,lv),st=stars(x.iv||0),aff=x.aff||0,fed=x.bfn||0,cl=coll(b.k);
+    return '<article class="bcard" style="--c:'+b.c+'"><div class="bhead"><div class="emo">'+art(b.k,2)+'</div><div><b class="big">'+b.n+'</b><div class="stars">'+starHTML(st)+'</div></div></div>'+
+    '<div class="hp"><span>HP</span><b>'+h+'</b><span class="sub">最高 '+hp(b,31,10)+'</span></div><div class="hpbar"><i style="width:'+Math.round(h/maxHp*100)+'%"></i></div>'+
+    '<div class="kv"><span>屬性</span><b>'+b.el+'</b><span>等級</span><b>Lv '+lv+' / 10</b><span>個體值 IV</span><b>'+(x.iv||0)+' / 31</b><span>基礎 HP</span><b>'+b.base+'</b></div>'+
+    '<div class="affl"><span>親密度 <b>'+aff+'</b>'+(lv<10?'（下一級還差 '+(10-aff%10)+'）':'（已滿級）')+'</span><div class="hpbar aff"><i style="width:'+(lv>=10?100:(aff%10)*10)+'%"></i></div></div>'+
+    '<div class="row"><button class="btn" type="button" data-feed="'+esc(x.id)+'"'+(lv>=10||!b0.fr||fed>=feedMax||D.busy?' disabled':'')+'>🍑 餵神獸果 '+fed+'/'+feedMax+'</button></div>'+
+    (cl.length?'<div class="clist"><b>🗃 收藏中（'+cl.length+' 隻）</b>'+cl.map(function(c,i){var cs=stars(c.iv),g=sell.wood+c.iv*sellIv;return '<div class="citem"><span class="stars">'+starHTML(cs)+'</span><span>IV '+c.iv+'・HP '+hp(b,c.iv,1+Math.min(9,Math.floor((c.aff||0)/10)))+'</span><span class="cbtns"><button class="btn ghost sm" type="button" data-sw="'+b.k+'" data-i="'+i+'">換上小島</button><button class="btn ghost sm" type="button" data-sell="'+b.k+'" data-i="'+i+'" title="換成 🪵'+g+' 🪨'+g+' 🔩'+g+' 💎'+sell.dia+'">🏪 換 🪵🪨🔩'+g+'</button></span></div>'}).join('')+'</div>':'')+
+    '</article>'}).join('')+'</div>'
+   :'<div class="empty">還沒有神獸。<br>到「⚔️ 關卡」拿碎片合成，或到扭蛋島試試手氣。</div>')+
+   '<h2 style="margin-top:14px">各神獸 HP 範圍</h2><div class="tblw"><table class="tbl"><tr><th>神獸</th><th>Lv1 IV0</th><th>Lv1 IV31</th><th>Lv10 IV0</th><th>Lv10 IV31</th></tr>'+
+   B.map(function(b){return '<tr><td>'+b.e+' '+b.n+'</td><td>'+hp(b,0,1)+'</td><td>'+hp(b,31,1)+'</td><td>'+hp(b,0,10)+'</td><td>'+hp(b,31,10)+'</td></tr>'}).join('')+'</table></div>'+
+   '<p class="sub">HP = 基礎 HP ×（1 + IV÷31×0.5）×（1 +（Lv−1）×0.15）。親密度每 10 點升一級：小島上摸摸、餵食都會加，神獸果一顆 +5。</p></section>';
+  function act(q,ok){if(D.busy)return;D.busy=true;render();api(q).then(function(j){D.busy=false;if(!j.ok)toast('⚠️ '+errMsg(j));else if(ok)toast(ok(j));render()})}
+  document.querySelectorAll('[data-feed]').forEach(function(x){x.onclick=function(){act({a:'bfeed',id:x.dataset.feed},function(j){return '💕 親密度 +5'+(j.bfed?'・Lv '+j.bfed.lv:'')})}});
+  document.querySelectorAll('[data-sw]').forEach(function(x){x.onclick=function(){act({a:'bswap',k:x.dataset.sw,i:+x.dataset.i},function(){return '已換上小島'})}});
+  document.querySelectorAll('[data-sell]').forEach(function(x){x.onclick=function(){
+    if(x.dataset.arm!=='1'){x.dataset.arm='1';x.textContent='確定換？';setTimeout(function(){if(x.isConnected)render()},3000);return}
+    act({a:'bsell',k:x.dataset.sell,i:+x.dataset.i},function(j){var g=j.sold.got;return '🏪 換到 🪵'+g.wood+' 🪨'+g.stone+' 🔩'+g.iron+' 💎'+g.dia})}});
+}
+
+document.querySelectorAll('.tab').forEach(function(t){t.onclick=function(){if(game&&!game.done&&t.dataset.v!=='play'){clearTimeout(timer);game=null}view=t.dataset.v;render()}});
+window.trialSync=function(){load()};
+addEventListener('resize',report);
+load();
+
+})();
+</script>
+</body></html>

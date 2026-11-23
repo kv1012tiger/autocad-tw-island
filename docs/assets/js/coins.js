@@ -28,7 +28,7 @@
   function apply(p) {
     if (!p) return;
     P.code = p.code; P.nick = p.nick; P.bal = p.bal; P.earned = p.earned; P.streak = p.streak; P.admin = !!p.admin; P.qa = p.qa || [];
-    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'unread', 'friends', 'fl', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
+    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'bsellIv', 'bcol', 'bt', 'unread', 'friends', 'fl', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
     if (p.cd !== undefined) P.cdT = Date.now();
     save(); emit({ t: 'sync' });
   }
@@ -64,7 +64,7 @@
     noinv: '封測期間要有邀請碼才能登島，請向蘋果爸索取一組', badinv: '邀請碼不正確，請再確認一次（英文字母和數字）', invfull: '這組邀請碼名額已滿（每組限 2 位），請向蘋果爸索取新的一組', bad: '資料有誤，請重新整理後再試',
     nofid: '找不到這個海島編號，請再確認一次', self: '這是你自己的海島編號喔', fmax: '好友最多 50 位',
     notfriend: '要先互加好友才行', gifted: '今天已經送過這位好友了，明天再送', few: '數量不夠喔',
-    trademax: '今天的兌換次數用完了，明天再來', nobeast: '神獸收藏裡沒有這隻了', gachamax: '今天 3 次扭蛋抽完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', buymax: '今天買這樣東西的次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
+    trademax: '今天的兌換次數用完了，明天再來', nobeast: '神獸收藏裡沒有這隻了', noshard: '碎片不夠，要同一隻神獸的頭、身、腳各一片', nobfruit: '沒有神獸果了：神獸試煉島、扭蛋島、拉霸都拿得到', bfedmax: '這隻神獸今天已經吃了 2 顆神獸果，明天再餵', gamecool: '太快了，休息幾秒再試', gachamax: '今天 3 次扭蛋抽完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', buymax: '今天買這樣東西的次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
     msgshort: '留言至少要 2 個字', imgbad: '圖片格式不對或太大，換一張試試', imgfail: '圖片存檔失敗，請稍後再試', msgmax: '今天的留言次數用完了，明天再來', admin: '只有站長可以這樣做',
     tired: '今天在這座島採夠了，明天再來', closed: '這座島的資源剛消失了，每 20 分鐘會隨機換一批，到地圖上找有徽章的島吧', empty: '這座島今天的物資被採光了，明天會再長出來',
     maxed: '已經蓋到最高級了', busy: '這塊田已經種了東西', notyet: '還沒長好喔，再等等', nohouse: '要先蓋小屋才能領養寵物',

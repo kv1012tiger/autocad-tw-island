@@ -293,9 +293,10 @@ $('bst').innerHTML=['dragon','phoenix','qilin','tiger','tortoise'].map(function(
 
 /* ---- 獎品表（要和後台 GACHA 一致） ---- */
 var TIER={w:['#f4f1ea','安慰獎'],g:['#66bb6a','普通'],b:['#42a5f5','不錯'],p:['#ab47bc','稀有'],y:['#ffca28','超稀有'],r:['conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)','神獸']};
-var TABLE=[['fruit',10,26,'w'],['wood',20,15,'g'],['stone',20,15,'g'],['iron',20,15,'g'],['coin',15,10,'b'],['dia',1,10,'p'],['dia',3,3,'y'],['beast',1,6,'r']];
-var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸']};
-$('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（五選一）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
+var TABLE=[['fruit',10,11,'w'],['wood',20,15,'g'],['stone',20,15,'g'],['iron',20,15,'g'],['coin',15,10,'b'],['dia',1,10,'p'],['dia',3,3,'y'],['beast',1,6,'r'],['shard',1,10,'p'],['bfruit',2,5,'g']];
+var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸'],shard:['🧩','神獸碎片'],bfruit:['🍑','神獸果']};
+var PARTN={head:'頭',body:'身',foot:'腳'};
+$('odds').innerHTML=TABLE.map(function(t){return '<span class="dot" style="background:'+TIER[t[3]][0]+'"></span><span>'+RN[t[0]][0]+' '+RN[t[0]][1]+(t[0]==='beast'?'（五選一）':t[0]==='shard'?'（隨機一片）':' ×'+t[1])+(t[3]==='w'?'（安慰獎）':'')+'</span><span class="pc">'+t[2]+'%</span>'}).join('');
 
 /* ---- 狀態 ---- */
 var S={coins:50,left:3,login:true,busy:false,cap:null,taps:0,res:null,sfx:true,log:[],err:false};
@@ -315,7 +316,7 @@ function sync(){
   fit();
 }
 window.gachaSync=sync;
-function label(g){if(g.k==='beast')return (g.dup?'🐲 '+g.name+'（收藏）':'🐲 '+g.name);return RN[g.k][0]+' '+RN[g.k][1]+' ×'+g.n}
+function label(g){if(g.k==='beast')return (g.dup?'🐲 '+g.name+'（收藏）':'🐲 '+g.name)+(g.iv!=null?' IV'+g.iv:'');if(g.k==='shard')return '🧩 '+(g.name||'')+'「'+(PARTN[g.part]||'')+'」碎片';return RN[g.k][0]+' '+RN[g.k][1]+' ×'+g.n}
 
 /* ---- 音效 ---- */
 var AC=null;function tone(f,d,type,v,delay){if(!S.sfx)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();var o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+(delay||0);o.type=type||'sine';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
@@ -335,6 +336,7 @@ function capCenter(){var r=$('cap').getBoundingClientRect();return [r.left+r.wid
 function newId(){return 'g'+Math.random().toString(36).slice(2,12)+'-'+Date.now().toString(36)}
 function fake(){var tot=0,i,rv;TABLE.forEach(function(t){tot+=t[2]});rv=Math.random()*tot;for(i=0;i<TABLE.length;i++){rv-=TABLE[i][2];if(rv<0)break}var t=TABLE[Math.min(i,TABLE.length-1)],g={k:t[0],n:t[1],tier:t[3]};
   if(g.k==='beast'){var ks=['dragon','phoenix','qilin','tiger','tortoise'],b=ks[Math.floor(Math.random()*5)];g.b=b;g.name=BN[b][0];g.el=b}
+  if(g.k==='shard'){var ks2=['dragon','phoenix','qilin','tiger','tortoise'],b2=ks2[Math.floor(Math.random()*5)];g.b=b2;g.name=BN[b2][0];g.part=['head','body','body','foot','foot'][Math.floor(Math.random()*5)]}
   S.coins-=5;if(g.k==='coin')S.coins+=g.n;S.left--;return Promise.resolve({ok:true,gacha:g})}
 function spin(){
   if(!S.login){if(API)API.login();return}
@@ -378,7 +380,9 @@ function openCap(g){
     $('rays').classList.add('on');
     var em=$('pem'),nm=$('pnm'),ds=$('pds'),tc=g.tier==='r'?BN[g.b][2]:TIER[g.tier][0];
     $('prize').style.setProperty('--tc',tc);
-    if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=g.dup?'你已經有 '+g.name+' 了，收進神獸收藏（可送好友或到商店換資源）':BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）'}
+    if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=(g.iv!=null?'個體值 IV '+g.iv+'・':'')+(g.where==='swap'?'比你原本的 '+g.name+' 強，住進小島（原本那隻放進收藏）':g.dup?'你已經有 '+g.name+' 了，收進神獸收藏（可送好友或到商店換資源）':BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）')}
+    else if(g.k==='shard'){em.innerHTML=beastSVG(g.b,0);nm.textContent='🧩 '+g.name+' 的「'+(PARTN[g.part]||'')+'」碎片';ds.textContent='稀有・到神獸試煉島湊齊頭、身、腳就能合成'}
+    else if(g.k==='bfruit'){em.textContent='🍑';nm.textContent='神獸果 ×'+g.n;ds.textContent='普通・餵神獸親密度 +5（每隻每天 2 顆）'}
     else{em.textContent=RN[g.k][0];nm.textContent=RN[g.k][1]+' ×'+g.n;ds.textContent=TIER[g.tier][1]+(g.tier==='w'?'・下次一定更好！':'・已放進背包')}
     $('prize').classList.add('on');
     sWin(big);

@@ -1621,7 +1621,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=9b646a5f"></script>
+<script src="assets/js/coins.js?v=6a30f99e"></script>
 <script src="assets/bet/bgm.js?v=2026112204"></script>
 <script>
 (function(){
@@ -1820,6 +1820,7 @@ SP.push({k:'castle',e:'🏰',name:'AI課程城堡',sub:'9 個單元・課程內�
 SP.push({k:'dock',e:'⛵',name:'報名碼頭',sub:'場次・費用・報名方式',c:'#ff8a2a',g:['#ffc27a','#b8611f'],dc:['⚓','🏮','🧭'],res:[['🦀','w'],['🐢','w'],['🐦','f']]});
 SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手氣',c:'#fbbf24',g:['#fde68a','#b45309'],dc:['🪙','🍒','✨']});
 SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
+SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・合成神獸',c:'#34d399',g:['#a7f3d0','#047857'],dc:['🧩','🍑','⛩️']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
 /* 「找到蘋果爸」的 6 個連結也做成小島（和商店島一樣大），點進去先看介紹，再按「前往 ↗」用新分頁開 */
 var LINK_SPOTS=[
@@ -2424,7 +2425,7 @@ function route(){
   if((m=h.match(/^qa-(\d+)$/))&&ISLES[+m[1]]){openPanel('isle',+m[1]);placeBoat(ISLES[+m[1]].si,true)}
   else if(h==='tarot'){openPanel('search',1);placeBoat(spotIdx('search'),true)}
   else if(h==='game-2'){openPanel('game',1);placeBoat(GAME_SPOTS[1].si,true)}
-  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'){openPanel(h);placeBoat(spotIdx(h),true)}
+  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'||h==='trial'){openPanel(h);placeBoat(spotIdx(h),true)}
   else if((m=h.match(/^res-(\d+)$/))&&RESI[+m[1]]){openPanel('res',+m[1]);placeBoat(RESI[+m[1]].si,true)}
   else if((m=h.match(/^link-(\d+)$/))&&LINK_SPOTS[+m[1]]){openPanel('link',+m[1]);placeBoat(LINK_SPOTS[+m[1]].si,true)}
   else if(!h&&panel.classList.contains('open'))closePanel();
@@ -3159,8 +3160,9 @@ function paintShop(){
   o+='<div class="p-sec"><h4>我的錢包</h4><div class="rs-bag"><span>🪙 <b>'+(w.bal||0)+'</b> 金幣</span>'+RTYPE.map(function(x){return '<span>'+x.it+' <b>'+(b[x.rk]||0)+'</b> '+x.item+'</span>'}).join('')+'<span>💎 <b>'+(w.dia||0)+'</b> 鑽石</span></div></div>';
   var dleft=Math.max(0,(w.diaSellMax||3)-(w.diaSells||0)),sleft=Math.max(0,(w.swapMax||5)-(w.swaps||0));
   o+='<div class="p-sec"><h4>💎 鑽石換金幣<span class="sh-left">今天還能換 '+dleft+' 次</span></h4><div class="mi-seeds"><button class="mb-b" type="button" data-sell="dia"'+((w.dia||0)<1||!dleft?' disabled':'')+'>💎1 → 🪙10<small>'+((w.dia||0)<1?'你還沒有鑽石':'找鸚鵡商人鑑定')+'</small></button></div><p class="mi-note">每天最多 '+(w.diaSellMax||3)+' 次。鑽石可以在物資島採集、看文章時撿到。</p></div>';
-  var bbg2=w.bbag||{},bk2=Object.keys(bbg2).filter(function(k){return bbg2[k]>0}),bsl=w.bsell||{wood:66,stone:66,iron:66,dia:6};
-  if(bk2.length)o+='<div class="p-sec"><h4>🐲 神獸收藏換資源</h4><div class="mi-seeds">'+bk2.map(function(k){return '<button class="mb-b" type="button" data-bsell="'+k+'">'+(ANI[k]||['🐾'])[0]+' '+(ANI[k]||['',k])[1]+' → 🪵'+bsl.wood+' 🪨'+bsl.stone+' 🔩'+bsl.iron+' 💎'+bsl.dia+'<small>收藏 ×'+bbg2[k]+'</small></button>'}).join('')+'</div><p class="mi-note">重複抽到的神獸可以在這裡換資源，也可以送給好友。</p></div>';
+  var bbg2=w.bbag||{},bk2=Object.keys(bbg2).filter(function(k){return bbg2[k]>0}),bsl=w.bsell||{wood:66,stone:66,iron:66,dia:6},bsi=w.bsellIv||2;
+  function bLow(k){var c=(w.bcol||{})[k]||[],m=null;c.forEach(function(x){if(m==null||x.iv<m)m=x.iv});return m==null?0:m}
+  if(bk2.length)o+='<div class="p-sec"><h4>🐲 神獸收藏換資源</h4><div class="mi-seeds">'+bk2.map(function(k){return '<button class="mb-b" type="button" data-bsell="'+k+'">'+(ANI[k]||['🐾'])[0]+' '+(ANI[k]||['',k])[1]+'（IV '+bLow(k)+'）→ 🪵'+(bsl.wood+bLow(k)*bsi)+' 🪨'+(bsl.stone+bLow(k)*bsi)+' 🔩'+(bsl.iron+bLow(k)*bsi)+' 💎'+bsl.dia+'<small>收藏 ×'+bbg2[k]+'・先換 IV 最低的</small></button>'}).join('')+'</div><p class="mi-note">收藏的神獸可以在這裡換資源（IV 每 1 點，木、石、鐵各多 '+bsi+'），也可以送給好友；想挑哪一隻換，到 🐲 神獸試煉島的「神獸」頁。</p></div>';
   o+='<div class="p-sec"><h4>⛵ 船塢（你有 '+sh.own.length+' / '+SHIPC.length+' 艘）</h4><div class="sh-ships">'+SHIPC.map(function(c,i){
     var own=sh.own.indexOf(i)>=0,cur=sh.cur===i;
     return '<div class="sh-ship'+(cur?' cur':'')+'"><div class="sh-pv">'+shipSVG(i)+'</div><b>'+esc((sh.names&&sh.names[i])||SHIPN[i][0])+'</b><small>'+esc(SHIPN[i][1])+'</small>'+
@@ -3185,7 +3187,7 @@ pBody.addEventListener('click',function(e){
   if(d.shopRetry!=null){shopSync();return}
   if(d.bsell){var bsk=d.bsell,bnm=(ANI[bsk]||['',''])[1];t.disabled=true;
     COINS.api({a:'bsell',k:bsk}).then(function(j){if(!j||!j.ok){toast('⚠️ '+COINS.errText(j));paintShop();return}
-      if(window.TRADE_FX)window.TRADE_FX([(ANI[bsk]||['🐲'])[0]],['🪵','🪨','🔩','💎'],true);toast('🐲 '+bnm+' 換到 🪵25 🪨25 🔩25 💎1');paintShop()}).catch(function(){toast('⚠️ 網路不穩，請重新整理確認');paintShop()});return}
+      if(window.TRADE_FX)window.TRADE_FX([(ANI[bsk]||['🐲'])[0]],['🪵','🪨','🔩','💎'],true);var sg=(j.sold&&j.sold.got)||{};toast('🐲 '+bnm+'（IV '+((j.sold&&j.sold.iv)||0)+'）換到 🪵'+(sg.wood||0)+' 🪨'+(sg.stone||0)+' 🔩'+(sg.iron||0)+' 💎'+(sg.dia||0));paintShop()}).catch(function(){toast('⚠️ 網路不穩，請重新整理確認');paintShop()});return}
   if(d.shjoin!=null){COINS.need(function(){paintShop()});return}
   if(d.buyship!=null){
     var bi=+d.buyship,w1=COINS.get();
@@ -3233,7 +3235,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112101';
+var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112301';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3274,9 +3276,24 @@ function renderGacha(){
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
     '<div class="p-sec"><h4>🎉 最近喜報</h4><div class="bn-list" id="bnList">'+bnListHTML()+'</div></div>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，還有 6% 機率抽到神獸（水、火、木、金、土五選一）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
+    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，🧩 神獸碎片（10%，到神獸試煉島湊齊頭身腳合成）、🍑 神獸果 ×2（5%，餵神獸親密度 +5），還有 6% 機率抽到神獸（水、火、木、金、土五選一，個體值 IV 隨機）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
   $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
   if(code)gaLoad();
+}
+/* 神獸試煉島：頁面在 assets/bet/trial.html（iframe）；碎片、合成、神獸果、IV 都由後台決定 */
+window.AIKB_TRIAL={
+  state:function(){return {login:!!COINS.get().code}},
+  api:function(q){return COINS.api(q).then(function(j){if(j&&j.ok&&q.a!=='me'&&q.a!=='island'&&MI.data&&!MI.fid)MI.at=0;return j})},
+  err:function(j){return COINS.errText(j)},
+  login:function(){COINS.need(function(){renderTrial()})},
+  size:function(h){var f=$('trF');if(f&&V.t==='trial'&&h>200)f.style.height=Math.ceil(h)+'px'},
+  toast:function(t){toast(t)}
+};
+function renderTrial(){
+  pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳合成五行神獸</p></div></div>'+
+    '<iframe class="bet-f" id="trF" src="assets/bet/trial.html?v='+TRIAL_V+'" title="神獸試煉島" scrolling="no"></iframe>'+
+    '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 3 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能合成，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
+  $('pStep').textContent='🐲 神獸試煉島';footSimple('← 回地圖','');pNext.hidden=true;
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={
@@ -3303,7 +3320,7 @@ function betPlay(k,choice,retry){
   return COINS.api({a:'betplay',kind:k,choice:pending.choice,id:pending.id}).then(function(j){
     state.busy=false;if(COINS.get().code!==owner)return {ok:false,msg:'帳號已切換'};
     if(!j||!j.ok){if(j&&j.err!=='bad'){state.pending=null;betStore(k,null)}return {ok:false,msg:j&&j.err==='betmax'?'今天次數已用完':COINS.errText(j)}}
-    state.pending=null;betStore(k,null);state.result=j.bet;if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0}
+    state.pending=null;betStore(k,null);state.result=j.bet;if(j.bet&&j.bet.bfruit)setTimeout(function(){toast('🍑 額外掉了一顆神獸果！到神獸試煉島餵神獸')},1600);if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0}
     return {ok:true,bet:j.bet};
   }).catch(function(){state.busy=false;return {ok:false,msg:'網路中斷，請按「確認上一局結果」'}});
 }
@@ -3427,7 +3444,9 @@ function pvDefs(k,st,id){
   if(k==='turtle')return '<defs><linearGradient id="sh'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26a69a"/><stop offset=".5" stop-color="#ffd54f"/><stop offset="1" stop-color="#ef6c00"/></linearGradient></defs>';
   return '';
 }
-var PV_SIZE=[0,58,64,70];
+var PV_SIZE=[0,58,64,70],BEAST_SCALE=1.5;   /* 神獸比一般寵物大 1.5 倍 */
+var BEAST_BASE={dragon:105,phoenix:85,qilin:100,tiger:90,tortoise:120};
+function beastHp(k,iv,lv){return Math.round((BEAST_BASE[k]||100)*(1+(iv||0)/31*0.5)*(1+((lv||1)-1)*0.15))}
 /* 神獸外觀（水靈龍、火鳳凰、木麒麟、金白虎、土靈龜）：一抽到就是畫出來的樣子；Lv3 加屬性特效、Lv5 傳說加王冠與光暈 */
 function pvBeastFx(el,st){
   if(st<2)return '';
@@ -3531,7 +3550,7 @@ function petArt(k,st){
   if(PV_BEAST[k])st=Math.max(1,st);
   var id=++PV_UID,bx=PV_BEAST[k],body=k==='tiger'?pvTiger(st,id):k==='tortoise'?pvTortoise(st,id):k==='dragon'?pvDragon(st,id):k==='phoenix'?pvPhoenix(st,id):k==='qilin'?pvQilin(st,id):k==='turtle'?pvTurtle(st,id):k==='parrot'?pvParrot(st,id):pvQuad(k,st,id);
   var df=bx?(st===3?'<defs>'+pvBeastDefs(k,id)+'</defs>':''):pvDefs(k,st,id);
-  var s='<svg width="'+PV_SIZE[st]+'" height="'+Math.round(PV_SIZE[st]*64/84)+'" viewBox="0 0 84 64" aria-hidden="true">'+df+'<g class="bob">'+body+'</g>'+(bx?pvBeastFx(bx,st):'')+'</svg>';
+  var sz=Math.round(PV_SIZE[st]*(bx?BEAST_SCALE:1)),s='<svg width="'+sz+'" height="'+Math.round(sz*64/84)+'" viewBox="0 0 84 64" aria-hidden="true">'+df+'<g class="bob">'+body+'</g>'+(bx?pvBeastFx(bx,st):'')+'</svg>';
   if(st===3)s+='<i class="spk" style="left:-4px;top:4px">✨</i><i class="spk b" style="right:-4px;top:16px">✨</i>';
   return s;
 }
@@ -3703,7 +3722,7 @@ function sceneHTML(d){
   });
   (d.wild||[]).forEach(function(w){var stage=w.stage==null?2:w.stage,ready=stage===2&&(w.count||0)<2;o+='<span class="mi-wild" data-wk="'+esc(w.id)+'"'+(d.mine&&ready?' data-chop="'+esc(w.id)+'" role="button" aria-label="採收木材"':'')+' style="left:'+w.x+'%;top:'+w.y+'%;font-size:'+(stage===0?22:stage===1?30:39)+'px">'+(stage===0?'🌱':stage===1?'🌿':'🌲')+'</span>'});
   Object.keys(d.bb||{}).forEach(function(k){var pp=k==='tree'?TREE_POS[(d.trees||[]).length%TREE_POS.length]:dp[k];if(pp)o+='<span class="mi-deco bld" style="left:'+pp[0]+'%;top:'+pp[1]+'%">🚧</span>'});
-  o+=d.pets.map(function(p,i){if(p.home)return '';var a=ANI[p.k]||['🐾',''],st=petStageP(p),w=PV_SIZE[st],h=Math.round(w*64/84),bx=PV_BEAST[p.k];
+  o+=d.pets.map(function(p,i){if(p.home)return '';var a=ANI[p.k]||['🐾',''],st=petStageP(p),bx=PV_BEAST[p.k],w=Math.round(PV_SIZE[st]*(bx?BEAST_SCALE:1)),h=Math.round(w*64/84);
     return '<span class="mi-pet'+(st===3?' lgd':'')+(bx?' el-'+bx:'')+'" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" data-mpet="'+esc(p.id||'')+'" data-k="'+esc(p.k)+'" data-st="'+st+'" role="button" aria-label="'+esc(p.n)+'" style="'+(st?'margin:'+(-h/2)+'px 0 0 '+(-w/2)+'px':'font-size:'+(32+Math.min(4,p.lv-1)*4)+'px')+'">'+
       '<i class="'+(st?'sv':'')+'">'+(st?petArt(p.k,st):'<u>'+a[0]+'</u>')+'</i>'+(st?'<span class="psh"></span>':'')+'<em'+(bx?' class="bst"':'')+'>'+(bx?'✨':'')+esc(p.n)+'</em><span class="zz">💤</span></span>'}).join('');
   if(!d.h&&!d.fields&&!d.deco.length&&!(d.trees||[]).length&&!d.pets.length)o+='<p class="mi-empty">'+(d.mine?'這座島還是一片空地，先用 🪵 木材和 🪨 石頭蓋一間小屋吧！':'這座島還是一片空地')+'</p>';
@@ -3808,7 +3827,7 @@ function pwTick(t){
     if(!PW.rm&&!isSel){
       if(st.mv){
         var dx=st.tx-st.x,dy=st.ty-st.y,d=Math.hypot(dx,dy),sp=st.spd*dt;
-        if(d<=sp){st.x=st.tx;st.y=st.ty;st.mv=0;st.wait=.8+Math.random()*3.2;st.mood='';
+        if(d<=sp){st.x=st.tx;st.y=st.ty;st.mv=0;st.wait=PV_BEAST[pk]?3+Math.random()*5:.8+Math.random()*3.2;st.mood='';
           if(pst){var rr=Math.random();   /* 長大以後：貓會睡覺、烏龜縮殼、熊貓打滾、狗狗衝刺、鸚鵡降落 */
             if(pk==='cat'&&rr<.4){st.mood='sleep';st.wait=6}
             else if(pk==='turtle'&&rr<.35){st.mood='hide';st.wait=3.5}
@@ -3817,7 +3836,7 @@ function pwTick(t){
         else{st.x+=dx/d*sp;st.y+=dy/d*sp;if(Math.abs(dx)>2)st.dir=dx>0?1:-1}
       }else{
         st.wait-=dt;
-        if(st.wait<=0){st.mood='';if(pk==='parrot'&&pst)st.fly=Math.random()<.6;if(pk==='dragon'||pk==='phoenix')st.fly=true;var q=pwPick(G,st);if(q){st.tx=q[0];st.ty=q[1];st.spd=(PV_SPD[pk]||30)*(.85+Math.random()*.3)*(st.fly?2.3:1)*(pk==='dog'&&Math.random()<.3?1.8:1);st.mv=1}else st.wait=1}
+        if(st.wait<=0){st.mood='';if(pk==='parrot'&&pst)st.fly=Math.random()<.6;if(pk==='dragon'||pk==='phoenix')st.fly=true;var q=pwPick(G,st);if(q){st.tx=q[0];st.ty=q[1];st.spd=(PV_SPD[pk]||30)*(.85+Math.random()*.3)*(st.fly?(PV_BEAST[pk]?1.2:2.3):1)*(pk==='dog'&&Math.random()<.3?1.8:1)*(PV_BEAST[pk]?.5:1);st.mv=1}else st.wait=1}
       }
     }
     el.style.transform='translate('+st.x.toFixed(1)+'px,'+st.y.toFixed(1)+'px)';
@@ -3848,7 +3867,7 @@ function petBubHTML(p){
     '<div class="prow"><span>飽足度 '+p.full+(p.full<50?' 😟 餓了':'')+'</span><span>'+(p.patted?'✋ 今天摸過了':'✋ 點牠摸摸')+'</span></div><div class="pbar"><i style="width:'+p.full+'%"></i></div>'+
     '<div class="prow"><span>親密度 '+p.aff+'（'+(p.aff%10)+' / 10）</span><span>餵食加親密 '+Math.min(2,fa)+' / 2</span></div><div class="pbar af"><i style="width:'+(p.aff%10)*10+'%"></i></div>'+
     '<div class="pfood">'+F.map(function(f){return '<button type="button" data-feed="'+f[0]+'" data-id="'+esc(p.id)+'"'+(f[3]<1||p.full>=100?' disabled':'')+' aria-label="餵'+f[2]+'">'+f[1]+'<small>×'+f[3]+'</small></button>'}).join('')+'</div>'+
-    '<div class="pnx">'+(p.full>=100?'吃飽了，晚一點再餵・':'')+(nx?'下一個形態：Lv'+nx+' '+PV_STN[petStage(nx)]:'已經是最高的傳說形態')+'</div>';
+    (PV_BEAST[p.k]?'<div class="prow"><span>⭐ IV '+(p.iv||0)+' / 31</span><span>❤️ HP '+beastHp(p.k,p.iv,p.lv)+'</span></div><div class="pnx">🍑 神獸果可以在 🐲 神獸試煉島餵（親密度 +5）</div>':'')+'<div class="pnx">'+(p.full>=100?'吃飽了，晚一點再餵・':'')+(nx?'下一個形態：Lv'+nx+' '+PV_STN[petStage(nx)]:'已經是最高的傳說形態')+'</div>';
 }
 function petBubPlace(sc,el,st){
   var p=MI.data&&MI.data.pets.filter(function(x){return x.id===PW.selId})[0];if(!p||!MI.data.mine){petBubClose();return}
@@ -3930,7 +3949,7 @@ function paintMine(){
   var nPet=d.pets.filter(function(p){return !PV_BEAST[p.k]}).length,nOut=d.pets.filter(function(p){return !p.home}).length;
   o+='<div class="p-sec"><h4>🐾 我的寵物（'+nPet+' / '+Math.min(d.h,8)+'）'+(d.pets.length>nPet?'＋神獸 '+(d.pets.length-nPet):'')+'</h4>';
   var bbg=COINS.get().bbag||{},bks=Object.keys(bbg).filter(function(k){return bbg[k]>0});
-  if(bks.length)o+='<div class="mi-bbag">🐲 神獸收藏（重複抽到的）：'+bks.map(function(k){return (ANI[k]||['🐾',k])[0]+' '+(ANI[k]||['',k])[1]+' ×'+bbg[k]}).join('、')+'<br><small>可以在「👥 好友」裡送給船長好友（互送就是交換），或到 🏪 商店島換資源。</small></div>';
+  if(bks.length)o+='<div class="mi-bbag">🐲 神獸收藏（重複抽到的）：'+bks.map(function(k){return (ANI[k]||['🐾',k])[0]+' '+(ANI[k]||['',k])[1]+' ×'+bbg[k]+(((COINS.get().bcol||{})[k]||[]).length?'（IV '+((COINS.get().bcol||{})[k]||[]).map(function(x){return x.iv}).join('、')+'）':'')}).join('、')+'<br><small>可以在「👥 好友」裡送給船長好友（互送就是交換），或到 🏪 商店島換資源。</small></div>';
   if(d.pets.length)o+='<p class="mi-note">小島上現在有 '+nOut+' 隻。按「🏠 帶回家」可以先收起來，小島上就不會出現；想看的時候再「🏝️ 放出來」。</p>';
   if(!d.pets.length)o+='<p class="mi-note">'+(d.h?'小屋可以養 '+Math.min(d.h,8)+' 隻寵物，':'先蓋小屋，')+'到寵物島領養一隻吧！</p><button class="btn btn-primary btn-sm" type="button" data-open="pets">🐾 去寵物島</button>';
   o+='<div class="mi-pets">'+d.pets.map(function(p){
@@ -4805,7 +4824,7 @@ function applySync(code){
 }
 function actsHTML(){
   var s=null,h='',title='';
-  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='game')s=GAME_SPOTS[V.i]||GAME_SPOTS[0];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
+  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='trial'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='game')s=GAME_SPOTS[V.i]||GAME_SPOTS[0];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
   if(V.t==='hut'&&SCN){h=spotHash(SCN)+'/'+V.i;title=SCN.name+'・'+SCN.huts[V.i].name}
   else if(s){h=spotHash(s);title=s.name}
   if(!h)return '';
@@ -4814,7 +4833,7 @@ function actsHTML(){
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
-  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame(V.i);else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
+  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame(V.i);else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='trial')renderTrial();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
   pBody.scrollTop=0;
@@ -5053,7 +5072,7 @@ var HASH=location.hash.replace(/^#/,''),HASH_SP=-1,hm;
 if((hm=HASH.match(/^isle-([^/]+)/)))SP.forEach(function(s){if(s.k==='forum'&&s.id===decodeURIComponent(hm[1]))HASH_SP=s.si});
 else if((hm=HASH.match(/^qa-(\d+)$/))&&ISLES[+hm[1]])HASH_SP=ISLES[+hm[1]].si;
 else if(HASH==='game-2')HASH_SP=GAME_SPOTS[1].si;
-else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='gacha'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
+else if(HASH==='home'||HASH==='castle'||HASH==='search'||HASH==='dock'||HASH==='msg'||HASH==='game'||HASH==='slot'||HASH==='rps'||HASH==='gacha'||HASH==='trial'||HASH==='mine'||HASH==='pets'||HASH==='shop')HASH_SP=spotIdx(HASH);
 else if(HASH==='tarot')HASH_SP=spotIdx('search');
 else if((hm=HASH.match(/^res-(\d+)$/))&&RESI[+hm[1]])HASH_SP=RESI[+hm[1]].si;
 else if((hm=HASH.match(/^link-(\d+)$/))&&LINK_SPOTS[+hm[1]])HASH_SP=LINK_SPOTS[+hm[1]].si;
