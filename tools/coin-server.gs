@@ -184,9 +184,42 @@ function isBeast_(k) { return !!(ANIMALS[k] && ANIMALS[k].beast); }
 function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k); }).length; } // 佔名額的寵物（不含神獸）
 /* 扭蛋島：每抽 5 枚金幣、每天 3 次；[種類, 數量, 機率權重, 扭蛋顏色] */
 var GACHA_COST = 5, GACHA_DAY = 3;
-var GACHA = [['fruit', 10, 26, 'w'], ['wood', 20, 15, 'g'], ['stone', 20, 15, 'g'], ['iron', 20, 15, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 10, 'p'], ['dia', 3, 3, 'y'], ['beast', 1, 6, 'r']];   // 第三欄是機率（%），合計 100
+var GACHA = [['fruit', 10, 11, 'w'], ['wood', 20, 15, 'g'], ['stone', 20, 15, 'g'], ['iron', 20, 15, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 10, 'p'], ['dia', 3, 3, 'y'], ['beast', 1, 6, 'r'], ['shard', 1, 10, 'p'], ['bfruit', 2, 5, 'g']];   // v62：水果 26→11，新增神獸碎片 10%、神獸果 ×2 5%   // 第三欄是機率（%），合計 100
 var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
 var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸到商店島換資源
+var BEAST_SELL_IV = 2;   // v62：換資源依個體值加成，IV 每 1 點木、石、鐵各多 2
+/* v62 神獸試煉島：碎片（5 隻神獸 × 頭身腳）、合成、個體值 IV（0～31）、神獸果（只有神獸能吃，親密度 +5） */
+var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 3, BT_FRUIT_DAY = 5, BT_FORGE = 40, BT_PITY = 20;
+var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, BT_GAP = 15 * 1000;
+function partRoll_() { var x = Math.random() * 100; return x < 20 ? 'head' : x < 60 ? 'body' : 'foot'; }   // 頭 20%、身 40%、腳 40%
+function ivRoll_() { return Math.floor(Math.random() * 32); }
+/* 神獸的個體值：新拿到的存在 p.iv；舊的（v62 以前抽到的）用寵物編號算一個固定值，不會每次不一樣 */
+function ivOf_(p) { return p && p.iv != null && isFinite(p.iv) ? Math.max(0, Math.min(31, Math.floor(Number(p.iv)))) : hash_('iv|' + String(p && p.id || '')) % 32; }
+function btOf_(o) {
+  var b = o.bt && typeof o.bt === 'object' ? o.bt : {}, td = day_();
+  b.sh = b.sh && typeof b.sh === 'object' ? b.sh : {}; b.pity = b.pity && typeof b.pity === 'object' ? b.pity : {}; b.fr = num_(b.fr);
+  if (b.d !== td) { b.d = td; b.st = 0; b.ft = 0; b.sf = 0; }
+  b.receipts = Array.isArray(b.receipts) ? b.receipts.slice(-60) : [];
+  o.bt = b; return b;
+}
+function btPub_(o) {
+  var b = btOf_(o), kinds = {};
+  (o.pets || []).forEach(function (p) { if (isBeast_(p.k)) kinds[p.k] = 1; });
+  return { sh: b.sh, fr: b.fr, pity: b.pity, st: num_(b.st), ft: num_(b.ft), sf: num_(b.sf), kinds: Object.keys(kinds).length,
+    max: { shard: BT_SHARD_DAY, fruit: BT_FRUIT_DAY, slot: SLOT_FRUIT_DAY, feed: BT_FEED_DAY, lv: BEAST_LV_MAX }, forge: BT_FORGE, pityStep: BT_PITY };
+}
+/* 神獸收藏改成一隻一隻記（isle.bcol = {種類: [{iv, aff}]}），isle.bbag 的數量跟著同步；舊的只有數量，就補上固定的 IV */
+function bcolOf_(o) {
+  var bag = bbagOf_(o), src = o.bcol && typeof o.bcol === 'object' ? o.bcol : null, out = {};
+  BEASTS.forEach(function (k) {
+    var arr = src && Array.isArray(src[k]) ? src[k].filter(function (x) { return x && typeof x === 'object'; }).map(function (x) { return { iv: ivOf_(x), aff: num_(x.aff) }; }) : [];
+    if (!src) for (var i = 0; i < num_(bag[k]); i++) arr.push({ iv: hash_('bcol|' + k + '|' + i) % 32, aff: 0 });
+    if (arr.length) out[k] = arr;
+  });
+  return out;
+}
+function bcolSet_(o, col) { o.bcol = {}; o.bbag = {}; BEASTS.forEach(function (k) { if (col[k] && col[k].length) { o.bcol[k] = col[k]; o.bbag[k] = col[k].length; } }); }
+function lowIdx_(arr) { var b = 0; arr.forEach(function (x, i) { if (x.iv < arr[b].iv) b = i; }); return b; }
 /* 喜報跑馬燈：船長抽到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則 */
 var BN_HEAD = ['時間', '暱稱', '神獸', '收藏'], BN_KEEP = 10, BN_HOURS = 24;
 function bnews_() {
@@ -210,10 +243,17 @@ function bnewsAdd_(nick, b, dup) {
 /* 重複抽到的神獸先收在「神獸收藏」（isle.bbag）；可以送給好友，或到商店換資源 */
 function bbagOf_(o) { var b = o.bbag && typeof o.bbag === 'object' ? o.bbag : {}, out = {}; BEASTS.forEach(function (k) { if (num_(b[k]) > 0) out[k] = num_(b[k]); }); return out; }
 /* 收到一隻神獸：沒有就住進小島，有了就放進收藏 */
-function beastGive_(o, k) {
+function beastGive_(o, k, iv, aff) {
   o.pets = Array.isArray(o.pets) ? o.pets : [];
-  if (o.pets.some(function (x) { return x.k === k; })) { o.bbag = bbagOf_(o); o.bbag[k] = num_(o.bbag[k]) + 1; return 'bag'; }
-  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: 0, pd: 0 });
+  iv = iv == null ? ivRoll_() : iv; aff = num_(aff);
+  var cur = null; o.pets.forEach(function (x) { if (x.k === k) cur = x; });
+  if (cur) {   /* v62：已經有同一種 → IV 高的住小島，另一隻（連同親密度）放進收藏 */
+    var col = bcolOf_(o), civ = ivOf_(cur);
+    col[k] = col[k] || [];
+    if (iv > civ) { col[k].push({ iv: civ, aff: num_(cur.aff) }); cur.iv = iv; cur.aff = aff; bcolSet_(o, col); return 'swap'; }
+    col[k].push({ iv: iv, aff: aff }); bcolSet_(o, col); return 'bag';
+  }
+  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: aff, pd: 0, iv: iv });
   return 'pet';
 }
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
@@ -396,7 +436,7 @@ function profile_(r) {
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
     trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
     swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY,
-    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, unread: num_(r[C.unread]), friends: list_(r[C.friends]).length, fl: list_(r[C.friends]).map(String), // fl：好友的好友碼（排行榜標「好友」用）
+    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, bsellIv: BEAST_SELL_IV, bcol: bcolOf_(io), bt: btPub_(io), unread: num_(r[C.unread]), friends: list_(r[C.friends]).length, fl: list_(r[C.friends]).map(String), // fl：好友的好友碼（排行榜標「好友」用）
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',
@@ -541,7 +581,7 @@ function handle_(q) {
           }
           r[C.bal]=num_(r[C.bal])-1+paid;r[C.earned]=num_(r[C.earned])+Math.max(0,paid-1);bets[bt]=num_(bets[bt])+1;
           if(bdia)r[C.dia]=num_(r[C.dia])+bdia;
-          res.bet={kind:bt,roll:roll,paid:paid,result:result};if(bdia)res.bet.dia=bdia;if(streak!==null)res.bet.streak=streak;bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
+          res.bet={kind:bt,roll:roll,paid:paid,result:result};if(bdia)res.bet.dia=bdia;if(streak!==null)res.bet.streak=streak;if(bt==='slot'){var sfb=btOf_(betIsland);if(sfb.sf<SLOT_FRUIT_DAY&&Math.random()<SLOT_FRUIT_P){sfb.sf++;sfb.fr++;res.bet.bfruit=1;}}bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
         }
       }
       betIsland.bets=bets;r[C.isle]=JSON.stringify(betIsland);res.betstats={slot:10-num_(bets.slot),rps:10-num_(bets.rps),rs:num_(bets.rs)};
@@ -567,9 +607,12 @@ function handle_(q) {
           if (pick[0]==='coin'){r[C.bal]=num_(r[C.bal])+pick[1];r[C.earned]=num_(r[C.earned])+Math.max(0,pick[1]-GACHA_COST);}
           else if (pick[0]==='beast'){
             var bk=BEASTS[Math.floor(Math.random()*BEASTS.length)];gr.b=bk;gr.name=ANIMALS[bk].name;gr.el=ANIMALS[bk].beast;
-            if (beastGive_(gIsle,bk)==='bag') gr.dup=1;
+            var giv=ivRoll_(),gw=beastGive_(gIsle,bk,giv,0);gr.iv=giv;gr.where=gw;
+            if (gw!=='pet') gr.dup=1;
             bnewsAdd_(r[C.nick],bk,gr.dup);
           }
+          else if (pick[0]==='shard'){var gsb=btOf_(gIsle),gsk=BEASTS[Math.floor(Math.random()*BEASTS.length)],gsp=partRoll_();gsb.sh[gsk+'.'+gsp]=num_(gsb.sh[gsk+'.'+gsp])+1;gr.b=gsk;gr.part=gsp;gr.name=ANIMALS[gsk].name;gr.el=ANIMALS[gsk].beast;}
+          else if (pick[0]==='bfruit'){var gfb=btOf_(gIsle);gfb.fr+=pick[1];}
           else r[BAG_COL[pick[0]]]=num_(r[BAG_COL[pick[0]]])+pick[1];
           ga.n=num_(ga.n)+1;res.gacha=gr;
           ga.receipts.push({id:gid,result:gr,t:Date.now()});if(ga.receipts.length>50)ga.receipts=ga.receipts.slice(-50);
@@ -579,24 +622,82 @@ function handle_(q) {
       res.gachaLog=ga.receipts.slice(-6).reverse().map(function(x){return x.result});res.bn=bnews_();
     } else if (a === 'bsell') {
       /* 商店島：收藏裡的一隻神獸換資源 */
-      var sIsle=isleOf_(r), sk=String(q.k||''), sb=bbagOf_(sIsle);
-      if (!sb[sk]) return {ok:false,err:'nobeast',p:me};
-      sb[sk]--; if(!sb[sk]) delete sb[sk]; sIsle.bbag=sb;
-      for (var bs in BEAST_SELL) r[BAG_COL[bs]]=num_(r[BAG_COL[bs]])+BEAST_SELL[bs];
-      r[C.isle]=JSON.stringify(sIsle); res.sold={k:sk,got:BEAST_SELL};
+      var sIsle=isleOf_(r), sk=String(q.k||''), scol=bcolOf_(sIsle), sarr=scol[sk]||[];
+      if (!sarr.length) return {ok:false,err:'nobeast',p:me};
+      var sidx=q.i!=null&&q.i!==''?Math.floor(num_(q.i)):lowIdx_(sarr);
+      if (sidx<0||sidx>=sarr.length) return {ok:false,err:'bad',p:me};
+      var sold=sarr.splice(sidx,1)[0], sgot={}; bcolSet_(sIsle,scol);
+      for (var bs in BEAST_SELL) { sgot[bs]=BEAST_SELL[bs]+(bs==='dia'?0:sold.iv*BEAST_SELL_IV); r[BAG_COL[bs]]=num_(r[BAG_COL[bs]])+sgot[bs]; }
+      r[C.isle]=JSON.stringify(sIsle); res.sold={k:sk,iv:sold.iv,got:sgot};
     } else if (a === 'bgift') {
       /* 送一隻收藏的神獸給好友（不算每天送禮的次數；互送就是交換） */
       var bk2=String(q.k||''), jb=findFid_(rows, q.fid);
       if (!ANIMALS[bk2]||!ANIMALS[bk2].beast||jb<0) return {ok:false,err:'bad',p:me};
       var bfid=String(rows[jb][C.fid]);
       if (list_(r[C.friends]).indexOf(bfid)<0) return {ok:false,err:'notfriend',p:me};
-      var myIsle=isleOf_(r), mb=bbagOf_(myIsle);
-      if (!mb[bk2]) return {ok:false,err:'nobeast',p:me};
-      mb[bk2]--; if(!mb[bk2]) delete mb[bk2]; myIsle.bbag=mb; r[C.isle]=JSON.stringify(myIsle);
-      var fIsle=isleOf_(rows[jb]), where=beastGive_(fIsle,bk2); rows[jb][C.isle]=JSON.stringify(fIsle);
+      var myIsle=isleOf_(r), mcol=bcolOf_(myIsle), marr=mcol[bk2]||[];
+      if (!marr.length) return {ok:false,err:'nobeast',p:me};
+      var midx=q.i!=null&&q.i!==''?Math.floor(num_(q.i)):lowIdx_(marr);
+      if (midx<0||midx>=marr.length) return {ok:false,err:'bad',p:me};
+      var mgive=marr.splice(midx,1)[0]; bcolSet_(myIsle,mcol); r[C.isle]=JSON.stringify(myIsle);
+      var fIsle=isleOf_(rows[jb]), where=beastGive_(fIsle,bk2,mgive.iv,0); rows[jb][C.isle]=JSON.stringify(fIsle);
       rows[jb][C.unread]=num_(rows[jb][C.unread])+1; touched[jb]=1;
-      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], bfid, rows[jb][C.nick], '🐲 送你一隻神獸「'+ANIMALS[bk2].name+'」'+(where==='pet'?'，已經住進你的小島了！':'，放在你的神獸收藏裡。')]);
+      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], bfid, rows[jb][C.nick], '🐲 送你一隻神獸「'+ANIMALS[bk2].name+'」'+'（IV '+mgive.iv+'）'+(where==='pet'?'，已經住進你的小島了！':where==='swap'?'，比你原本的強，已經住進小島（原本那隻放進收藏）。':'，放在你的神獸收藏裡。')]);
       res.friends=friendsOf_(rows, r); res.bgift={k:bk2,to:where};
+    } else if (a === 'trial') {
+      /* v62 神獸試煉島關卡結算：網頁回報答對幾題（0～8），伺服器決定掉不掉碎片／神獸果；同一個 id 重送只回原結果 */
+      var tIsle=isleOf_(r), tb=btOf_(tIsle), tid=String(q.id||'');
+      if (!/^[A-Za-z0-9_-]{12,80}$/.test(tid)) return {ok:false,err:'bad',p:me};
+      var tOld=tb.receipts.find(function(x){return x.id===tid});
+      if (tOld) res.trial=tOld.result;
+      else {
+        var tTime=parseInt(tid.split('-').pop(),36);if(!isFinite(tTime)||Math.abs(Date.now()-tTime)>86400000) return {ok:false,err:'expired',p:me};
+        var tright=Math.floor(num_(q.right));if(tright<0||tright>8) return {ok:false,err:'bad',p:me};
+        if (Date.now()-num_(tb.lt)<BT_GAP) return {ok:false,err:'gamecool',p:me};
+        var tch=tright>=8?100:tright>=7?60:tright>=5?30:0, tres={right:tright,shard:null,fruit:0,chance:tch};
+        if (tch && num_(tb.st)<BT_SHARD_DAY && Math.random()*100<tch) {
+          var tk=BEASTS[Math.floor(Math.random()*BEASTS.length)], tp=partRoll_();
+          tb.sh[tk+'.'+tp]=num_(tb.sh[tk+'.'+tp])+1; tb.st=num_(tb.st)+1; tres.shard={k:tk,p:tp,name:ANIMALS[tk].name};
+        } else if (tch && num_(tb.st)>=BT_SHARD_DAY) tres.full=1;
+        var tfr=tright>=8?2:tright>=5?1:0; tfr=Math.max(0,Math.min(tfr,BT_FRUIT_DAY-num_(tb.ft)));
+        if (tfr) { tb.fr+=tfr; tb.ft=num_(tb.ft)+tfr; tres.fruit=tfr; }
+        tb.lt=Date.now(); tb.receipts.push({id:tid,result:tres}); res.trial=tres;
+      }
+      r[C.isle]=JSON.stringify(tIsle);
+    } else if (a === 'forge') {
+      /* v62 合成：同一隻神獸的頭身腳各一片；成功率 40%，失敗一次 +20%（最多 3 次失敗必成功） */
+      var fI=isleOf_(r), fb=btOf_(fI), fk=String(q.k||''), fxid=String(q.id||'');
+      if (BEASTS.indexOf(fk)<0||!/^[A-Za-z0-9_-]{12,80}$/.test(fxid)) return {ok:false,err:'bad',p:me};
+      var fOld=fb.receipts.find(function(x){return x.id===fxid});
+      if (fOld) res.forge=fOld.result;
+      else {
+        var fTime=parseInt(fxid.split('-').pop(),36);if(!isFinite(fTime)||Math.abs(Date.now()-fTime)>86400000) return {ok:false,err:'expired',p:me};
+        if (!BT_PARTS.every(function(pp){return num_(fb.sh[fk+'.'+pp])>0})) return {ok:false,err:'noshard',p:me};
+        BT_PARTS.forEach(function(pp){fb.sh[fk+'.'+pp]=num_(fb.sh[fk+'.'+pp])-1;if(!fb.sh[fk+'.'+pp])delete fb.sh[fk+'.'+pp]});
+        var frate=Math.min(100,BT_FORGE+BT_PITY*num_(fb.pity[fk])), fwin=Math.random()*100<frate, fres={k:fk,name:ANIMALS[fk].name,rate:frate,win:fwin};
+        if (fwin) { fb.pity[fk]=0; var fiv=ivRoll_(), fw=beastGive_(fI,fk,fiv,0); fres.iv=fiv; fres.where=fw; bnewsAdd_(r[C.nick],fk,fw!=='pet'); }
+        else { fb.pity[fk]=num_(fb.pity[fk])+1; fres.next=Math.min(100,BT_FORGE+BT_PITY*fb.pity[fk]); }
+        fb.receipts.push({id:fxid,result:fres}); res.forge=fres;
+      }
+      r[C.isle]=JSON.stringify(fI); res.island=islePub_(r,true);
+    } else if (a === 'bfeed') {
+      /* v62 餵神獸果：親密度 +5，每隻神獸每天最多 2 顆，Lv10 封頂 */
+      var bI=isleOf_(r), bfb=btOf_(bI), bp=null;
+      (bI.pets||[]).forEach(function(pp){if(pp.id===String(q.id||''))bp=pp});
+      if (!bp||!isBeast_(bp.k)) return {ok:false,err:'bad',p:me};
+      if (bfb.fr<1) return {ok:false,err:'nobfruit',p:me};
+      if (petLv_(bp)>=BEAST_LV_MAX) return {ok:false,err:'maxed',p:me};
+      if (num_(bp.bfd)!==day_()) { bp.bfd=day_(); bp.bfn=0; }
+      if (num_(bp.bfn)>=BT_FEED_DAY) return {ok:false,err:'bfedmax',p:me};
+      bfb.fr--; bp.bfn=num_(bp.bfn)+1; bp.aff=num_(bp.aff)+BT_FRUIT_AFF;
+      r[C.isle]=JSON.stringify(bI); res.island=islePub_(r,true); res.bfed={id:bp.id,lv:petLv_(bp),aff:num_(bp.aff)};
+    } else if (a === 'bswap') {
+      /* v62 收藏裡的某一隻換上小島，原本在小島的那隻進收藏（IV、親密度各自跟著走） */
+      var wI=isleOf_(r), wk=String(q.k||''), wcol=bcolOf_(wI), warr=wcol[wk]||[], wi=Math.floor(num_(q.i)), wp=null;
+      (wI.pets||[]).forEach(function(pp){if(pp.k===wk)wp=pp});
+      if (!wp||wi<0||wi>=warr.length) return {ok:false,err:'bad',p:me};
+      var wit=warr[wi]; warr[wi]={iv:ivOf_(wp),aff:num_(wp.aff)}; wp.iv=wit.iv; wp.aff=num_(wit.aff); bcolSet_(wI,wcol);
+      r[C.isle]=JSON.stringify(wI); res.island=islePub_(r,true);
     } else if (a === 'login' || a === 'me') {
       // 只回傳資料
     } else if (a === 'daily') {
@@ -1298,7 +1399,7 @@ function isleScore_(o) {
 }
 function cropLeft_(c, now) { return Math.max(0, num_(c.t) + VEG[c.v].hours * HOUR - num_(c.b) - now); }
 function fullNow_(p, now) { return Math.max(0, Math.min(100, Number(p.full) - HUNGER_PER_DAY * (now - num_(p.ft)) / DAY_MS)); }
-function petLv_(p) { return 1 + Math.floor(num_(p.aff) / 10); }
+function petLv_(p) { var l = 1 + Math.floor(num_(p.aff) / 10); return isBeast_(p.k) ? Math.min(BEAST_LV_MAX, l) : l; }
 function hasCost_(r, cost) { for (var k in cost) if (num_(r[BAG_COL[k]]) < cost[k]) return false; return true; }
 /* 看自己的小島（只讀，不寫回試算表、不佔用鎖）：登入小島時最常被呼叫，所以走最短的路 */
 function islandOwn_(q) {
@@ -1346,7 +1447,7 @@ function islePub_(r, mine, viewer) {
     hb: o.hb ? { t: num_(o.hb.t), left: Math.max(0, num_(o.hb.e) - now), total: HOUSE_MS[num_(o.hb.t)] || 0 } : null,
     f: o.f.map(function (c) { return c && VEG[c.v] ? { v: c.v, left: cropLeft_(c, now), total: VEG[c.v].hours * HOUR } : null; }),
     pets: o.pets.map(function (p) {
-      return { id: p.id, k: p.k, n: p.n, full: Math.round(fullNow_(p, now)), aff: num_(p.aff), lv: petLv_(p), patted: num_(p.pd) === day_(), fa: num_(p.fd) === day_() ? num_(p.fa) : 0, home: num_(p.home) ? 1 : 0, beast: isBeast_(p.k) ? ANIMALS[p.k].beast : '' };
+      return { id: p.id, k: p.k, n: p.n, full: Math.round(fullNow_(p, now)), aff: num_(p.aff), lv: petLv_(p), patted: num_(p.pd) === day_(), fa: num_(p.fd) === day_() ? num_(p.fa) : 0, home: num_(p.home) ? 1 : 0, iv: isBeast_(p.k) ? ivOf_(p) : undefined, bfn: isBeast_(p.k) && num_(p.bfd) === day_() ? num_(p.bfn) : 0, beast: isBeast_(p.k) ? ANIMALS[p.k].beast : '' };
     })
   };
   if (mine) { out.open = r[C.open] !== '否'; out.vis = o.vis.map(function (x) { return { n: x.n, a: x.a, t: x.t, f: x.f }; }); out.veg = o.veg; out.rules = { house: HOUSE, houseMs: HOUSE_MS, fieldMs: FIELD_MS, decoMs: DECO_MS, field: FIELD, deco: DECO,
