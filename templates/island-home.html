@@ -956,7 +956,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .online .tag{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:999px;background:#ff8a2a;color:#fff;font-size:12px;vertical-align:2px}
 @media (max-width:520px){.facts{grid-template-columns:1fr}.plans{grid-template-columns:1fr}}
 
-@media (max-width:480px){.in-scene .hud #missionBtn,.in-scene .hud #boardBtn,.in-scene .hud #bagBtn,.in-scene .hud #annBtn{display:none}}
+@media (max-width:480px){.in-scene .hud #missionBtn,.in-scene .hud #searchBtn2,.in-scene .hud #castleBtn,.in-scene .hud #annBtn{display:none}}
 #annBtn{position:relative}
 @media (max-width:440px){#searchBtn{display:none}}
 #bagBtn{position:relative}.hb-dot{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ff5e62;color:#fff;font:800 11px/17px sans-serif;text-align:center;box-shadow:0 0 0 2px #063a50}.hb-dot[hidden]{display:none}
@@ -1423,8 +1423,8 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
   <div class="hud-r">
     <button class="hb" id="missionBtn" type="button" aria-label="使用說明與遊戲規則">📖</button>
     <button class="hb" id="annBtn" type="button" aria-label="站長公告">📢<span class="hb-dot" id="annDot" hidden></span></button>
-    <button class="hb" id="boardBtn" type="button" aria-label="排行榜">🏆</button>
-    <button class="hb" id="bagBtn" type="button" aria-label="背包與好友">🎒<span class="hb-dot" id="bagDot" hidden></span></button>
+    <button class="hb" id="searchBtn2" type="button" aria-label="搜尋文章與問答">🔮</button>
+    <button class="hb" id="castleBtn" type="button" data-open="castle" aria-label="AI課程城堡">🏰</button>
     <button class="hb" id="searchBtn" type="button" aria-label="搜尋文章與問答">🔍</button>
     <button class="hb" id="sfxBtn" type="button" aria-label="關閉音效">🔊</button>
     <button class="hb" id="fsBtn" type="button" aria-label="全螢幕"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -1447,8 +1447,8 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
   <button class="qtog" type="button" id="questTog" aria-label="展開選單" aria-expanded="false"><i>⛵</i>選單</button>
   <button class="qfold" type="button" id="questFold" aria-label="收起選單">⌄</button>
   <button class="qbtn" type="button" data-open="mine"><i>🏝️</i>我的小島</button>
-  <button class="qbtn" type="button" id="searchBtn2"><i>🔮</i>搜尋</button>
-  <button class="qbtn" type="button" data-open="castle"><i>🏰</i>城堡</button>
+  <button class="qbtn" type="button" id="boardBtn"><i>🏆</i>排行榜</button>
+  <button class="qbtn" type="button" id="bagBtn"><i>🎒</i>背包<span class="hb-dot" id="bagDot" hidden></span></button>
   <button class="qbtn" type="button" id="favBtn"><i>⭐</i>收藏</button>
   <button class="qbtn" type="button" id="histBtn"><i>🕘</i>紀錄</button>
   <button class="qbtn" type="button" id="logBtn"><i>📜</i>清單</button>
@@ -5231,7 +5231,7 @@ $('hudFold').addEventListener('click',function(){hudOpen(false)});
 $('questTog').addEventListener('click',function(){dockOpen(true)});
 $('questFold').addEventListener('click',function(){dockOpen(false)});
 $('quest').addEventListener('click',function(e){if(e.target.closest('.qbtn'))dockOpen(false)});
-$('hud').addEventListener('click',function(e){if(!hudFull()&&e.target.closest('#missionBtn,#annBtn,#boardBtn,#bagBtn,#searchBtn,#candyBtn'))hudOpen(false)});
+$('hud').addEventListener('click',function(e){if(!hudFull()&&e.target.closest('#missionBtn,#annBtn,#searchBtn2,#castleBtn,#searchBtn,#candyBtn'))hudOpen(false)});
 world.addEventListener('pointerdown',collapseMenus,{passive:true});
 world.addEventListener('wheel',collapseMenus,{passive:true});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')collapseMenus()});
