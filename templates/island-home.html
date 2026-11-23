@@ -1021,11 +1021,13 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-tool.swing{animation:rsSwing .18s ease-in}
 .rs-fruit .rs-tool.swing{animation:rsPush .18s ease-out}
 @keyframes rsSwing{0%{transform:rotate(-40deg)}100%{transform:rotate(18deg)}}
-@keyframes rsPush{50%{transform:translateX(16px)}}
+@keyframes rsPush{50%{transform:translateX(38px)}}
 /* 斧頭、十字鎬左右翻過來：刀刃朝向樹和礦石，握把在右下；揮動也改成往左下劈 */
 .rs-tool.mir{transform-origin:76% 94%;transform:rotate(27deg)}
 .rs-tool.mir.swing{animation:rsSwingM .24s ease-in-out}
-@keyframes rsSwingM{0%{transform:rotate(27deg)}50%{transform:rotate(-38deg)}100%{transform:rotate(27deg)}}   /* 平常直立，點擊時往左下砍／敲再回到直立 */
+/* 十字鎬（鐵礦、金礦）照原本的揮法；斧頭、槌子揮下去時往物資移動，真的碰到 */
+.rs-tool.rk-iron,.rs-tool.rk-gold{--hx:0px;--hy:0px}
+@keyframes rsSwingM{0%{transform:translate(0,0) rotate(27deg)}50%{transform:translate(var(--hx,-30px),var(--hy,44px)) rotate(-38deg)}100%{transform:translate(0,0) rotate(27deg)}}   /* 平常直立，點擊時往左下砍／敲再回到直立 */
 .rs-art.hit-fruit{animation:rsShake .22s}
 .rs-art.hit-iron,.rs-art.hit-stone,.rs-art.hit-gold{animation:rsKnock .16s}
 .rs-art.hit-wood{animation:rsChop .2s}
@@ -1805,7 +1807,7 @@ var RS_TOOL={
 fruit:'<svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="22" cy="26" r="7" fill="#ef4444"/><circle cx="34" cy="24" r="7" fill="#fb923c"/><circle cx="28" cy="20" r="6" fill="#ef4444"/><path d="M6 28h48l-6 26H12z" fill="#c08a4a" stroke="#6b4220" stroke-width="1.5"/><path d="M8 36h44M10 44h40M18 28l2 26M30 28v26M42 28l-2 26" stroke="#7a4a22" stroke-width="1.5"/><rect x="4" y="25" width="52" height="6" rx="3" fill="#a86f36" stroke="#6b4220" stroke-width="1.2"/></svg>',
 iron:'<svg viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60 0) scale(-1 1)"><path d="M14 56L40 12" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M14 56L40 12" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M6 20Q28 0 56 14l-2 4Q30 8 9 24z" fill="#9aa3b0" stroke="#3f4652" stroke-width="1.4"/><path d="M9 19Q28 5 52 14" stroke="#e5e9ef" stroke-width="1.4" fill="none"/><rect x="34" y="8" width="10" height="9" rx="2" fill="#5b6270" transform="rotate(30 39 12)"/></g></svg>',
 wood:'<svg viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60 0) scale(-1 1)"><path d="M16 57L38 8" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M16 57L38 8" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M30 6l18-4q10 14 0 30l-18-8z" fill="#b8c0cc" stroke="#3f4652" stroke-width="1.4"/><path d="M48 2q10 14 0 30" stroke="#f1f5f9" stroke-width="2.4" fill="none"/><path d="M30 6l6 2-2 12-4 4z" fill="#dc2626"/></g></svg>',
-stone:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M18 57L34 18" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M18 57L34 18" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M16 8l32 12-6 14-32-12z" fill="#8a93a1" stroke="#2f343d" stroke-width="1.4"/><path d="M16 8l32 12-2 4-32-12z" fill="#d4d9e1"/><path d="M28 13l10 4-4 9-10-4z" fill="#5b6270"/></svg>'
+stone:'<svg viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60 0) scale(-1 1)"><path d="M18 57L34 18" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M18 57L34 18" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M16 8l32 12-6 14-32-12z" fill="#8a93a1" stroke="#2f343d" stroke-width="1.4"/><path d="M16 8l32 12-2 4-32-12z" fill="#d4d9e1"/><path d="M28 13l10 4-4 9-10-4z" fill="#5b6270"/></g></svg>'
 };
 RS_TOOL.gold=RS_TOOL.iron;
 var RESI=ISLT.map(function(a,i){
@@ -2844,7 +2846,7 @@ function renderRes(n){
         '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+(RS_SVG[R.rk]||R.art)+'</span>'+
           (R.rk==='stone'?'<svg class="rs-crack" id="rsCrack" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 18 L44 34 L54 44 L46 60"/><path d="M54 44 L70 50 L76 66"/><path d="M46 60 L32 70 L28 84"/><path d="M46 60 L56 78 L52 90"/></svg>':'')+
           (R.rk==='iron'?'<span class="rs-ore"><i></i><i></i><i></i></span>':'')+
-          '<span class="rs-tool'+(R.rk==='wood'||R.rk==='iron'||R.rk==='gold'?' mir':'')+'" id="rsTool">'+(RS_TOOL[R.rk]||R.tool)+'</span></button>'+
+          '<span class="rs-tool rk-'+R.rk+(R.rk==='wood'||R.rk==='iron'||R.rk==='gold'||R.rk==='stone'?' mir':'')+'" id="rsTool">'+(RS_TOOL[R.rk]||R.tool)+'</span></button>'+
         '<b class="rs-combo" id="rsCombo"></b></div>'+
       '<div class="rs-timer" id="rsTimerBox"><i id="rsTime"></i></div>'+
       '<p class="rs-cnt" id="rsCnt"></p>'+
