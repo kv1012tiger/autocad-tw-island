@@ -334,7 +334,7 @@ var BAS=[
  [2,'TRIM 修剪時按住 Shift 再點線會？','改成延伸',['改成刪除','改成複製','取消指令']],
  [2,'填充線設成「關聯」的好處？','邊界改了填充線跟著變',['不會印出','檔案變小','顏色固定']],
  [2,'選取循環（Selection Cycling）用來？','在重疊的物件中挑出要的那一個',['循環切換圖層','重複上一個指令','切換配置']]];
-var DIFF=[null,{n:'入門',sec:8,kinds:['desc','fkey','bas1'],t:'指令、功能鍵、基礎觀念'},{n:'初階',sec:7,kinds:['desc','alias','fkey','fkey2','ctrl','bas1'],t:'加入快捷鍵、Ctrl 組合鍵'},{n:'中階',sec:6,kinds:['alias','rev','fkey2','ctrl','ctrl2','bas'],t:'反過來考說明、進階觀念'},{n:'高階',sec:5,kinds:['alias','rev','var','fkey2','ctrl2','bas'],t:'再加系統變數'},{n:'大師',sec:4,kinds:['rev','var','alias','ctrl2','bas'],t:'全部混合、只有 4 秒'}];
+var DIFF=[null,{n:'入門',sec:12,kinds:['desc','alias','fkey','bas1'],t:'指令、快捷鍵、功能鍵、基礎觀念'},{n:'初階',sec:11,kinds:['desc','rev','alias','fkey','fkey2','bas'],t:'再加反向題、完整基礎觀念'},{n:'中階',sec:10,kinds:['alias','ctrl','ctrl2','desc','rev','fkey','fkey2','bas'],t:'快捷鍵、Ctrl 組合鍵，穿插各類題型'},{n:'高階',sec:9,kinds:['ctrl','ctrl2','var','desc','rev','fkey','fkey2','bas'],t:'Ctrl 組合鍵、系統變數，穿插各類題型'},{n:'大師',sec:8,kinds:['ctrl','ctrl2','var','desc','rev','fkey','fkey2','bas'],t:'全部混合，只有 8 秒'}];
 var $=function(id){return document.getElementById(id)};
 var D={p:null,isl:null,busy:false,fresh:false},view='play',game=null,timer=null;
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -364,7 +364,7 @@ function errMsg(j){return (j&&j.msg)||(API&&API.err?API.err(j):'發生錯誤，�
 function load(){
   if(!API||!API.state().login){render();return}
   try{var c=API.cache&&API.cache();if(c&&c.bt&&!D.p)D.p=c;var il=API.isl&&API.isl();if(il&&!D.isl)D.isl=il;if(D.p)render()}catch(e){}   /* 先用島上存著的資料畫出來，伺服器回來再更新（更新前開始鈕先停用，避免用到昨天的數字） */
-  Promise.all([api({a:'me'}),api({a:'island'})]).then(function(){D.fresh=true;render()});
+  api({a:'island'}).then(function(j){if(j&&j.ok)D.fresh=true;render()});   /* 自己小島走只讀快速路線（不排隊等鎖），同時回傳小島與個人資料 */
 }
 function header(){
   var b=bt();$('sToday').textContent=b.st||0;$('sMax').textContent=(b.max||{}).shard||5;$('sFruit').textContent=b.fr||0;
@@ -386,7 +386,7 @@ function vPlay(){
    '<div class="diffbar"><span class="stars">'+starHTML(d)+'</span><b>難度 '+d+'・'+Dd.n+'</b><span class="sub">每題 '+Dd.sec+' 秒・'+Dd.t+'</span></div>'+
    '<p class="sub">看題目選出正確答案，共 8 題。答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%），也送 🍑 神獸果（5 題 1 顆、全對 2 顆）。擁有的神獸種類愈多，難度愈高。</p>'+
    (game&&game.done?resultHtml():'')+
-   '<div class="row" style="margin-top:12px">'+(!D.fresh?'<button class="btn" type="button" disabled>讀取中…</button>':full?'<b>✅ 今天的碎片和神獸果都拿滿了，明天再來試煉！</b>':'<button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>')+
+   '<div class="row" style="margin-top:12px">'+(D.fresh&&full?'<b>✅ 今天的碎片和神獸果都拿滿了，明天再來試煉！</b>':'<button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>')+
    '<span class="sub">今天碎片 '+(b.st||0)+' / '+(m.shard||5)+'・神獸果 '+(b.ft||0)+' / '+(m.fruit||5)+'</span></div></section>';
   if($('go'))$('go').onclick=startGame;
 }
