@@ -220,6 +220,8 @@ function bcolOf_(o) {
   return out;
 }
 function bcolSet_(o, col) { o.bcol = {}; o.bbag = {}; BEASTS.forEach(function (k) { if (col[k] && col[k].length) { o.bcol[k] = col[k]; o.bbag[k] = col[k].length; } }); }
+var BEAST_BASE = { dragon: 105, phoenix: 85, qilin: 100, tiger: 90, tortoise: 120 };   // 與前端 BEAST_BASE 一致
+function beastHp_(k, iv, lv) { return Math.round((BEAST_BASE[k] || 100) * (1 + iv / 31 * 0.5) * (1 + (lv - 1) * 0.15)); }
 function lowIdx_(arr) { var b = 0; arr.forEach(function (x, i) { if (x.iv < arr[b].iv) b = i; }); return b; }
 /* 喜報跑馬燈：船長抽到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則 */
 var BN_HEAD = ['時間', '暱稱', '神獸', '收藏'], BN_KEEP = 10, BN_HOURS = 24;
@@ -1204,13 +1206,16 @@ function visitors_(isle) { return (isle && visStats_()[isle]) || { list: [], tot
    三份名單一起算好，在 Google 快取放 60 秒，期間不用重讀整張玩家表。 */
 var TOP_TTL = 60;
 function topLists_() {
-  var cache = CacheService.getScriptCache(), hit = cache.get('top5');
+  var cache = CacheService.getScriptCache(), hit = cache.get('top6');
   if (hit) return JSON.parse(hit);
   var rows = rows_(players_()), out = {}, isl = rows.map(isleOf_), scoreOf = {}; var nowT = Date.now();
   rows.forEach(function (r, x) { scoreOf[x] = isleScore_(isl[x]); });
-  [['coin', C.bal], ['res', C.tres], ['dia', C.dia], ['isle', -1]].forEach(function (kc) {   // v61：鑽石榜改看手上現有的鑽石
+  /* v65 神獸榜：小島上每隻神獸的 HP 加總（神獸戰力）；bs 是擁有的神獸與 IV、等級 */
+  var powOf = {}, bsOf = {};
+  rows.forEach(function (r, x) { var p = 0, bs = []; (isl[x].pets || []).forEach(function (pt) { if (!isBeast_(pt.k)) return; var iv = ivOf_(pt), lv = petLv_(pt); p += beastHp_(pt.k, iv, lv); bs.push({ k: pt.k, iv: iv, lv: lv }); }); powOf[x] = p; bsOf[x] = bs; });
+  [['coin', C.bal], ['res', C.tres], ['dia', C.dia], ['isle', -1], ['beast', -2]].forEach(function (kc) {   // v61：鑽石榜改看手上現有的鑽石
     var k = kc[0], col = kc[1];
-    var val = function (r) { return col < 0 ? scoreOf[rows.indexOf(r)] : num_(r[col]); };
+    var val = function (r) { return col === -2 ? powOf[rows.indexOf(r)] : col < 0 ? scoreOf[rows.indexOf(r)] : num_(r[col]); };
     out[k] = rows
       .filter(function (r) { return r[C.nick] && r[C.admin] !== '是' && (k === 'coin' || val(r) > 0); })
       .sort(function (x, y) { return val(y) - val(x); })
@@ -1219,6 +1224,7 @@ function topLists_() {
         var o = { c: String(r[C.code]).toUpperCase(), nick: plain_(r[C.nick]), av: plain_(r[C.av]), v: val(r), bal: num_(r[C.bal]), fid: String(r[C.fid] || '') };
         if (r[C.seen] && nowT - new Date(r[C.seen]).getTime() < ONLINE_WIN) o.on = 1;   // 在線（跟上面「現在 X 位在線」同一個判斷）
         if (k === 'res') o.bag = bag_(r);
+        if (k === 'beast') o.bs = bsOf[rows.indexOf(r)];
         return o;
       });
   });
@@ -1232,7 +1238,7 @@ function topLists_() {
   // 登島船長總人數：所有有暱稱的一般玩家（不含站長帳號），不是只算排行榜前 20 名
   out.n = rows.filter(function (r) { return r[C.nick] && r[C.admin] !== '是'; }).length;
   out.on = rows.filter(function (r) { return r[C.nick] && r[C.admin] !== '是' && r[C.seen] && nowT - new Date(r[C.seen]).getTime() < ONLINE_WIN; }).length;
-  try { cache.put('top5', JSON.stringify(out), TOP_TTL); } catch (e) {}
+  try { cache.put('top6', JSON.stringify(out), TOP_TTL); } catch (e) {}
   return out;
 }
 function voyage_() { return { ok: true, list: topLists_().voy || [] }; }
@@ -1257,7 +1263,7 @@ function anns_() {
 function top_(q) {
   var lists = topLists_(), code = String(q.code || '').toUpperCase();
   function pub(list) { return list.map(function (o) { var x = {}; for (var k in o) if (k !== 'c') x[k] = o[k]; x.me = !!code && o.c === code; return x; }); }
-  if (q.k === 'all') return { ok: true, n: lists.n, on: lists.on || 0, all: { coin: pub(lists.coin), res: pub(lists.res), dia: pub(lists.dia), isle: pub(lists.isle || []) } };
+  if (q.k === 'all') return { ok: true, n: lists.n, on: lists.on || 0, all: { coin: pub(lists.coin), res: pub(lists.res), dia: pub(lists.dia), isle: pub(lists.isle || []), beast: pub(lists.beast || []) } };
   var k = q.k === 'res' || q.k === 'dia' ? q.k : 'coin';
   return { ok: true, k: k, n: lists.n, on: lists.on || 0, top: pub(lists[k]) };
 }
