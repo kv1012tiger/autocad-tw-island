@@ -137,7 +137,7 @@ var FIELD = [{ wood: 3, stone: 2 }, { wood: 6, stone: 5 }, { wood: 12, stone: 8,
 var DECO = {
   tree: { name: '果樹', cost: { fruit: 6, wood: 3 }, pts: 5 },
   fountain: { name: '噴水池', cost: { stone: 10, iron: 5 }, pts: 10 },
-  tower: { name: '瞭望塔', cost: { wood: 15, iron: 10 }, pts: 20 }
+  tower: { name: '瞭望塔', cost: { iron: 15, wood: 10 }, pts: 20 }
 };
 /* 果樹可以種很多棵：會自己長大（幼苗 → 小樹 → 結果樹），結果樹每隔一段時間長出水果，累積最多 TREE_CAP 顆，要自己去摘 */
 var TREE_MAX = 6, TREE_GROW = [5 * 60 * 1000, 20 * 60 * 1000], TREE_EVERY = 20 * 60 * 1000, TREE_CAP = 3;
@@ -148,9 +148,9 @@ var UPC = {
   fountain: [null, { stone: 10, iron: 5 }, { stone: 20, iron: 10, wood: 8 }, { stone: 35, iron: 18 },
     { stone: 50, iron: 25, wood: 15 }, { stone: 70, iron: 35, wood: 25 }, { stone: 95, iron: 50, wood: 35 },
     { stone: 125, iron: 65, wood: 50, dia: 1 }, { stone: 160, iron: 85, wood: 70, dia: 2 }],
-  tower: [null, { wood: 15, iron: 10 }, { wood: 30, iron: 18, stone: 12 }, { wood: 50, iron: 30, stone: 25 },
-    { wood: 70, iron: 40, stone: 35 }, { wood: 95, iron: 55, stone: 50 }, { wood: 125, iron: 70, stone: 65 },
-    { wood: 160, iron: 90, stone: 85, dia: 1 }, { wood: 200, iron: 115, stone: 110, dia: 2 }]
+  tower: [null, { iron: 15, wood: 10 }, { iron: 30, wood: 18, stone: 12 }, { iron: 50, wood: 30, stone: 25 },
+    { iron: 70, wood: 40, stone: 35 }, { iron: 95, wood: 55, stone: 50 }, { iron: 125, wood: 70, stone: 65 },
+    { iron: 160, wood: 90, stone: 85, dia: 1 }, { iron: 200, wood: 115, stone: 110, dia: 2 }]
 };
 var FT_PTS = { fountain: [0, 10, 20, 35, 50, 70, 95, 125, 160], tower: [0, 20, 40, 70, 100, 140, 190, 250, 320] };
 var LV_MULT = [1, 1.6, 3, 4.5, 6, 8, 10, 12];
