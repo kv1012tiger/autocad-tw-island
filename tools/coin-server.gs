@@ -1170,7 +1170,7 @@ function handle_(q) {
       r[C.isle] = JSON.stringify(shopSaved);
     }
     if (res.add) { r[C.bal] = num_(r[C.bal]) + res.add; r[C.earned] = num_(r[C.earned]) + res.add; }
-    r[C.seen] = new Date();
+    if (!num_(q.idle)) r[C.seen] = new Date();   // v66：網頁閒置時的自動同步（idle=1）不算在線，有實際操作才算
     sh.getRange(i + 2, 1, 1, P_HEAD.length).setValues([r]);
     Object.keys(touched).forEach(function (jx) { jx = Number(jx); sh.getRange(jx + 2, 1, 1, P_HEAD.length).setValues([rows[jx]]); });
     res.p = profile_(r);
