@@ -381,7 +381,7 @@ function openCap(g){
     var em=$('pem'),nm=$('pnm'),ds=$('pds'),tc=g.tier==='r'?BN[g.b][2]:TIER[g.tier][0];
     $('prize').style.setProperty('--tc',tc);
     if(g.k==='beast'){em.innerHTML=beastSVG(g.b,1);nm.textContent='🐲 神獸 '+g.name+'！';ds.textContent=(g.iv!=null?'個體值 IV '+g.iv+'・':'')+(g.where==='swap'?'比你原本的 '+g.name+' 強，住進小島（原本那隻放進收藏）':g.dup?'你已經有 '+g.name+' 了，收進神獸收藏（可送好友或到商店換資源）':BN[g.b][1]+'屬性・住進你的小島了（不佔寵物名額）')}
-    else if(g.k==='shard'){em.innerHTML=beastSVG(g.b,0);nm.textContent='🧩 '+g.name+' 的「'+(PARTN[g.part]||'')+'」碎片';ds.textContent='稀有・到神獸試煉島湊齊頭、身、腳就能合成'}
+    else if(g.k==='shard'){em.innerHTML=beastSVG(g.b,0);nm.textContent='🧩 '+g.name+' 的「'+(PARTN[g.part]||'')+'」碎片';ds.textContent='稀有・到神獸試煉島湊齊頭、身、腳就能召喚'}
     else if(g.k==='bfruit'){em.textContent='🍑';nm.textContent='神獸果 ×'+g.n;ds.textContent='普通・餵神獸親密度 +5（每隻每天 2 顆）'}
     else{em.textContent=RN[g.k][0];nm.textContent=RN[g.k][1]+' ×'+g.n;ds.textContent=TIER[g.tier][1]+(g.tier==='w'?'・下次一定更好！':'・已放進背包')}
     $('prize').classList.add('on');

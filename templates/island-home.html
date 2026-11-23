@@ -1022,6 +1022,10 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-fruit .rs-tool.swing{animation:rsPush .18s ease-out}
 @keyframes rsSwing{0%{transform:rotate(-40deg)}100%{transform:rotate(18deg)}}
 @keyframes rsPush{50%{transform:translateX(16px)}}
+/* 斧頭、十字鎬左右翻過來：刀刃朝向樹和礦石，握把在右下；揮動也改成往左下劈 */
+.rs-tool.mir{transform-origin:80% 85%;transform:rotate(-18deg)}
+.rs-tool.mir.swing{animation:rsSwingM .18s ease-in}
+@keyframes rsSwingM{0%{transform:rotate(40deg)}100%{transform:rotate(-18deg)}}
 .rs-art.hit-fruit{animation:rsShake .22s}
 .rs-art.hit-iron,.rs-art.hit-stone,.rs-art.hit-gold{animation:rsKnock .16s}
 .rs-art.hit-wood{animation:rsChop .2s}
@@ -1799,8 +1803,8 @@ gold:'<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="rs
 };
 var RS_TOOL={
 fruit:'<svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="22" cy="26" r="7" fill="#ef4444"/><circle cx="34" cy="24" r="7" fill="#fb923c"/><circle cx="28" cy="20" r="6" fill="#ef4444"/><path d="M6 28h48l-6 26H12z" fill="#c08a4a" stroke="#6b4220" stroke-width="1.5"/><path d="M8 36h44M10 44h40M18 28l2 26M30 28v26M42 28l-2 26" stroke="#7a4a22" stroke-width="1.5"/><rect x="4" y="25" width="52" height="6" rx="3" fill="#a86f36" stroke="#6b4220" stroke-width="1.2"/></svg>',
-iron:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M14 56L40 12" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M14 56L40 12" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M6 20Q28 0 56 14l-2 4Q30 8 9 24z" fill="#9aa3b0" stroke="#3f4652" stroke-width="1.4"/><path d="M9 19Q28 5 52 14" stroke="#e5e9ef" stroke-width="1.4" fill="none"/><rect x="34" y="8" width="10" height="9" rx="2" fill="#5b6270" transform="rotate(30 39 12)"/></svg>',
-wood:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M16 57L38 8" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M16 57L38 8" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M30 6l18-4q10 14 0 30l-18-8z" fill="#b8c0cc" stroke="#3f4652" stroke-width="1.4"/><path d="M48 2q10 14 0 30" stroke="#f1f5f9" stroke-width="2.4" fill="none"/><path d="M30 6l6 2-2 12-4 4z" fill="#dc2626"/></svg>',
+iron:'<svg viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60 0) scale(-1 1)"><path d="M14 56L40 12" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M14 56L40 12" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M6 20Q28 0 56 14l-2 4Q30 8 9 24z" fill="#9aa3b0" stroke="#3f4652" stroke-width="1.4"/><path d="M9 19Q28 5 52 14" stroke="#e5e9ef" stroke-width="1.4" fill="none"/><rect x="34" y="8" width="10" height="9" rx="2" fill="#5b6270" transform="rotate(30 39 12)"/></g></svg>',
+wood:'<svg viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60 0) scale(-1 1)"><path d="M16 57L38 8" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M16 57L38 8" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M30 6l18-4q10 14 0 30l-18-8z" fill="#b8c0cc" stroke="#3f4652" stroke-width="1.4"/><path d="M48 2q10 14 0 30" stroke="#f1f5f9" stroke-width="2.4" fill="none"/><path d="M30 6l6 2-2 12-4 4z" fill="#dc2626"/></g></svg>',
 stone:'<svg viewBox="0 0 60 60" aria-hidden="true"><path d="M18 57L34 18" stroke="#7a4a22" stroke-width="5.5" stroke-linecap="round"/><path d="M18 57L34 18" stroke="#c08a4a" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M16 8l32 12-6 14-32-12z" fill="#8a93a1" stroke="#2f343d" stroke-width="1.4"/><path d="M16 8l32 12-2 4-32-12z" fill="#d4d9e1"/><path d="M28 13l10 4-4 9-10-4z" fill="#5b6270"/></svg>'
 };
 RS_TOOL.gold=RS_TOOL.iron;
@@ -1838,7 +1842,7 @@ SP.push({k:'castle',e:'🏰',name:'AI課程城堡',sub:'9 個單元・課程內�
 SP.push({k:'dock',e:'⛵',name:'報名碼頭',sub:'場次・費用・報名方式',c:'#ff8a2a',g:['#ffc27a','#b8611f'],dc:['⚓','🏮','🧭'],res:[['🦀','w'],['🐢','w'],['🐦','f']]});
 SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手氣',c:'#fbbf24',g:['#fde68a','#b45309'],dc:['🪙','🍒','✨']});
 SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
-SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・合成神獸',c:'#34d399',g:['#a7f3d0','#047857'],st:{land:'#6ee7b7',deep:'#047857',tree:'#065f46',leaf:'#a7f3d0',sand:['#92400e','#d97706','#fde68a'],dirt:'#78350f',n:5,glow:'#fbbf24'},dc:['🧩','🍑','✨']});
+SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・召喚神獸',c:'#34d399',g:['#a7f3d0','#047857'],st:{land:'#6ee7b7',deep:'#047857',tree:'#065f46',leaf:'#a7f3d0',sand:['#92400e','#d97706','#fde68a'],dirt:'#78350f',n:5,glow:'#fbbf24'},dc:['🧩','🍑','✨']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
 /* 「找到蘋果爸」的 6 個連結也做成小島（和商店島一樣大），點進去先看介紹，再按「前往 ↗」用新分頁開 */
 var LINK_SPOTS=[
@@ -2351,7 +2355,7 @@ $('logBtn').addEventListener('click',openLog);
 $('logClose').addEventListener('click',closeLog);
 var gb=$('guideBox'),gbT;
 /* 進場第一則泡泡：新增神獸試煉島（點了直接去試煉島）；收起後恢復原本的金幣提示 */
-var GB_ANN='🐲 新島開放：神獸試煉島！過關拿碎片，湊齊頭、身、腳合成五行神獸 ⛩️ 點亮你小島的五行神殿 👉',gbAnn=false;
+var GB_ANN='🐲 新島開放：神獸試煉島！過關拿碎片，湊齊頭、身、腳召喚五行神獸 ⛩️ 點亮你小島的五行神殿 👉',gbAnn=false;
 function gbClose(){gb.hidden=true;if(gbAnn){gbAnn=false;refresh()}}
 function showGuide(ann){gbAnn=!!ann;if(gbAnn)$('guideTxt').textContent=GB_ANN;gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(gbClose,gbAnn?12000:9000)}
 gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#trial'});
@@ -2840,7 +2844,7 @@ function renderRes(n){
         '<button class="rs-obj" type="button" id="rsObj" aria-label="點我'+esc(R.act)+'"><span class="rs-art" id="rsArt">'+(RS_SVG[R.rk]||R.art)+'</span>'+
           (R.rk==='stone'?'<svg class="rs-crack" id="rsCrack" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 18 L44 34 L54 44 L46 60"/><path d="M54 44 L70 50 L76 66"/><path d="M46 60 L32 70 L28 84"/><path d="M46 60 L56 78 L52 90"/></svg>':'')+
           (R.rk==='iron'?'<span class="rs-ore"><i></i><i></i><i></i></span>':'')+
-          '<span class="rs-tool" id="rsTool">'+(RS_TOOL[R.rk]||R.tool)+'</span></button>'+
+          '<span class="rs-tool'+(R.rk==='wood'||R.rk==='iron'||R.rk==='gold'?' mir':'')+'" id="rsTool">'+(RS_TOOL[R.rk]||R.tool)+'</span></button>'+
         '<b class="rs-combo" id="rsCombo"></b></div>'+
       '<div class="rs-timer" id="rsTimerBox"><i id="rsTime"></i></div>'+
       '<p class="rs-cnt" id="rsCnt"></p>'+
@@ -3280,7 +3284,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112305';
+var BET_V='2026112202',GACHA_V='2026112306',TRIAL_V='2026112306';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3309,7 +3313,7 @@ window.AIKB_GACHA={
   },
   login:function(){COINS.need(function(){renderGacha()})},
   size:function(h){var f=$('gaF');if(f&&V.t==='gacha'&&h>200)f.style.height=Math.ceil(h)+'px'},
-  done:function(g){if(g&&g.k==='beast')toast(g.dup?'🐲 '+g.name+' 放進神獸收藏了':'🐲 '+g.name+' 住進你的小島了！')},
+  done:function(g){if(g&&g.k==='shard'&&g.b){var shs=(COINS.get().bt||{}).sh||{};if(['head','body','foot'].every(function(p){return (shs[g.b+'.'+p]||0)>0}))setTimeout(function(){toast('✨ '+g.name+'的頭、身、腳湊齊了！到 🐲 神獸試煉島召喚吧')},1200)}if(g&&g.k==='beast')toast(g.dup?'🐲 '+g.name+' 放進神獸收藏了':'🐲 '+g.name+' 住進你的小島了！')},
   setSfx:function(){}
 };
 /* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
@@ -3321,7 +3325,7 @@ function renderGacha(){
   pBody.innerHTML='<div class="ph" style="--c:#c084fc"><span class="ph-e">🎁</span><div><div class="p-kicker">GACHA ISLAND・扭蛋島</div><h3 id="pTitle">扭蛋島</h3><p>每抽 5 枚金幣、每天 3 次，有機會抽到五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="gaF" src="assets/bet/gacha.html?v='+GACHA_V+'" title="扭蛋島" scrolling="no"></iframe>'+
     '<div class="p-sec"><h4>🎉 最近喜報</h4><div class="bn-list" id="bnList">'+bnListHTML()+'</div></div>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，🧩 神獸碎片（10%，到神獸試煉島湊齊頭身腳合成）、🍑 神獸果 ×2（5%，餵神獸親密度 +5），還有 6% 機率抽到神獸（水、火、木、金、土五選一，個體值 IV 隨機）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
+    '<div class="p-sec"><h4>📖 規則</h4><p>每抽 🪙 5 枚，每天 3 次。獎品：🍎 水果 ×10、🪵 木材 ×20、🪨 石頭 ×20、🔩 鐵礦 ×20、🪙 金幣 ×15、💎 鑽石 ×1 或 ×3，🧩 神獸碎片（10%，到神獸試煉島湊齊頭身腳召喚）、🍑 神獸果 ×2（5%，餵神獸親密度 +5），還有 6% 機率抽到神獸（水、火、木、金、土五選一，個體值 IV 隨機）。神獸住進你的小島、不佔寵物名額；重複抽到的會收進「神獸收藏」，可以送給好友，或到商店島換成 🪵66 🪨66 🔩66 💎6。抽到神獸會上「🎉 喜報」跑馬燈，讓全島船長都知道！結果由伺服器決定。</p></div>';
   $('pStep').textContent='🎁 扭蛋島';footSimple('← 回地圖','');pNext.hidden=true;
   if(code)gaLoad();
 }
@@ -3337,9 +3341,9 @@ window.AIKB_TRIAL={
   toast:function(t){toast(t)}
 };
 function renderTrial(){
-  pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳合成五行神獸</p></div></div>'+
+  pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳召喚五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="trF" src="assets/bet/trial.html?v='+TRIAL_V+'" title="神獸試煉島" scrolling="no"></iframe>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 5 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能合成，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
+    '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 5 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能召喚，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
   $('pStep').textContent='🐲 神獸試煉島';footSimple('← 回地圖','');pNext.hidden=true;
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
