@@ -1023,9 +1023,9 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 @keyframes rsSwing{0%{transform:rotate(-40deg)}100%{transform:rotate(18deg)}}
 @keyframes rsPush{50%{transform:translateX(16px)}}
 /* 斧頭、十字鎬左右翻過來：刀刃朝向樹和礦石，握把在右下；揮動也改成往左下劈 */
-.rs-tool.mir{transform-origin:80% 85%;transform:rotate(-18deg)}
-.rs-tool.mir.swing{animation:rsSwingM .18s ease-in}
-@keyframes rsSwingM{0%{transform:rotate(40deg)}100%{transform:rotate(-18deg)}}
+.rs-tool.mir{transform-origin:76% 94%;transform:rotate(27deg)}
+.rs-tool.mir.swing{animation:rsSwingM .24s ease-in-out}
+@keyframes rsSwingM{0%{transform:rotate(27deg)}50%{transform:rotate(-38deg)}100%{transform:rotate(27deg)}}   /* 平常直立，點擊時往左下砍／敲再回到直立 */
 .rs-art.hit-fruit{animation:rsShake .22s}
 .rs-art.hit-iron,.rs-art.hit-stone,.rs-art.hit-gold{animation:rsKnock .16s}
 .rs-art.hit-wood{animation:rsChop .2s}
