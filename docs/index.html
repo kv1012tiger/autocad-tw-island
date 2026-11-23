@@ -3280,7 +3280,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112302';
+var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112304';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3328,6 +3328,8 @@ function renderGacha(){
 /* 神獸試煉島：頁面在 assets/bet/trial.html（iframe）；碎片、合成、神獸果、IV 都由後台決定 */
 window.AIKB_TRIAL={
   state:function(){return {login:!!COINS.get().code}},
+  cache:function(){return COINS.get()},
+  isl:function(){if(MI.data&&!MI.fid)return MI.data;var c=miCacheGet();return c?c.d:null},   /* 自己小島的資料（記憶體或這台裝置的快取），讓試煉島一進來就有數字 */
   api:function(q){return COINS.api(q).then(function(j){if(j&&j.ok&&q.a!=='me'&&q.a!=='island'&&MI.data&&!MI.fid)MI.at=0;return j})},
   err:function(j){return COINS.errText(j)},
   login:function(){COINS.need(function(){renderTrial()})},
@@ -3337,7 +3339,7 @@ window.AIKB_TRIAL={
 function renderTrial(){
   pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳合成五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="trF" src="assets/bet/trial.html?v='+TRIAL_V+'" title="神獸試煉島" scrolling="no"></iframe>'+
-    '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 3 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能合成，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
+    '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 5 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能合成，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
   $('pStep').textContent='🐲 神獸試煉島';footSimple('← 回地圖','');pNext.hidden=true;
 }
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}

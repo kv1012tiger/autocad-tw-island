@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>神獸試煉島</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Chakra+Petch:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Chakra+Petch:wght@600;700&display=swap" media="print" onload="this.media='all'">
 <style>
 /* 版面：深海夜色的一欄手機遊戲畫面；上方神獸卡、下方分頁（關卡／碎片／合成／圖鑑） */
 :root{
@@ -131,7 +131,7 @@ h2{font-size:1.05rem;margin:0 0 8px;font-weight:900}
 </style></head><body>
 <div class="wrap">
   <section class="box stat" aria-label="今日狀態">
-    <div><small>今天拿到的碎片</small><b class="num" id="sToday">0</b><span class="num"> / <span id="sMax">3</span></span></div>
+    <div><small>今天拿到的碎片</small><b class="num" id="sToday">0</b><span class="num"> / <span id="sMax">5</span></span></div>
     <div><small>碎片總數</small><b class="num" id="sShards">0</b></div>
     <div><small>擁有神獸</small><b class="num" id="sBeasts">0</b><span class="num"> / 5</span></div>
     <div><small>🍑 神獸果</small><b class="num" id="sFruit">0</b></div>
@@ -266,12 +266,73 @@ var Q=[['畫直線','LINE'],['畫圓','CIRCLE'],['把物件平行偏移一段距
  ['旋轉物件','ROTATE'],['比例縮放','SCALE'],['兩線接成圓角','FILLET'],['兩線倒角','CHAMFER'],['分解圖塊或聚合線','EXPLODE'],
  ['建立圖塊','BLOCK'],['插入圖塊','INSERT'],['線性標註','DIMLINEAR'],['多行文字','MTEXT'],['畫聚合線','PLINE'],['畫矩形','RECTANG'],
  ['拉伸物件','STRETCH'],['把線段接合','JOIN'],['清除沒用到的圖層、圖塊','PURGE'],['載入 LISP 程式','APPLOAD'],['複製物件性質','MATCHPROP'],
- ['附著外部參考','XREF'],['量測距離','DIST'],['打斷物件','BREAK']];
-var DIFF=[null,{n:'入門',sec:8,kinds:['desc'],t:'看說明選指令'},{n:'初階',sec:7,kinds:['desc','alias'],t:'加入快捷鍵題'},{n:'中階',sec:6,kinds:['alias','rev'],t:'快捷鍵＋反過來考說明'},{n:'高階',sec:5,kinds:['alias','rev','var'],t:'再加系統變數'},{n:'大師',sec:4,kinds:['rev','var','alias'],t:'全部混合、只有 4 秒'}];
-var AL=[['L','LINE'],['C','CIRCLE'],['O','OFFSET'],['TR','TRIM'],['EX','EXTEND'],['MI','MIRROR'],['AR','ARRAY'],['H','HATCH'],['LA','LAYER'],['CO','COPY'],['M','MOVE'],['RO','ROTATE'],['SC','SCALE'],['F','FILLET'],['CHA','CHAMFER'],['X','EXPLODE'],['B','BLOCK'],['I','INSERT'],['DLI','DIMLINEAR'],['T','MTEXT'],['PL','PLINE'],['REC','RECTANG'],['S','STRETCH'],['J','JOIN'],['PU','PURGE'],['MA','MATCHPROP'],['XR','XREF'],['DI','DIST'],['BR','BREAK'],['E','ERASE']];
-var VAR=[['控制物件鎖點（OSNAP）設定','OSMODE'],['開啟或關閉檔案對話框','FILEDIA'],['線型比例（全域）','LTSCALE'],['PEDIT 是否自動轉成聚合線','PEDITACCEPT'],['十字游標大小','CURSORSIZE'],['選取框大小','PICKBOX'],['是否顯示指令對話框','CMDDIA'],['圓弧顯示的平滑度','VIEWRES'],['填充線是否關聯','HPASSOC'],['點的樣式','PDMODE'],['文字鏡射後是否反轉','MIRRTEXT'],['正交模式','ORTHOMODE'],['圖紙空間線型比例','PSLTSCALE'],['尺寸標註的整體比例','DIMSCALE']];
+ ['附著外部參考','XREF'],['量測距離','DIST'],['打斷物件','BREAK'],['刪除物件','ERASE'],['畫圓弧','ARC'],['畫橢圓','ELLIPSE'],['畫正多邊形','POLYGON'],
+ ['畫雲形線（平滑曲線）','SPLINE'],['畫無限長的建構線','XLINE'],['畫點','POINT'],['把物件等分放點','DIVIDE'],['沿物件每隔固定長度放點','MEASURE'],
+ ['把封閉線框轉成面域','REGION'],['點封閉區域自動產生邊界','BOUNDARY'],['用兩組點對齊物件','ALIGN'],['改變線段或圓弧的長度','LENGTHEN'],
+ ['編輯聚合線','PEDIT'],['對齊式標註（斜的也能量）','DIMALIGNED'],['半徑標註','DIMRADIUS'],['直徑標註','DIMDIAMETER'],['角度標註','DIMANGULAR'],
+ ['快速標註','QDIM'],['標註型式管理員','DIMSTYLE'],['文字型式','STYLE'],['單行文字','TEXT'],['插入表格','TABLE'],['多重引線','MLEADER'],
+ ['縮放畫面','ZOOM'],['平移畫面','PAN'],['重新生成畫面','REGEN'],['復原','UNDO'],['救回最後一次刪除的物件','OOPS'],['列出物件資料','LIST'],
+ ['查詢點座標','ID'],['計算面積','AREA'],['開啟性質面板','PROPERTIES'],['依條件快速選取','QSELECT'],['把物件設成群組','GROUP'],
+ ['把圖塊寫出成獨立檔案','WBLOCK'],['編輯圖塊','BEDIT'],['定義屬性（圖塊上的文字欄位）','ATTDEF'],['在配置中開視埠','MVIEW'],['出圖列印','PLOT'],
+ ['刪除重疊、重複的線','OVERKILL'],['檢查並修正圖檔錯誤','AUDIT'],['修復損壞的圖檔','RECOVER'],['設定單位與精度','UNITS'],['設定圖面界限','LIMITS'],
+ ['畫圓環（實心圓點）','DONUT'],['畫修訂雲形','REVCLOUD'],['遮蔽（蓋住後面的物件）','WIPEOUT'],['開啟選項設定','OPTIONS']];
+var AL=[['L','LINE'],['C','CIRCLE'],['O','OFFSET'],['TR','TRIM'],['EX','EXTEND'],['MI','MIRROR'],['AR','ARRAY'],['H','HATCH'],['LA','LAYER'],['CO','COPY'],['M','MOVE'],['RO','ROTATE'],['SC','SCALE'],['F','FILLET'],['CHA','CHAMFER'],['X','EXPLODE'],['B','BLOCK'],['I','INSERT'],['DLI','DIMLINEAR'],['T','MTEXT'],['PL','PLINE'],['REC','RECTANG'],['S','STRETCH'],['J','JOIN'],['PU','PURGE'],['MA','MATCHPROP'],['XR','XREF'],['DI','DIST'],['BR','BREAK'],['E','ERASE'],
+ ['A','ARC'],['EL','ELLIPSE'],['POL','POLYGON'],['SPL','SPLINE'],['XL','XLINE'],['PO','POINT'],['DIV','DIVIDE'],['ME','MEASURE'],['REG','REGION'],['BO','BOUNDARY'],['AL','ALIGN'],['LEN','LENGTHEN'],['PE','PEDIT'],['DAL','DIMALIGNED'],['DRA','DIMRADIUS'],['DDI','DIMDIAMETER'],['DAN','DIMANGULAR'],['D','DIMSTYLE'],['ST','STYLE'],['DT','TEXT'],['TB','TABLE'],['MLD','MLEADER'],['Z','ZOOM'],['P','PAN'],['RE','REGEN'],['U','UNDO'],['LI','LIST'],['AA','AREA'],['PR','PROPERTIES'],['G','GROUP'],['W','WBLOCK'],['BE','BEDIT'],['ATT','ATTDEF'],['MV','MVIEW'],['DO','DONUT'],['OP','OPTIONS'],['UN','UNITS']];
+var VAR=[['控制物件鎖點（OSNAP）設定','OSMODE'],['開啟或關閉檔案對話框','FILEDIA'],['線型比例（全域）','LTSCALE'],['PEDIT 是否自動轉成聚合線','PEDITACCEPT'],['十字游標大小','CURSORSIZE'],['選取框大小','PICKBOX'],['是否顯示指令對話框','CMDDIA'],['圓弧顯示的平滑度','VIEWRES'],['填充線是否關聯','HPASSOC'],['點的樣式','PDMODE'],['文字鏡射後是否反轉','MIRRTEXT'],['正交模式','ORTHOMODE'],['圖紙空間線型比例','PSLTSCALE'],['尺寸標註的整體比例','DIMSCALE'],
+ ['自動存檔的間隔（分鐘）','SAVETIME'],['插入圖塊時使用的單位','INSUNITS'],['長度顯示的小數位數','LUPREC'],['格線顯示開關','GRIDMODE'],['鎖點模式開關','SNAPMODE'],['存檔時是否產生 .bak 備份','ISAVEBAK'],['選取時是否要按 Shift 才能加選','PICKADD'],['物件鎖點的靶框大小','APERTURE'],['點的大小','PDSIZE'],['預設文字高度','TEXTSIZE']];
+/* 功能鍵、組合鍵：可以考「鍵→功能」，也可以考「功能→鍵」 */
+var FK=[['F1','開啟說明'],['F2','開啟文字視窗（指令歷程）'],['F3','物件鎖點開關'],['F4','3D 物件鎖點開關'],['F5','切換等角平面'],['F6','動態 UCS 開關'],['F7','格線顯示開關'],['F8','正交模式開關'],['F9','格點鎖點開關'],['F10','極座標追蹤開關'],['F11','物件鎖點追蹤開關'],['F12','動態輸入開關']];
+var CK=[['Ctrl+1','開啟性質面板'],['Ctrl+2','開啟設計中心'],['Ctrl+3','開啟工具選項板'],['Ctrl+9','顯示／隱藏指令列'],['Ctrl+0','全螢幕（清除畫面）'],['Ctrl+Z','復原上一步'],['Ctrl+Y','重做'],['Ctrl+S','儲存'],['Ctrl+Shift+S','另存新檔'],['Ctrl+N','開新圖檔'],['Ctrl+O','開啟舊檔'],['Ctrl+P','出圖列印'],['Ctrl+C','複製到剪貼簿'],['Ctrl+V','從剪貼簿貼上'],['Ctrl+Shift+V','貼上成圖塊'],['Ctrl+Shift+C','指定基準點複製'],['Ctrl+A','全選'],['Ctrl+Tab','切換開啟中的圖檔'],['Esc','取消目前的指令'],['Enter／空白鍵','重複上一個指令']];
+/* 基礎觀念：[等級（1＝入門就會考，2＝中階以上）, 題目, 正解, 錯誤選項×3] */
+var BAS=[
+ [1,'相對座標「@50,30」的 @ 代表什麼？','相對於上一點',['相對於原點 0,0','極座標的角度','物件鎖點']],
+ [1,'「@100<45」是哪一種座標輸入？','相對極座標',['絕對直角座標','相對直角座標','絕對極座標']],
+ [1,'不加 @ 直接輸入「100,50」是？','絕對直角座標',['相對直角座標','相對極座標','絕對極座標']],
+ [1,'AutoCAD 預設角度 0° 指向哪裡？','正東（右邊）',['正北（上面）','正西（左邊）','正南（下面）']],
+ [1,'AutoCAD 預設角度的正方向是？','逆時針',['順時針','跟著滑鼠方向','跟著 UCS 原點']],
+ [1,'沒有指令時直接按 Enter 或空白鍵會？','重複上一個指令',['結束 AutoCAD','存檔','全選']],
+ [1,'滑鼠滾輪連按兩下會？','縮放到全部物件（範圍）',['平移畫面','復原上一步','結束指令']],
+ [1,'按住滑鼠滾輪拖曳會？','平移畫面',['旋轉畫面','框選物件','縮放到範圍']],
+ [1,'由左往右拉框（實線框）會選到？','完全在框內的物件',['碰到框的都選','只選圖塊','全部物件']],
+ [1,'由右往左拉框（虛線框）會選到？','碰到框或在框內的物件',['只選完全在框內的','只選文字','什麼都不選']],
+ [1,'選物件時按住 Shift 再點已選的物件會？','把它從選取中移除',['再加選一次','刪除它','複製它']],
+ [1,'正交模式打開後，游標會？','只能水平或垂直移動',['只能斜 45 度','自動抓端點','顯示格線']],
+ [1,'要抓圓的圓心，物件鎖點要用？','中心點',['端點','中點','切點']],
+ [1,'按住 Shift 再按滑鼠右鍵會出現？','物件鎖點選單',['圖層選單','列印選單','指令歷程']],
+ [1,'指令進行到一半按 Esc 會？','取消指令',['存檔','重複指令','關閉圖檔']],
+ [1,'.dwg 是什麼檔？','AutoCAD 圖檔',['字型檔','出圖樣式檔','樣板檔']],
+ [1,'.dwt 是什麼檔？','樣板檔',['圖檔','備份檔','線型檔']],
+ [1,'.bak 是什麼檔？','存檔時自動留下的備份',['字型檔','LISP 程式','出圖樣式']],
+ [1,'圖層 0 有什麼特性？','不能刪除也不能改名',['不能畫東西','不會印出來','只能放文字']],
+ [1,'物件顏色設成 ByLayer 代表？','跟著所在圖層的顏色',['永遠是白色','跟著圖塊的顏色','印出來是黑色']],
+ [1,'通常用 1:1 實際尺寸畫圖的地方是？','模型空間',['配置空間','區塊編輯器','選項對話框']],
+ [1,'要排版、開視埠、準備出圖的地方是？','配置空間（Layout）',['模型空間','圖層管理員','設計中心']],
+ [2,'Defpoints 圖層上的物件？','看得到但不會印出',['看不到也印不出','一定是紅色','不能被選取']],
+ [2,'凍結圖層和關閉圖層的差別？','凍結的不參與重生運算，關閉的仍會運算',['完全一樣','關閉的不能再打開','凍結的會被刪除']],
+ [2,'鎖定圖層後，上面的物件？','看得到但不能修改',['看不到','會被刪除','不能印出']],
+ [2,'.ctb 檔是做什麼的？','依顏色設定出圖筆寬',['存圖塊','定義線型','定義字型']],
+ [2,'.lin 檔定義的是？','線型',['字型','填充圖樣','出圖筆寬']],
+ [2,'.pat 檔定義的是？','填充圖樣',['線型','字型','圖層']],
+ [2,'.shx 是什麼檔？','AutoCAD 形檔字型',['圖檔','樣板','備份']],
+ [2,'在配置的視埠裡面雙擊會？','進入視埠內的模型空間',['刪除視埠','開新配置','縮放到範圍']],
+ [2,'聚合線和直線最大的差別？','聚合線多段是同一個物件',['聚合線不能有寬度','直線可以設寬度','完全一樣']],
+ [2,'WBLOCK 和 BLOCK 的差別？','WBLOCK 會存成獨立的 DWG 檔',['WBLOCK 只能存文字','BLOCK 會存成檔案','完全一樣']],
+ [2,'外部參考的原檔改了之後？','重新載入就會更新',['永遠不會變','會自動刪除','要重畫一次']],
+ [2,'註解性（Annotative）物件會？','依視埠比例自動調整大小',['不能修改','不會印出','永遠是紅色']],
+ [2,'MTEXT 和單行文字 TEXT 的差別？','MTEXT 整段是一個物件，TEXT 每行各自獨立',['TEXT 不能改字型','MTEXT 不能換行','完全一樣']],
+ [2,'用 1:100 出圖，1 公尺長的牆在紙上是？','10 mm',['1 mm','100 mm','1000 mm']],
+ [2,'DIMSCALE 設成 100，標註的文字和箭頭會？','放大 100 倍',['縮小 100 倍','不變','消失']],
+ [2,'物件鎖點追蹤（F11）可以？','從鎖點拉出虛線對齊取點',['自動刪除重複線','鎖定圖層','開啟說明']],
+ [2,'狀態列的 LWT 按鈕控制？','畫面上是否顯示線寬',['線型比例','圖層鎖定','動態輸入']],
+ [2,'ZOOM 的「E」選項是？','縮放到所有物件範圍',['框選放大','回上一個畫面','即時縮放']],
+ [2,'ZOOM 的「P」選項是？','回到上一個畫面',['平移','縮放到範圍','放大一倍']],
+ [2,'圓弧在畫面上變成多邊形，可以用？','REGEN 重新生成',['PURGE 清除','AUDIT 檢查','EXPLODE 分解']],
+ [2,'TRIM 修剪時按住 Shift 再點線會？','改成延伸',['改成刪除','改成複製','取消指令']],
+ [2,'填充線設成「關聯」的好處？','邊界改了填充線跟著變',['不會印出','檔案變小','顏色固定']],
+ [2,'選取循環（Selection Cycling）用來？','在重疊的物件中挑出要的那一個',['循環切換圖層','重複上一個指令','切換配置']]];
+var DIFF=[null,{n:'入門',sec:8,kinds:['desc','fkey','bas1'],t:'指令、功能鍵、基礎觀念'},{n:'初階',sec:7,kinds:['desc','alias','fkey','fkey2','ctrl','bas1'],t:'加入快捷鍵、Ctrl 組合鍵'},{n:'中階',sec:6,kinds:['alias','rev','fkey2','ctrl','ctrl2','bas'],t:'反過來考說明、進階觀念'},{n:'高階',sec:5,kinds:['alias','rev','var','fkey2','ctrl2','bas'],t:'再加系統變數'},{n:'大師',sec:4,kinds:['rev','var','alias','ctrl2','bas'],t:'全部混合、只有 4 秒'}];
 var $=function(id){return document.getElementById(id)};
-var D={p:null,isl:null,busy:false},view='play',game=null,timer=null;
+var D={p:null,isl:null,busy:false,fresh:false},view='play',game=null,timer=null;
 function rnd(n){return Math.floor(Math.random()*n)}
 function pick(a){return a[rnd(a.length)]}
 function sh4(a){return a.slice().sort(function(){return Math.random()-.5})}
@@ -288,20 +349,22 @@ function sh(k,p){return (bt().sh||{})[k+'.'+p]||0}
 function rate(k){var b=bt();return Math.min(100,(b.forge||40)+(b.pityStep||20)*((b.pity||{})[k]||0))}
 function beasts(){var o={};((D.isl&&D.isl.pets)||[]).forEach(function(p){if(BK[p.k])o[p.k]=p});return o}
 function coll(k){return ((D.p&&D.p.bcol)||{})[k]||[]}
+function isFull(){var b=bt(),m=b.max||{};return (b.st||0)>=(m.shard||5)&&(b.ft||0)>=(m.fruit||5)}
 function diff(){return Math.min(5,(bt().kinds||0)+1)}
 function report(){try{if(API&&API.size)API.size(document.documentElement.scrollHeight)}catch(e){}}
 function api(q){
   if(!API)return Promise.resolve({ok:false,msg:'請從論壇資源島的地圖進入神獸試煉島'});
-  return API.api(q).then(function(j){if(j&&j.p)D.p=j.p;if(j&&j.island)D.isl=j.island;return j}).catch(function(){return {ok:false,msg:'網路不穩，請再試一次'}});
+  return API.api(q).then(function(j){if(j&&j.p)D.p=j.p;if(j&&j.island)D.isl=j.island;return j}).catch(function(){return {ok:false,net:1,msg:'網路不穩，請再試一次'}});
 }
 function errMsg(j){return (j&&j.msg)||(API&&API.err?API.err(j):'發生錯誤，請再試一次')}
 function load(){
   if(!API||!API.state().login){render();return}
-  Promise.all([api({a:'me'}),api({a:'island'})]).then(function(){render()});
+  try{var c=API.cache&&API.cache();if(c&&c.bt&&!D.p)D.p=c;var il=API.isl&&API.isl();if(il&&!D.isl)D.isl=il;if(D.p)render()}catch(e){}   /* 先用島上存著的資料畫出來，伺服器回來再更新（更新前開始鈕先停用，避免用到昨天的數字） */
+  Promise.all([api({a:'me'}),api({a:'island'})]).then(function(){D.fresh=true;render()});
 }
 function header(){
-  var b=bt();$('sToday').textContent=b.st||0;$('sMax').textContent=(b.max||{}).shard||3;$('sFruit').textContent=b.fr||0;
-  var n=0;for(var k in (b.sh||{}))n+=b.sh[k];$('sShards').textContent=n;$('sBeasts').textContent=Object.keys(beasts()).length;
+  var b=bt();$('sToday').textContent=b.st||0;$('sMax').textContent=(b.max||{}).shard||5;$('sFruit').textContent=b.fr||0;
+  var n=0;for(var k in (b.sh||{}))n+=b.sh[k];$('sShards').textContent=n;$('sBeasts').textContent=D.isl?Object.keys(beasts()).length:'…';
   document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected',t.dataset.v===view?'true':'false')});
   var r=B.filter(function(x){return PART.every(function(p){return sh(x.k,p[0])>0})}).length;$('t-forge').innerHTML='🔮 合成'+(r?'<span class="dot">'+r+'</span>':'');
 }
@@ -314,34 +377,54 @@ function render(){
 /* ---------- 關卡 ---------- */
 function vPlay(){
   if(game&&!game.done)return drawQ();
-  var d=diff(),Dd=DIFF[d],b=bt(),m=b.max||{};
+  var d=diff(),Dd=DIFF[d],b=bt(),m=b.max||{},full=isFull();
   $('view').innerHTML='<section class="box"><h2>⚔️ 指令快問快答</h2>'+
    '<div class="diffbar"><span class="stars">'+starHTML(d)+'</span><b>難度 '+d+'・'+Dd.n+'</b><span class="sub">每題 '+Dd.sec+' 秒・'+Dd.t+'</span></div>'+
    '<p class="sub">看題目選出正確答案，共 8 題。答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%），也送 🍑 神獸果（5 題 1 顆、全對 2 顆）。擁有的神獸種類愈多，難度愈高。</p>'+
    (game&&game.done?resultHtml():'')+
-   '<div class="row" style="margin-top:12px"><button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>'+
-   '<span class="sub">今天碎片 '+(b.st||0)+' / '+(m.shard||3)+'・神獸果 '+(b.ft||0)+' / '+(m.fruit||5)+'</span></div></section>';
-  $('go').onclick=startGame;
+   '<div class="row" style="margin-top:12px">'+(!D.fresh?'<button class="btn" type="button" disabled>讀取中…</button>':full?'<b>✅ 今天的碎片和神獸果都拿滿了，明天再來試煉！</b>':'<button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>')+
+   '<span class="sub">今天碎片 '+(b.st||0)+' / '+(m.shard||5)+'・神獸果 '+(b.ft||0)+' / '+(m.fruit||5)+'</span></div></section>';
+  if($('go'))$('go').onclick=startGame;
 }
 function resultHtml(){
   var g=game,h='<div class="drop"><div class="big">'+g.right+' / 8</div><div>';
   if(g.err)h+='<b>⚠️ '+esc(g.err)+'</b><br><button class="btn ghost sm0" type="button" id="retry">再送一次結果</button>';
-  else if(!g.res)h+='結算中…';
+  else if(!g.res)h+='結算中…'+(g.retry?'（網路忙，自動重送第 '+g.retry+' 次）':'');
   else{var r=g.res;
     if(r.shard){var b=BK[r.shard.k];h+=partEl(b,r.shard.p)+'<b>獲得 '+b.n+' 的「'+PN[r.shard.p]+'」碎片！</b>'}
     else h+=r.full?'今天的碎片已經拿滿，明天再來。':r.chance?'這次掉落機率 '+r.chance+'%，可惜沒掉到。':'答對 5 題以上才有機會掉碎片。';
     h+='<div class="sub" style="margin-top:4px">'+(r.fruit?'🍑 獲得神獸果 ×'+r.fruit:'🍑 這次沒有神獸果')+'</div>'}
   return h+'</div></div>';
 }
+/* 每種題型的所有題目（t 題目、a 答案、L＋ai 從哪個清單找錯誤選項、o 固定的錯誤選項） */
+function cands(kd){
+  function by(list,qi,ai,fmt){return list.map(function(x){return {t:fmt(x[qi]),a:x[ai],L:list,ai:ai}})}
+  if(kd==='desc')return by(Q,0,1,function(t){return '「'+t+'」是哪個指令？'});
+  if(kd==='alias')return by(AL,0,1,function(t){return '快捷鍵「'+t+'」是哪個指令？'});
+  if(kd==='rev')return by(Q,1,0,function(t){return '指令「'+t+'」是做什麼的？'});
+  if(kd==='var')return by(VAR,0,1,function(t){return t+'，是哪個系統變數？'});
+  if(kd==='fkey')return by(FK,0,1,function(t){return '按 '+t+' 是做什麼？'});
+  if(kd==='fkey2')return by(FK,1,0,function(t){return '「'+t+'」是哪個功能鍵？'});
+  if(kd==='ctrl')return by(CK,0,1,function(t){return '按 '+t+' 是做什麼？'});
+  if(kd==='ctrl2')return by(CK,1,0,function(t){return '「'+t+'」要按什麼？'});
+  return BAS.filter(function(x){return kd==='bas'||x[0]===1}).map(function(x){return {t:x[1],a:x[2],o:x[3]}});
+}
+/* 同一天出過的題目記在這台瀏覽器，盡量不重複（某種題型出完了才會再出現） */
+function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function seenGet(){try{var o=JSON.parse(localStorage.getItem('trialSeen')||'{}');return o.d===today()?o.k||[]:[]}catch(e){return []}}
+function seenAdd(ts){try{localStorage.setItem('trialSeen',JSON.stringify({d:today(),k:seenGet().concat(ts).slice(-800)}))}catch(e){}}
 function startGame(){
-  var d=diff(),Dd=DIFF[d],qs=[];
-  function mk(list,qi,ai,fmt){var q=pick(list),w=sh4(list.filter(function(x){return x[ai]!==q[ai]})).slice(0,3).map(function(x){return x[ai]});return {t:fmt(q[qi]),a:q[ai],o:sh4(w.concat([q[ai]]))}}
-  while(qs.length<8){var kd=pick(Dd.kinds),q;
-    if(kd==='desc')q=mk(Q,0,1,function(t){return '「'+t+'」是哪個指令？'});
-    else if(kd==='alias')q=mk(AL,0,1,function(t){return '快捷鍵「'+t+'」是哪個指令？'});
-    else if(kd==='rev')q=mk(Q,1,0,function(t){return '指令「'+t+'」是做什麼的？'});
-    else q=mk(VAR,0,1,function(t){return t+'，是哪個系統變數？'});
-    if(qs.some(function(x){return x.t===q.t}))continue;qs.push(q)}
+  if(isFull())return render();
+  var d=diff(),Dd=DIFF[d],seen=seenGet(),qs=[],pools={};
+  Dd.kinds.forEach(function(k){var all=cands(k),fresh=all.filter(function(c){return seen.indexOf(c.t)<0});pools[k]=sh4(fresh.length>=3?fresh:all)});
+  var kinds=sh4(Dd.kinds),guard=0;
+  while(qs.length<8&&guard++<300){
+    var c=pools[kinds[guard%kinds.length]].shift();if(!c)continue;
+    if(qs.some(function(x){return x.t===c.t||x.a===c.a}))continue;   /* 同一回不出同一個答案 */
+    var w=c.o?c.o.slice():sh4(c.L.map(function(x){return x[c.ai]}).filter(function(v,i,arr){return v!==c.a&&arr.indexOf(v)===i})).slice(0,3);
+    qs.push({t:c.t,a:c.a,o:sh4(w.concat([c.a]))});
+  }
+  seenAdd(qs.map(function(x){return x.t}));
   game={qs:qs,i:0,right:0,done:false,lock:false,d:d,sec:Dd.sec,id:nid()};drawQ();
 }
 function drawQ(){
@@ -359,13 +442,16 @@ function answer(a){
   document.querySelectorAll('.opt').forEach(function(b){if(b.dataset.a===q.a)b.classList.add('right');else if(b.dataset.a===a)b.classList.add('wrong');b.disabled=true});
   setTimeout(function(){game.i++;if(game.i<8)drawQ();else finish()},a===q.a?450:1000);
 }
-function finish(){
-  game.done=true;game.err='';D.busy=true;render();
+function finish(n){
+  n=n||0;game.done=true;game.err='';game.retry=n;D.busy=true;render();
   api({a:'trial',id:game.id,right:game.right}).then(function(j){
+    /* 同一個 id 重送只會拿回原本的結果、不會重複給獎勵，所以失敗可以放心自動重送 */
+    if(!j.ok&&j.net&&n<2){setTimeout(function(){finish(n+1)},1500*(n+1));return}
+    if(!j.ok&&j.err==='gamecool'&&n<4){setTimeout(function(){finish(n+1)},5000);return}
     D.busy=false;
     if(!j.ok){game.err=j.err==='gamecool'?'太快了，休息幾秒再送一次':errMsg(j)}
     else{game.res=j.trial;if(j.trial.shard)toast('🧩 獲得 '+BK[j.trial.shard.k].n+' 的「'+PN[j.trial.shard.p]+'」碎片！');else if(j.trial.fruit)toast('🍑 獲得神獸果 ×'+j.trial.fruit)}
-    render();if($('retry'))$('retry').onclick=finish;
+    render();if($('retry'))$('retry').onclick=function(){finish(0)};
   });
 }
 

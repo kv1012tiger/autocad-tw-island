@@ -190,7 +190,7 @@ var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
 var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸到商店島換資源
 var BEAST_SELL_IV = 2;   // v62：換資源依個體值加成，IV 每 1 點木、石、鐵各多 2
 /* v62 神獸試煉島：碎片（5 隻神獸 × 頭身腳）、合成、個體值 IV（0～31）、神獸果（只有神獸能吃，親密度 +5） */
-var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 3, BT_FRUIT_DAY = 5, BT_FORGE = 40, BT_PITY = 20;
+var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 5, BT_FRUIT_DAY = 5, BT_FORGE = 40, BT_PITY = 20;
 var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, BT_GAP = 15 * 1000;
 function partRoll_() { var x = Math.random() * 100; return x < 20 ? 'head' : x < 60 ? 'body' : 'foot'; }   // 頭 20%、身 40%、腳 40%
 function ivRoll_() { return Math.floor(Math.random() * 32); }
