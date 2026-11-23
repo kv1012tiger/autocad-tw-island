@@ -359,8 +359,8 @@
   }, true);
 
   /* ---------- 排行榜 ---------- */
-  var TABS = [['coin', '🪙 金幣'], ['res', '🧺 物資'], ['dia', '💎 鑽石'], ['isle', '🏝️ 島主']];
-  var TAB_NOTE = { coin: '依目前金幣排名', res: '依累計採集的物資排名（兌換、送禮不會掉名次）', dia: '依你現在手上有幾顆鑽石排名（拉霸、扭蛋、撿到的都算；換成金幣或送人就會少）', isle: '島主分＝小屋等級×10＋裝飾＋寵物親密度' };
+  var TABS = [['coin', '🪙 金幣'], ['res', '🧺 物資'], ['dia', '💎 鑽石'], ['isle', '🏝️ 島主'], ['beast', '🐲 神獸']];
+  var TAB_NOTE = { beast: '神獸戰力＝小島上每隻神獸的 HP 加總（個體值 IV、等級愈高，種類愈多，戰力愈高）', coin: '依目前金幣排名', res: '依累計採集的物資排名（兌換、送禮不會掉名次）', dia: '依你現在手上有幾顆鑽石排名（拉霸、扭蛋、撿到的都算；換成金幣或送人就會少）', isle: '島主分＝小屋等級×10＋裝飾＋寵物親密度' };
   /* 排行榜快取：三頁一次拿回來，存在這台裝置；打開時先顯示，再背景更新 */
   var TKEY = 'cw-top', TOPC = null, topReq = null;
   try { TOPC = JSON.parse(localStorage.getItem(TKEY) || 'null'); } catch (e) { TOPC = null; }
@@ -409,13 +409,13 @@
           if (nn) nn.textContent = TOPC && TOPC.n != null ? (TOPC.on != null ? '🟢 現在 ' + TOPC.on + ' 位在線・' : '') + '⚓ 共 ' + TOPC.n + ' 位船長' : '';
           var rows = TOPC && TOPC.all && TOPC.all[k];
           if (!rows) { body.innerHTML = '<p>載入中…</p>'; return; }
-          if (!rows.length) { body.innerHTML = '<p>' + (k === 'coin' ? '還沒有人上榜，你來當第一名！' : k === 'isle' ? '還沒有人蓋小島，去我的小島蓋一間小屋吧！' : '還沒有人上榜，去物資島採集吧！') + '</p>'; return; }
+          if (!rows.length) { body.innerHTML = '<p>' + (k === 'coin' ? '還沒有人上榜，你來當第一名！' : k === 'isle' ? '還沒有人蓋小島，去我的小島蓋一間小屋吧！' : k === 'beast' ? '還沒有人擁有神獸，去神獸試煉島合成第一隻吧！' : '還沒有人上榜，去物資島採集吧！') + '</p>'; return; }
           body.innerHTML = '<ol class="cw-lb">' + rows.map(function (r, i) {
-            var v = k === 'res' ? '🧺 ' + r.v : k === 'dia' ? '💎 ' + r.v : k === 'isle' ? '🏝️ ' + r.v : '🪙 ' + r.v;
+            var v = k === 'res' ? '🧺 ' + r.v : k === 'dia' ? '💎 ' + r.v : k === 'isle' ? '🏝️ ' + r.v : k === 'beast' ? '⚔️ ' + r.v : '🪙 ' + r.v;
             var go = r.fid && window.ISLE_VISIT, sail = go ? '<span class="go" aria-hidden="true">⛵</span>' : '';   // 整列可點：航向他的小島參觀
             var isFr = r.fid && (P.fl || []).indexOf(String(r.fid)) >= 0, tg = (isFr ? '<span class="fr">👥 好友</span>' : '') + (r.on ? '<span class="on">🟢 在線</span>' : '');   // 標記放在名字下方一行，名字不會被擠掉
             return '<li class="' + (r.nick === P.nick ? 'me' : '') + (isFr ? ' frd' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (tg ? '<span class="lbtg">' + tg + '</span>' : '') +
-              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
+              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + (k === 'beast' && r.bs ? '<span class="s">' + r.bs.map(function (b) { return ({ dragon: '🐉', phoenix: '🔥', qilin: '🦌', tiger: '🐯', tortoise: '🐢' }[b.k] || '🐲') + 'IV' + b.iv + '・Lv' + b.lv; }).join('　') + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
         function show(k) {
