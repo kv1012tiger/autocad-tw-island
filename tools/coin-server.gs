@@ -184,6 +184,7 @@ function isBeast_(k) { return !!(ANIMALS[k] && ANIMALS[k].beast); }
 function petCount_(o) { return o.pets.filter(function (p) { return !isBeast_(p.k); }).length; } // 佔名額的寵物（不含神獸）
 /* 扭蛋島：每抽 5 枚金幣、每天 3 次；[種類, 數量, 機率權重, 扭蛋顏色] */
 var GACHA_COST = 5, GACHA_DAY = 3;
+var PLAY_RESET = '20261123a';   // v63：改這個字串，所有人的「今天扭蛋次數、拉霸局數」各重置一次（因應神獸試煉島上線）
 var GACHA = [['fruit', 10, 11, 'w'], ['wood', 20, 15, 'g'], ['stone', 20, 15, 'g'], ['iron', 20, 15, 'g'], ['coin', 15, 10, 'b'], ['dia', 1, 10, 'p'], ['dia', 3, 3, 'y'], ['beast', 1, 6, 'r'], ['shard', 1, 10, 'p'], ['bfruit', 2, 5, 'g']];   // v62：水果 26→11，新增神獸碎片 10%、神獸果 ×2 5%   // 第三欄是機率（%），合計 100
 var BEASTS = ['dragon', 'phoenix', 'qilin', 'tiger', 'tortoise'];
 var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸到商店島換資源
@@ -553,7 +554,8 @@ function handle_(q) {
       r[C.isle]=JSON.stringify(guideIsland);
     } else if (a === 'betstatus' || a === 'betplay') {
       var betIsland=isleOf_(r), betDay=day_(), bets=betIsland.bets||{};
-      if (bets.d!==betDay) bets={d:betDay,slot:0,rps:0,rs:0,receipts:Array.isArray(bets.receipts)?bets.receipts.slice(-100):[]};
+      if (bets.d!==betDay) bets={d:betDay,slot:0,rps:0,rs:0,rt:PLAY_RESET,receipts:Array.isArray(bets.receipts)?bets.receipts.slice(-100):[]};
+      if (bets.rt!==PLAY_RESET) { bets.slot=0; bets.rt=PLAY_RESET; }   // 只重置拉霸，猜拳次數與連勝不動
       if (!Array.isArray(bets.receipts)) bets.receipts=[];
       if (a==='betplay') {
         var bt=String(q.kind||''),bid=String(q.id||''),choice=String(q.choice||'');
@@ -588,7 +590,8 @@ function handle_(q) {
     } else if (a === 'gacha') {
       /* 扭蛋島：q.id 有值就抽一次（同一個 id 重送只回原結果），沒有 id 只回今天剩幾次 */
       var gIsle=isleOf_(r), gDay=day_(), ga=gIsle.gacha||{};
-      if (ga.d!==gDay) ga={d:gDay,n:0,receipts:Array.isArray(ga.receipts)?ga.receipts.slice(-50):[]};
+      if (ga.d!==gDay) ga={d:gDay,n:0,rt:PLAY_RESET,receipts:Array.isArray(ga.receipts)?ga.receipts.slice(-50):[]};
+      if (ga.rt!==PLAY_RESET) { ga.n=0; ga.rt=PLAY_RESET; }
       if (!Array.isArray(ga.receipts)) ga.receipts=[];
       gIsle.pets=Array.isArray(gIsle.pets)?gIsle.pets:[];
       var gid=String(q.id||'');
