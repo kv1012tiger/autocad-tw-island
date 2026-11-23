@@ -351,7 +351,7 @@ function beasts(){var o={};((D.isl&&D.isl.pets)||[]).forEach(function(p){if(BK[p
 function coll(k){return ((D.p&&D.p.bcol)||{})[k]||[]}
 function isFull(){var b=bt(),m=b.max||{};return (b.st||0)>=(m.shard||5)&&(b.ft||0)>=(m.fruit||5)}
 function diff(){return Math.min(5,(bt().kinds||0)+1)}
-function report(){try{if(API&&API.size)API.size(document.documentElement.scrollHeight)}catch(e){}}
+function report(){try{var w=document.querySelector('.wrap');if(API&&API.size)API.size(Math.ceil((w?w.getBoundingClientRect().height:document.body.scrollHeight)+12))}catch(e){}}   /* 用內容實際高度（不是視窗高度），框架才會縮回來、不留空白 */
 function api(q){
   if(!API)return Promise.resolve({ok:false,msg:'請從論壇資源島的地圖進入神獸試煉島'});
   return API.api(q).then(function(j){if(j&&j.p)D.p=j.p;if(j&&j.island)D.isl=j.island;return j}).catch(function(){return {ok:false,net:1,msg:'網路不穩，請再試一次'}});

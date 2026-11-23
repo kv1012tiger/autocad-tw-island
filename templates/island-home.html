@@ -1640,7 +1640,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 
 <script src="assets/js/pets.js"></script>
 <script src="assets/js/coins.js"></script>
-<script src="assets/bet/bgm.js?v=2026112204"></script>
+<script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
 'use strict';
@@ -3280,7 +3280,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112304';
+var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112305';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -5155,8 +5155,8 @@ var intro=$('intro');
 function firstGesture(){if(!intro.hidden)return;musicSync();if(SFX_ON)bgmStart()}
 /* 物資島專屬背景音樂（bgm.js 的 res 曲目，敲擊聲依島的物資種類）：進物資島時大海音樂淡出，離開再切回來 */
 var RES_BGM=false;
-function musicSync(){var w=window.GBGM,res=SFX_ON&&!document.hidden&&panel.classList.contains('open')&&V.t==='res'&&reader.hidden&&RESI[V.i];
-  if(res&&w){if(!RES_BGM){RES_BGM=true;bgmStop()}w.res(RESI[V.i].rk);w.start('res')}
+function musicSync(){var w=window.GBGM,op=SFX_ON&&!document.hidden&&panel.classList.contains('open')&&reader.hidden,res=op&&V.t==='res'&&RESI[V.i],tri=op&&V.t==='trial';   /* 物資島工作歌／神獸試煉島神殿音樂 */
+  if((res||tri)&&w){if(!RES_BGM){RES_BGM=true;bgmStop()}if(res){w.res(RESI[V.i].rk);w.start('res')}else w.start('trial')}
   else if(RES_BGM){RES_BGM=false;if(w)w.stop();if(SFX_ON&&!document.hidden)bgmStart()}}
 document.addEventListener('visibilitychange',musicSync);
 document.addEventListener('pointerdown',firstGesture,{once:true});

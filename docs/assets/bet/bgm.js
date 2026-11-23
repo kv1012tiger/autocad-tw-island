@@ -8,7 +8,7 @@
     if (A.state === 'suspended') { try { A.resume(); } catch (e) {} }
     return A;
   }
-  function out() { if (!M) { M = A.createGain(); M.connect(A.destination); } M.gain.value = kind === 'res' ? 1.1 : 0.55; return M; }   /* 物資島工作歌大聲一倍，跟大海音樂差不多 */
+  function out() { if (!M) { M = A.createGain(); M.connect(A.destination); } M.gain.value = kind === 'res' ? 1.1 : kind === 'trial' ? 1.0 : 0.55; return M; }   /* 物資島工作歌大聲一倍，跟大海音樂差不多 */
   function osc(f, f2, t, d, type, vol) {
     var o = A.createOscillator(), g = A.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
@@ -60,11 +60,21 @@
     if (i % 2 === 1) noise(t, 0.02, 0.012, 8000);
     var m = WMEL[s % 32]; if (m) { osc(mtof(m), 0, t, 0.22, 'triangle', 0.045); osc(mtof(m + 12), 0, t, 0.12, 'sine', 0.012); }
   }
+  /* 神獸試煉島：莊嚴的神殿風（太鼓、寺鐘、低音持續、古箏般的五聲音階），72 BPM */
+  var TMEL = [62, 0, 65, 0, 67, 0, 69, 0, 72, 0, 69, 0, 67, 0, 65, 0, 62, 0, 0, 0, 60, 0, 62, 0, 65, 0, 67, 0, 62, 0, 0, 0], TB = [38, 36, 41, 38];
+  function trialStep(s, t) {
+    var i = s % 16, bar = Math.floor(s / 16) % 4;
+    if (i === 0) { osc(mtof(TB[bar]), 0, t, 3.2, 'sine', 0.14); osc(mtof(TB[bar] + 7), 0, t, 3.2, 'sine', 0.05); }
+    if (i === 0 || i === 8) { osc(110, 46, t, 0.5, 'sine', 0.32); noise(t, 0.08, 0.05, 150); }
+    if (i === 12 || i === 14) osc(130, 55, t, 0.3, 'sine', 0.14);
+    if (i === 0 && bar % 2 === 0) { osc(mtof(86), 0, t, 2.6, 'sine', 0.045); osc(mtof(86) * 2.76, 0, t, 1.3, 'sine', 0.012); }
+    var m = TMEL[s % 32]; if (m) { osc(mtof(m), 0, t, 0.65, 'triangle', 0.06); osc(mtof(m + 12), 0, t, 0.25, 'sine', 0.015); }
+  }
   function tick() {
     if (!on || !A) return;
-    var spb = 60 / ((kind === 'slot' ? 128 : kind === 'res' ? 96 : 100) * tempo) / 4;
+    var spb = 60 / ((kind === 'slot' ? 128 : kind === 'res' ? 96 : kind === 'trial' ? 72 : 100) * tempo) / 4;
     while (next < A.currentTime + 0.2) {
-      (kind === 'slot' ? slotStep : kind === 'res' ? resStep : rpsStep)(step, next);
+      (kind === 'slot' ? slotStep : kind === 'res' ? resStep : kind === 'trial' ? trialStep : rpsStep)(step, next);
       if (heart && step % 8 === 0) { osc(70, 45, next, 0.12, 'sine', 0.26); osc(60, 40, next + 0.18, 0.12, 'sine', 0.18); }
       next += spb; step++;
     }
