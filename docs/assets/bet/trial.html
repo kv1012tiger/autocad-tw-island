@@ -10,7 +10,7 @@
   --ok:#5ee08a; --bad:#ff6b6b;
   --water:#4fc3f7; --fire:#ff7043; --wood:#66bb6a; --metal:#ffd54f; --earth:#c49a6c;
   --f-body:"Noto Sans TC",system-ui,sans-serif; --f-num:"Chakra Petch","Noto Sans TC",monospace;
-  color-scheme:dark;
+  color-scheme:normal;
 }
 html,body{background:transparent;color:var(--fg);margin:0}
 body{font-family:var(--f-body);font-size:15px;line-height:1.55;
@@ -122,6 +122,11 @@ h2{font-size:1.05rem;margin:0 0 8px;font-weight:900}
 @media (prefers-reduced-motion:reduce){.flt,.bfx{animation:none}}
 @media (prefers-reduced-motion:reduce){.orb.spin{animation:none}.timer i{transition:none!important}}
 
+.stat{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px!important;padding:8px!important}
+.stat>div{padding:6px 7px!important;min-width:0}
+.stat small{font-size:.68rem;line-height:1.25}
+.stat b{font-size:1.1rem!important}
+.stat span{font-size:.8rem}
 .dot{display:inline-block;min-width:18px;font-size:.72rem;background:var(--bad);color:#fff;border-radius:99px;margin-left:3px}
 </style></head><body>
 <div class="wrap">

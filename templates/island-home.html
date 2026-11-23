@@ -200,10 +200,11 @@ h1,h2,h3,h4{margin:0;line-height:1.25}
 .p-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:rgba(2,30,44,.6)}
 .p-foot .btn{padding:11px 18px;font-size:14.5px}
 /* 問答島、物資島、主題小屋：底部按鈕改成懸浮（沒有底部列背景），內容往下多留空白不被擋住 */
-.panel.ff .p-foot{position:absolute;left:0;right:0;bottom:0;z-index:5;border-top:0;background:none;padding:12px 16px calc(16px + env(safe-area-inset-bottom));pointer-events:none}
-.panel.ff .p-foot .btn{pointer-events:auto;box-shadow:0 6px 18px rgba(0,0,0,.5)}
-.panel.ff .p-foot .btn-ghost{background:rgba(3,38,54,.95);border:1.5px solid rgba(255,255,255,.4)}
-.panel.ff .p-body{padding-bottom:104px}
+.panel .p-foot{position:absolute;left:0;right:0;bottom:0;z-index:5;border-top:0;background:none;padding:12px 16px calc(16px + env(safe-area-inset-bottom));pointer-events:none}
+.panel .p-foot .btn{pointer-events:auto;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.panel .p-foot .btn-ghost{background:rgba(3,38,54,.95);border:1.5px solid rgba(255,255,255,.4)}
+.panel .p-body{padding-bottom:104px}
+.panel .p-foot .p-dots{pointer-events:auto;padding:6px 10px;border-radius:99px;background:rgba(3,38,54,.85)}
 .p-dots{display:flex;gap:6px;align-items:center}
 .p-dots[hidden],.p-foot[hidden]{display:none}
 .p-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
@@ -861,6 +862,13 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .sync-box[hidden]{display:none}
 /* 六座主島：放大、金色名牌、立體圖示 */
 .spot.major{z-index:3}
+.tp-orb{animation:tpOrb 2.2s ease-in-out infinite;animation-delay:var(--d,0s);transform-box:fill-box;transform-origin:center}
+@keyframes tpOrb{50%{opacity:.55;transform:scale(1.25)}}
+.tp-spk{animation:tpSpk 2.6s ease-in-out infinite;animation-delay:var(--d,0s);transform-box:fill-box;transform-origin:center}
+@keyframes tpSpk{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.2)}}
+.tp-aura{animation:tpAura 3.4s ease-in-out infinite}
+@keyframes tpAura{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.tp-orb,.tp-spk,.tp-aura{animation:none}}
 .spot.major .isle .ico{bottom:40%;font-size:0}
 .spot.major .isle .ico .mico{display:block;width:calc(var(--w) * .27);height:calc(var(--w) * .27);overflow:visible;filter:drop-shadow(0 calc(var(--w) * .018) calc(var(--w) * .02) rgba(0,20,40,.55))}
 .spot.major .tag{font-size:27px;padding:6px 18px;border:3px solid #fff6d8;background:linear-gradient(180deg,#ffe58f,#f2a93b);color:#3a2410;text-shadow:none;box-shadow:0 0 0 3px #b8741d,0 0 22px rgba(255,209,102,.85),0 8px 20px rgba(0,0,0,.5)}
@@ -1129,6 +1137,16 @@ button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .mi-plot[data-harvest]::before{content:'';position:absolute;inset:-3px}
 @keyframes miGrow{50%{transform:translateY(-3px) rotate(4deg)}}
 .mi-deco{position:absolute;font-size:46px;line-height:1;filter:drop-shadow(0 4px 3px rgba(0,0,0,.3))}
+.mi-deco[data-dfx]{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.mi-deco.dfx-tower{animation:dfxSway .5s ease-in-out 3}
+.mi-deco.dfx-tower::after{content:'';position:absolute;left:50%;top:6%;width:calc(120px + var(--lv,1) * 14px);height:34px;margin-top:-17px;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,250,200,.95),rgba(255,240,150,0));clip-path:polygon(0 42%,100% 0,100% 100%,0 58%);pointer-events:none;animation:dfxBeam calc(1.6s + var(--lv,1) * .12s) ease-in-out forwards;mix-blend-mode:screen}
+@keyframes dfxBeam{0%{transform:rotate(-200deg);opacity:0}15%{opacity:1}50%{transform:rotate(-20deg)}85%{opacity:1}100%{transform:rotate(-200deg);opacity:0}}
+@keyframes dfxSway{50%{transform:rotate(-4deg)}}
+.mi-deco.dfx-fount{animation:dfxFount .8s ease-out 2}
+.mi-deco.dfx-fount::after{content:'💦';position:absolute;left:50%;top:-30%;font-size:.6em;transform:translateX(-50%);animation:dfxJet .8s ease-out 2;pointer-events:none}
+@keyframes dfxFount{30%{transform:scale(1.12,.92)}60%{transform:scale(.95,1.08)}}
+@keyframes dfxJet{0%{opacity:0;transform:translate(-50%,20px) scale(.6)}40%{opacity:1;transform:translate(-50%,-26px) scale(1.2)}100%{opacity:0;transform:translate(-50%,-6px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.mi-deco.dfx-tower,.mi-deco.dfx-fount,.mi-deco.dfx-tower::after,.mi-deco.dfx-fount::after{animation:none}}
 .mi-pet{position:absolute;left:0;top:0;margin:-.5em 0 0 -.5em;line-height:1;will-change:transform}
 .mi-pet i{display:block;font-style:normal}
 .mi-pet u{display:block;text-decoration:none}
@@ -1820,7 +1838,7 @@ SP.push({k:'castle',e:'🏰',name:'AI課程城堡',sub:'9 個單元・課程內�
 SP.push({k:'dock',e:'⛵',name:'報名碼頭',sub:'場次・費用・報名方式',c:'#ff8a2a',g:['#ffc27a','#b8611f'],dc:['⚓','🏮','🧭'],res:[['🦀','w'],['🐢','w'],['🐦','f']]});
 SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手氣',c:'#fbbf24',g:['#fde68a','#b45309'],dc:['🪙','🍒','✨']});
 SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
-SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・合成神獸',c:'#34d399',g:['#a7f3d0','#047857'],dc:['🧩','🍑','⛩️']});
+SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・合成神獸',c:'#34d399',g:['#a7f3d0','#047857'],st:{land:'#6ee7b7',deep:'#047857',tree:'#065f46',leaf:'#a7f3d0',sand:['#92400e','#d97706','#fde68a'],dirt:'#78350f',n:5,glow:'#fbbf24'},dc:['🧩','🍑','✨']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
 /* 「找到蘋果爸」的 6 個連結也做成小島（和商店島一樣大），點進去先看介紹，再按「前往 ↗」用新分頁開 */
 var LINK_SPOTS=[
@@ -2041,6 +2059,32 @@ function pineSVG(x,y,r,dark,light){
   return '<ellipse cx="'+f(x+r*.3)+'" cy="'+f(y+r*.1)+'" rx="'+f(r*.9)+'" ry="'+f(r*.3)+'" fill="#06260f" opacity=".35"/><rect x="'+f(x-r*.12)+'" y="'+f(y-r*.6)+'" width="'+f(r*.24)+'" height="'+f(r*.65)+'" fill="#5a3a1a"/>'+
     [[1,1.05],[.78,1.6],[.55,2.1]].map(function(t,k){return '<path d="M'+f(x-r*t[0])+' '+f(y-r*(.45+k*.55))+'L'+f(x)+' '+f(y-r*(t[1]+.9))+'L'+f(x+r*t[0])+' '+f(y-r*(.45+k*.55))+'Z" fill="'+(k===2?light:k?mix(dark,light,.45):dark)+'"/>'}).join('');
 }
+/* 神獸試煉島：島中央一座金色五行神殿，前面五根光球石柱，台階兩側神獸石像與燈籠，四周漂浮金光 */
+function trialProps(I){
+  var g='<defs><linearGradient id="tpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".55" stop-color="#fbbf24"/><stop offset="1" stop-color="#b45309"/></linearGradient><radialGradient id="tpA" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff7c2" stop-opacity=".9"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient></defs>';
+  /* 神殿後方的金色光暈 */
+  I.push({y:10,h:g+'<ellipse class="tp-aura" cx="70" cy="28" rx="34" ry="24" fill="url(#tpA)"/>'});
+  var t='<ellipse cx="70" cy="51" rx="27" ry="4.6" fill="#0a3a1e" opacity=".3"/>'+
+    '<path d="M45 49h50l-3 4H48z" fill="#b45309"/><path d="M48 45h44v4H48z" fill="#fde68a" stroke="#92400e" stroke-width=".5"/><path d="M51 41h38v4H51z" fill="#fcd34d" stroke="#92400e" stroke-width=".5"/>'+
+    '<path d="M47 22L70 9l23 13z" fill="url(#tpG)" stroke="#78350f" stroke-width=".8" stroke-linejoin="round"/><path d="M57 20L70 13l13 7z" fill="#fef3c7" opacity=".7"/>'+
+    '<circle cx="70" cy="17" r="2.2" fill="#fff" stroke="#b45309" stroke-width=".5"/><path d="M70 6v3" stroke="#fde68a" stroke-width="1.2"/><circle cx="70" cy="5" r="1.4" fill="#fff7c2"/>'+
+    '<path d="M48 22h44v4H48z" fill="#f59e0b" stroke="#78350f" stroke-width=".6"/>';
+  [53,61,79,87].forEach(function(x){t+='<path d="M'+(x-2.2)+' 26h4.4v15h-4.4z" fill="url(#tpG)" stroke="#92400e" stroke-width=".4"/><path d="M'+(x-3)+' 26h6v1.4h-6zM'+(x-3)+' 39.6h6V41h-6z" fill="#fde68a"/>'});
+  t+='<path d="M65 41V32a5 5 0 0 1 10 0v9z" fill="#3b1d0a" stroke="#92400e" stroke-width=".5"/><path d="M68 41v-7a2 2 0 0 1 4 0v7" fill="#fbbf24" opacity=".35"/>';
+  I.push({y:44,h:t});
+  /* 五根光球石柱（水火木金土），排成弧形在神殿前面 */
+  [['#4fc3f7',38,50],['#ff7043',50,57],['#66bb6a',70,60],['#ffd54f',90,57],['#d7a86e',102,50]].forEach(function(o,i){
+    I.push({y:o[2],h:'<path d="M'+(o[1]-1.8)+' '+(o[2]-9)+'h3.6v9h-3.6z" fill="#fde68a" stroke="#92400e" stroke-width=".4"/><path d="M'+(o[1]-2.6)+' '+o[2]+'h5.2v1.6h-5.2z" fill="#b45309"/><circle class="tp-orb" style="--d:'+(i*.35)+'s" cx="'+o[1]+'" cy="'+(o[2]-11.5)+'" r="2.8" fill="'+o[0]+'" stroke="#fff" stroke-width=".6"/>'});
+  });
+  /* 台階兩側的神獸石像與燈籠 */
+  function lion(x,y,f){return '<g transform="translate('+x+' '+y+') scale('+f+' 1)"><path d="M-4 0h8v-2h-8z" fill="#92400e"/><path d="M-3 -2c0-5 1-7 3-7 2 0 3 2 3 4l1 3z" fill="#fcd34d" stroke="#92400e" stroke-width=".4"/><circle cx="1.5" cy="-7.5" r="2.4" fill="#fbbf24" stroke="#92400e" stroke-width=".4"/><circle cx="2.4" cy="-8" r=".5" fill="#3b1d0a"/></g>'}
+  function lamp(x,y){return '<path d="M'+x+' '+y+'v-7" stroke="#78350f" stroke-width="1"/><rect x="'+(x-2)+'" y="'+(y-11)+'" width="4" height="4.5" rx="1" fill="#ef4444" stroke="#7f1d1d" stroke-width=".4"/><circle class="tp-orb" style="--d:.2s" cx="'+x+'" cy="'+(y-8.8)+'" r="1.1" fill="#fff7c2"/>'}
+  I.push({y:52,h:lion(43,52,1)+lion(97,52,-1)});
+  I.push({y:47,h:lamp(34,47)+lamp(106,47)});
+  /* 漂浮的金色光點 */
+  var sp='';[[22,18],[118,16],[30,34],[112,36],[60,4],[86,6]].forEach(function(p,i){sp+='<path class="tp-spk" style="--d:'+(i*.5)+'s" d="M'+p[0]+' '+(p[1]-3)+'l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" fill="#fff3b0"/>'});
+  I.push({y:0,h:sp});
+}
 function shopProps(I){
   var i,st=function(x,y,c1,c2){return '<rect x="'+(x-9)+'" y="'+(y-4)+'" width="18" height="10" rx="1" fill="#8a5a2b" stroke="#4a2a12" stroke-width=".7"/><path d="M'+(x-11)+' '+(y-4)+'l2-9h18l2 9z" fill="'+c1+'" stroke="#4a2a12" stroke-width=".7"/><path d="M'+(x-7)+' '+(y-4)+'l1-9M'+(x-1)+' '+(y-4)+'v-9M'+(x+5)+' '+(y-4)+'l-1-9" stroke="'+c2+'" stroke-width="3.2"/><circle cx="'+(x-3)+'" cy="'+(y+1)+'" r="1.8" fill="#ffd166"/><circle cx="'+(x+3)+'" cy="'+(y+1)+'" r="1.8" fill="#5ee7ff"/>'};
   /* 彩旗串 */
@@ -2109,6 +2153,7 @@ function isleSVG(s){
   if(s.k==='res')resProps(s.rk,I);
   if(s.k==='game')gameProps(I);
   if(s.k==='shop')shopProps(I);
+  if(s.k==='trial')trialProps(I);
   if(s.k==='link'){I.push({y:40,h:bigFlag(18,40,s.c)});I.push({y:44,h:isoHut(112,44,8,s.c)})}
   if(s.k==='mine'){I.push({y:40,h:isoHut(100,40,9,'#e76f51')});I.push({y:44,h:isoHut(40,44,7,'#2a9d8f')});I.push({y:50,h:'<rect x="60" y="46" width="22" height="8" rx="2" fill="#7a4a22"/><path d="M63 48v4M68 48v4M73 48v4M78 48v4" stroke="#4ade80" stroke-width="2"/>'})}
   if(s.k==='pets'){I.push({y:42,h:isoHut(98,42,9,'#fb7185')});I.push({y:46,h:'<path d="M38 46c-4-6 4-10 7-5 3-5 11-1 7 5l-7 6z" fill="#f43f5e" stroke="#9f1239" stroke-width=".7"/>'})}
@@ -2126,13 +2171,13 @@ function islandHTML(s){
   return '<span class="isle">'+isleSVG(s)+
     (s.k==='home'?'<span class="mini-orbit"><span class="tav"></span>'+ringHTML(false)+'</span>':'')+
     '<span class="dc dc1">'+s.dc[0]+'</span><span class="dc dc2">'+s.dc[1]+'</span><span class="dc dc3">'+s.dc[2]+'</span>'+
-    '<span class="ico">'+(s.major?majorIcon(s):s.k==='search'?oracleIcon():s.e)+'</span>'+resHTML(s)+'</span>';
+    '<span class="ico">'+(s.major?majorIcon(s):s.k==='search'?oracleIcon():s.k==='trial'?'':s.e)+'</span>'+resHTML(s)+'</span>';
 }
 SP.forEach(function(s,i){
   var b=document.createElement('button');b.type='button';
   var isl=s.k==='isle',frm=s.k==='forum',num=isl||frm;
   var cnt=isl?'💬 AI 問答・'+s.rows.length+' 則':frm?'📖 '+s.total+' 篇教學・'+(s.subs.length+1)+' 間小屋':s.k==='search'?'🔍 搜尋文章・🃏 抽塔羅牌':s.sub;
-  s.base=frm?220+9*Math.min(s.subs.length+1,10):isl?205:s.k==='home'?255:s.k==='search'?285:s.k==='res'?170:s.k==='msg'?215:s.k==='game'?225:s.k==='mine'?230:s.k==='pets'?320:s.k==='shop'||s.k==='link'?340:235;
+  s.base=frm?220+9*Math.min(s.subs.length+1,10):isl?205:s.k==='home'?255:s.k==='search'?285:s.k==='res'?170:s.k==='msg'?215:s.k==='game'?225:s.k==='mine'?230:s.k==='pets'?320:s.k==='shop'||s.k==='link'||s.k==='trial'?340:235;
   if(s.major)s.base=Math.round(s.base*1.4);
   if(s.member){var ref=FORUM.find(function(x){return x.id==='courses'});s.base=ref?Math.round((220+9*Math.min(ref.subs.length+1,10))*1.4):320;}
   b.className='spot'+(num?'':' sp')+(s.k==='home'?' home':'')+(s.k==='search'?' oracle':'')+(isl?' qai':'')+(frm?' fi':'')+(s.major?' major':'');
@@ -2305,11 +2350,11 @@ function closeLog(){logEl.hidden=true;hudSync()}
 $('logBtn').addEventListener('click',openLog);
 $('logClose').addEventListener('click',closeLog);
 var gb=$('guideBox'),gbT;
-/* 進場第一則泡泡：扭蛋島介紹（點了直接去扭蛋島）；收起後恢復原本的金幣提示 */
-var GB_ANN='🎉 扭蛋島開張！5 枚金幣抽物資、💎 鑽石，6% 抽到五行神獸 🐲 點我去扭蛋 👉',gbAnn=false;
+/* 進場第一則泡泡：新增神獸試煉島（點了直接去試煉島）；收起後恢復原本的金幣提示 */
+var GB_ANN='🐲 新島開放：神獸試煉島！過關拿碎片，湊齊頭、身、腳合成五行神獸 ⛩️ 點亮你小島的五行神殿 👉',gbAnn=false;
 function gbClose(){gb.hidden=true;if(gbAnn){gbAnn=false;refresh()}}
 function showGuide(ann){gbAnn=!!ann;if(gbAnn)$('guideTxt').textContent=GB_ANN;gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(gbClose,gbAnn?12000:9000)}
-gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#gacha'});
+gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#trial'});
 
 /* ---------- 島上場景：每間小屋是一個子版區 ---------- */
 var scene=$('scene'),land=$('land'),SCN=null;
@@ -3235,7 +3280,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112301';
+var BET_V='2026112202',GACHA_V='2026112301',TRIAL_V='2026112302';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}
@@ -3715,7 +3760,7 @@ function sceneHTML(d){
   o+='<div class="mi-house lv'+d.h+'"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
   var dp={tower:[52,8],fountain:[14,54]},dl=d.dl||{};   /* 瞭望塔在小屋右上、噴水池在小屋正下方，都緊靠小屋 */
-  d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(8,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,lv-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
+  d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(8,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" data-dfx="'+k+'" data-lv="'+lv+'" role="button" aria-label="'+DECOI[k][1]+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,lv-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
   (d.trees||[]).forEach(function(t,i){
     var v=treeView(t,d),pp=TREE_POS[i%TREE_POS.length];
     o+='<span class="mi-deco mi-fruit" data-ti="'+i+'"'+(v.ripe>0&&d.mine?' data-pick="'+i+'" role="button" aria-label="摘取第 '+(i+1)+' 棵果樹"':'')+' style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(v.st===0?26:v.st===1?36:46)+'px">'+(v.st===0?'🌱':'🌳')+(v.ripe>0?'<i class="mi-fr">🍎<b>'+v.ripe+'</b></i>':'')+'</span>';
@@ -3791,25 +3836,43 @@ var PV_SPD={hamster:30,rabbit:40,turtle:10,dog:44,cat:30,parrot:26,fox:42,panda:
 var PW={sel:null,selId:null,st:{},raf:0,t0:0,g:null,rm:!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 function pwGeom(sc,t){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect(),o=[];
-  sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco,.mi-temple').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
+  sc.querySelectorAll('.mi-house,.mi-plot,.mi-deco:not(.mi-fruit),.mi-temple').forEach(function(e){var r=e.getBoundingClientRect();o.push([r.left-b.left-8,r.top-b.top-8,r.right-b.left+8,r.bottom-b.top+8])});
   return {sc:sc,t:t,w:b.width,h:b.height,cx:l.left-b.left+l.width/2,cy:l.top-b.top+l.height/2,a:l.width/2*.9,b:l.height/2*.88,r:o};
 }
 function inLand(u,v){return Math.pow(Math.abs(u),6)+Math.pow(Math.abs(v),6)<=1}   /* 圓角方形陸地（比橢圓寬很多，四個角也能用） */
-function pwBlocked(G,x,y){
-  var u=(x-G.cx)/G.a,v=(y-G.cy)/G.b;if(!inLand(u,v))return true;
-  for(var i=0;i<G.r.length;i++){var r=G.r[i];if(x>r[0]&&x<r[2]&&y>r[1]&&y<r[3])return true}
+function pwBlocked(G,x,y,rd){
+  rd=rd||0;var u=(x-G.cx)/G.a,v=(y-G.cy)/G.b;if(!inLand(u,v))return true;
+  for(var i=0;i<G.r.length;i++){var r=G.r[i];if(x>r[0]-rd&&x<r[2]+rd&&y>r[1]-rd*1.4&&y<r[3]+rd*.3)return true}
+  return false;
+}
+/* 寵物之間保持距離：目標點、走路的下一步都不能太靠近別的寵物（PW.all 是這一格所有寵物的位置與半徑） */
+function pwCrowd(id,x,y,r,useTarget){
+  var L=PW.all||[];for(var i=0;i<L.length;i++){var o=L[i];if(o.id===id)continue;var need=(r+o.r)*.95;
+    if(Math.hypot(x-o.s.x,y-o.s.y)<need)return o;
+    if(useTarget&&o.s.mv&&Math.hypot(x-o.s.tx,y-o.s.ty)<need)return o}
+  return null;
+}
+function pwStepBad(id,x0,y0,x1,y1,r){
+  var L=PW.all||[];for(var i=0;i<L.length;i++){var o=L[i];if(o.id===id)continue;var need=(r+o.r)*.95,nd=Math.hypot(x1-o.s.x,y1-o.s.y);if(nd<need&&nd<Math.hypot(x0-o.s.x,y0-o.s.y)-.01)return true}
   return false;
 }
 function pwPick(G,st){
-  for(var k=0;k<30;k++){
+  var rd=(st.r||20)*.5,fb=null,fbd=-1;
+  for(var k=0;k<150;k++){
     var x=G.cx+(Math.random()*2-1)*G.a,y=G.cy+(Math.random()*2-1)*G.b;
-    if(pwBlocked(G,x,y))continue;
+    if(pwBlocked(G,x,y,rd))continue;
+    if(pwCrowd(st.id,x,y,st.r||20,true)){   /* 太擠：記下離別的寵物最遠的位置，真的找不到空位才用 */
+      var md=1e9;(PW.all||[]).forEach(function(o){if(o.id!==st.id)md=Math.min(md,Math.hypot(x-o.s.x,y-o.s.y))});if(md>fbd){fbd=md;fb=[x,y]}continue}
     if(st.x==null)return [x,y];
     if(Math.hypot(x-st.x,y-st.y)<40)continue;
-    var ok=1;for(var s=1;s<=10;s++){if(pwBlocked(G,st.x+(x-st.x)*s/10,st.y+(y-st.y)*s/10)){ok=0;break}}
+    if(pwCrowd(st.id,st.x,st.y,st.r||20,false)&&pwStepBad(st.id,st.x,st.y,st.x+(x-st.x)*.05,st.y+(y-st.y)*.05,st.r||20))continue;   /* 正擠在一起：只挑一開始就是遠離別人的方向 */
+    var ok=1,sb=pwBlocked(G,st.x,st.y,rd*.6);for(var s=1;s<=10;s++){var bl=pwBlocked(G,st.x+(x-st.x)*s/10,st.y+(y-st.y)*s/10,rd*.6);if(bl&&!sb){ok=0;break}if(!bl)sb=false}
     if(ok)return [x,y];
   }
-  return null;
+  if(st.x==null)return fb;
+  /* 太擠找不到完全空的地方：只要比現在站的位置更寬鬆，就往那邊走 */
+  var cd=1e9;(PW.all||[]).forEach(function(o){if(o.id!==st.id)cd=Math.min(cd,Math.hypot(st.x-o.s.x,st.y-o.s.y))});
+  return fb&&fbd>cd+8?fb:null;
 }
 function pwTick(t){
   PW.raf=0;
@@ -3819,9 +3882,10 @@ function pwTick(t){
   if(!PW.g||PW.g.sc!==sc||t-PW.g.t>400)PW.g=pwGeom(sc,t);
   var G=PW.g;
   if(G.w<80||G.a<20){PW.raf=requestAnimationFrame(pwTick);return}
+  PW.all=[];sc.querySelectorAll('.mi-pet').forEach(function(el){var s0=PW.st[el.getAttribute('data-pid')];if(s0&&s0.x!=null){s0.r=Math.max(12,((el.firstChild&&el.firstChild.offsetWidth)||36)*.32);PW.all.push({id:el.getAttribute('data-pid'),s:s0,r:s0.r})}});
   sc.querySelectorAll('.mi-pet').forEach(function(el){
-    var id=el.getAttribute('data-pid'),st=PW.st[id];
-    if(!st){st=PW.st[id]={x:null,y:0,wait:Math.random()*1.5,dir:1,w:G.w,h:G.h,mv:0};var p0=pwPick(G,st);st.x=p0?p0[0]:G.cx;st.y=p0?p0[1]:G.cy+G.b*.5}
+    var id=el.getAttribute('data-pid'),st=PW.st[id];if(st){st.id=id}
+    if(!st){st=PW.st[id]={id:id,x:null,y:0,wait:Math.random()*1.5,dir:1,w:G.w,h:G.h,mv:0,r:Math.max(12,((el.firstChild&&el.firstChild.offsetWidth)||36)*.32)};var p0=pwPick(G,st);st.x=p0?p0[0]:G.cx;st.y=p0?p0[1]:G.cy+G.b*.5;PW.all.push({id:id,s:st,r:st.r})}   /* 新出現的寵物也要避開已經站好的寵物 */
     if(st.w!==G.w||st.h!==G.h){st.x*=G.w/st.w;st.y*=G.h/st.h;st.w=G.w;st.h=G.h;st.mv=0;st.wait=.3}
     var pk=el.getAttribute('data-k'),pst=+el.getAttribute('data-st')||0,isSel=PW.sel===id;
     if(!PW.rm&&!isSel){
@@ -3833,9 +3897,13 @@ function pwTick(t){
             else if(pk==='turtle'&&rr<.35){st.mood='hide';st.wait=3.5}
             else if(pk==='panda'&&rr<.35)st.fx={c:'roll',u:t+1150};
             if(pk==='parrot'&&st.fly&&rr<.5)st.fly=false}}
-        else{st.x+=dx/d*sp;st.y+=dy/d*sp;if(Math.abs(dx)>2)st.dir=dx>0?1:-1}
+        else{var nx=st.x+dx/d*sp,ny=st.y+dy/d*sp;
+          if(pwStepBad(id,st.x,st.y,nx,ny,st.r||20)){st.mv=0;st.wait=.3+Math.random()*.8}   /* 會撞到別的寵物：停下來，等一下換個方向（往遠離的方向走不算） */
+          else if(pwBlocked(G,nx,ny,(st.r||20)*.35)&&!pwBlocked(G,st.x,st.y,(st.r||20)*.35)){st.mv=0;st.wait=.2}   /* 本來就卡在建築邊上時，允許往外走 */
+          else{st.x=nx;st.y=ny;if(Math.abs(dx)>2)st.dir=dx>0?1:-1}}
       }else{
         st.wait-=dt;
+        var ov=pwCrowd(id,st.x,st.y,(st.r||20)*.8,false);if(ov&&id>ov.id&&st.wait>.4)st.wait=.4;   /* 停著卻跟別的寵物疊在一起：較晚來的那隻趕快走開 */
         if(st.wait<=0){st.mood='';if(pk==='parrot'&&pst)st.fly=Math.random()<.6;if(pk==='dragon'||pk==='phoenix')st.fly=true;var q=pwPick(G,st);if(q){st.tx=q[0];st.ty=q[1];st.spd=(PV_SPD[pk]||30)*(.85+Math.random()*.3)*(st.fly?(PV_BEAST[pk]?1.2:2.3):1)*(pk==='dog'&&Math.random()<.3?1.8:1)*(PV_BEAST[pk]?.5:1);st.mv=1}else st.wait=1}
       }
     }
@@ -4098,6 +4166,24 @@ function fitIslandItems(){
   var b=sc.getBoundingClientRect(),l=sc.querySelector('.mi-land').getBoundingClientRect();if(!b.width||!b.height)return;
   miShape(sc);
   var cx=(l.left+l.right)/2-b.left,cy=(l.top+l.bottom)/2-b.top,rx=l.width*.475,ry=l.height*.475;
+  /* 建築互不交疊：小屋位置固定；菜田、神殿、瞭望塔、噴水池、施工中的建築依序檢查，碰到前面任何建築就移到最近的空位 */
+  (function(){
+    function bx(el){var r=el.getBoundingClientRect(),a=[r.left,r.top,r.right,r.bottom];el.querySelectorAll('em,.mi-lv,i').forEach(function(c){var q=c.getBoundingClientRect();if(q.width&&q.height){a[0]=Math.min(a[0],q.left);a[1]=Math.min(a[1],q.top);a[2]=Math.max(a[2],q.right);a[3]=Math.max(a[3],q.bottom)}});return [a[0]-b.left,a[1]-b.top,a[2]-b.left,a[3]-b.top]}
+    function hit(a,c,pd){return a[0]<c[2]+pd&&a[2]>c[0]-pd&&a[1]<c[3]+pd&&a[3]>c[1]-pd}
+    var fixed=[].slice.call(sc.querySelectorAll('.mi-house')).map(bx);
+    [].concat([].slice.call(sc.querySelectorAll('.mi-fields')),[].slice.call(sc.querySelectorAll('.mi-temple')),[].slice.call(sc.querySelectorAll('.mi-deco:not(.mi-fruit)'))).forEach(function(el){
+      var box=bx(el);
+      if(!fixed.some(function(f){return hit(box,f,6)})){fixed.push(box);return}
+      var cs=getComputedStyle(el),x0=parseFloat(cs.left)/b.width*100,y0=parseFloat(cs.top)/b.height*100,best=null,bd=Infinity;
+      for(var x=2;x<=98;x+=2)for(var y=0;y<=92;y+=2){
+        var dx=(x-x0)*b.width/100,dy=(y-y0)*b.height/100,nb=[box[0]+dx,box[1]+dy,box[2]+dx,box[3]+dy];
+        if(![[nb[0],nb[1]+(nb[3]-nb[1])*.5],[nb[2],nb[1]+(nb[3]-nb[1])*.5],[nb[0],nb[3]],[nb[2],nb[3]]].every(function(c){return inLand((c[0]-cx)/rx,(c[1]-cy)/ry)}))continue;
+        if(fixed.some(function(f){return hit(nb,f,6)}))continue;
+        var dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=[x,y,nb]}
+      }
+      if(best){el.style.left=best[0]+'%';el.style.top=best[1]+'%';fixed.push(best[2])}else fixed.push(box);
+    });
+  })();
   function rect(el){var r=el.getBoundingClientRect();return [r.left-b.left,r.top-b.top,r.right-b.left,r.bottom-b.top]}
   function overlap(a,c,pad){return a[0]<c[2]+pad&&a[2]>c[0]-pad&&a[1]<c[3]+pad&&a[3]>c[1]-pad}
   var farm=sc.querySelector('.mi-fields'),farmBox=farm?rect(farm):null;
@@ -4176,8 +4262,9 @@ function fitIslandItems(){
   }
 }
 pBody.addEventListener('click',function(e){
-  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop]');if(!t||V.t!=='mine')return;
+  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx]');if(!t||V.t!=='mine')return;
   var d=t.dataset,patId=null;
+  if(d.dfx){decoFx(t,d.dfx,+d.lv||1);return}
   if(d.pbx!=null){petBubClose();return}
   if(d.mpet!=null){var mp=MI.data&&MI.data.pets.filter(function(x){return x.id===d.mpet})[0];if(!mp)return;
     if(!MI.data.mine){petFx(d.mpet,'joy');fxAt(t,['👋','💕','✨']);toast('👋 '+mp.n+' 跟你打招呼');return}
@@ -4967,6 +5054,14 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!$('miss
 
 /* ---------- 特效 ---------- */
 var fx=$('fx');
+/* 點瞭望塔：探照燈掃過＋鐘聲；點噴水池：水柱噴高、水花、彩虹＋水聲（純互動，不給物資） */
+function decoFx(el,k,lv){
+  if(el.classList.contains('dfx-on'))return;
+  el.classList.add('dfx-on',k==='tower'?'dfx-tower':'dfx-fount');el.style.setProperty('--lv',lv);
+  setTimeout(function(){el.classList.remove('dfx-on','dfx-tower','dfx-fount')},k==='tower'?2200+lv*120:1600);
+  if(k==='tower'){fxAt(el,['🕊️','✨','🕊️']);if(SFX_ON){tone(880,0,.9,'sine',.12);tone(1320,0,.7,'sine',.05,.02);tone(660,0,1.1,'sine',.08,.35)}}
+  else{fxAt(el,['💧','💦','💧','🌈','💧']);if(SFX_ON){tone(260,140,.5,'triangle',.05);for(var i=0;i<7;i++)tone(1100+Math.random()*1100,0,.07,'sine',.045,.05+i*.06)}}
+}
 function burst(x,y,em){
   if(reduce)return;
   for(var i=0;i<14;i++){var e=document.createElement('span'),a=Math.random()*Math.PI*2,d=70+Math.random()*120;
