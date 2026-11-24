@@ -241,6 +241,11 @@ function bnews_() {
 }
 function bnewsAdd_(nick, b, dup) {
   sheet_('喜報', BN_HEAD).appendRow([new Date(), String(nick || '船長'), b, dup ? '是' : '']);
+  /* v67：新神獸住進小島時，官方自動在留言碼頭發一篇喜報（重複的不發） */
+  if (!dup && ANIMALS[b]) { try {
+    sheet_('留言板', M_HEAD).appendRow(['M' + Date.now().toString(36).toUpperCase() + 'BN', new Date(), '論壇資源島', 'SYSTEM', '🎉', '🎉 喜報：恭喜船長「' + plain_(nick || '船長') + '」得到五行神獸「' + ANIMALS[b].name + '」，已經住進小島、點亮五行神殿！大家也到 🐲 神獸試煉島、🎁 扭蛋島試試手氣吧～', '', '', '', '']);
+    bump_('msgs');
+  } catch (e) {} }
   CacheService.getScriptCache().remove('bnews');
 }
 /* 重複抽到的神獸先收在「神獸收藏」（isle.bbag）；可以送給好友，或到商店換資源 */
@@ -1677,7 +1682,7 @@ function msgsBuild_(admin, prefix) {
     for (var x = vals.length - 1; x >= 0; x--) {
       var v = vals[x], st = String(v[9]);
       if (!v[0] || st === '刪除' || (st === '隱藏' && !admin)) continue;
-      if (!v[6] && st !== '隱藏') pending++;
+      if (!v[6] && st !== '隱藏' && String(v[3]) !== 'SYSTEM') pending++;   // 官方自動喜報不算待回覆
       var who = String(v[3]).toUpperCase();
       list.push({ id: String(v[0]), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]),
         reply: plain_(v[6]), rt: fmt_(v[7]), re: fmt_(v[8]), hidden: st === '隱藏', w: who });
