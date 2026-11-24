@@ -137,6 +137,11 @@ h2{font-size:1.05rem;margin:0 0 8px;font-weight:900}
 .rdy .big{font-size:1.5rem;font-weight:900;color:var(--gold)}
 @keyframes rdyPop{to{transform:scale(1.15) rotate(-6deg)}}
 @media (prefers-reduced-motion:reduce){.rdy-ic{animation:none}}
+.roll{display:inline-flex;gap:4px;margin-right:6px;vertical-align:middle}
+.roll i{font-style:normal;font-size:1.3rem;display:inline-block;animation:rollB .6s ease-in-out infinite alternate}
+.roll i:nth-child(2){animation-delay:.2s}.roll i:nth-child(3){animation-delay:.4s}
+@keyframes rollB{to{transform:translateY(-7px) rotate(18deg)}}
+@media (prefers-reduced-motion:reduce){.roll i{animation:none}}
 </style></head><body>
 <div class="wrap">
   <section class="box stat" aria-label="今日狀態">
@@ -398,7 +403,7 @@ function vPlay(){
 function resultHtml(){
   var g=game,h='<div class="drop"><div class="big">'+g.right+' / 8</div><div>';
   if(g.err)h+='<b>⚠️ '+esc(g.err)+'</b><br><button class="btn ghost sm0" type="button" id="retry">再送一次結果</button>';
-  else if(!g.res)h+='結算中…'+(g.retry?'（網路忙，自動重送第 '+g.retry+' 次）':'');
+  else if(!g.res)h+='<span class="roll"><i>🧩</i><i>🍑</i><i>🎲</i></span><b>'+(g.right>=5?'抽神獸碎片中…':'計算神獸果中…')+'</b>';
   else{var r=g.res;
     if(r.shard){var b=BK[r.shard.k];h+=partEl(b,r.shard.p)+'<b>獲得 '+b.n+' 的「'+PN[r.shard.p]+'」碎片！</b>'}
     else h+=r.full?'今天的碎片已經拿滿，明天再來。':r.chance?'這次掉落機率 '+r.chance+'%，可惜沒掉到。':'答對 5 題以上才有機會掉碎片。';
@@ -466,7 +471,7 @@ function finish(n){
   api({a:'trial',id:game.id,right:game.right}).then(function(j){
     /* 同一個 id 重送只會拿回原本的結果、不會重複給獎勵，所以失敗可以放心自動重送 */
     if(!j.ok&&j.net&&n<2){setTimeout(function(){finish(n+1)},1500*(n+1));return}
-    if(!j.ok&&j.err==='gamecool'&&n<4){setTimeout(function(){finish(n+1)},5000);return}
+    if(!j.ok&&j.err==='gamecool'&&n<4){setTimeout(function(){finish(n+1)},Math.min(16000,Math.max(300,(+j.wait||5000)+250)));return}   /* 後端說還要等幾毫秒就等幾毫秒 */
     D.busy=false;
     if(!j.ok){game.err=j.err==='gamecool'?'太快了，休息幾秒再送一次':errMsg(j)}
     else{game.res=j.trial;if(j.trial.shard&&ready(j.trial.shard.k))setTimeout(function(){readyPop(j.trial.shard.k)},400);if(j.trial.shard)toast('🧩 獲得 '+BK[j.trial.shard.k].n+' 的「'+PN[j.trial.shard.p]+'」碎片！');else if(j.trial.fruit)toast('🍑 獲得神獸果 ×'+j.trial.fruit)}

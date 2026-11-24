@@ -191,7 +191,7 @@ var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸
 var BEAST_SELL_IV = 2;   // v62：換資源依個體值加成，IV 每 1 點木、石、鐵各多 2
 /* v62 神獸試煉島：碎片（5 隻神獸 × 頭身腳）、合成、個體值 IV（0～31）、神獸果（只有神獸能吃，親密度 +5） */
 var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 5, BT_FRUIT_DAY = 5, BT_FORGE = 40, BT_PITY = 20;
-var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, BT_GAP = 15 * 1000;
+var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, BT_GAP = 6 * 1000;   // v69：試煉兩場結算間隔 15→6 秒（8 題不可能 6 秒內答完）
 function partRoll_() { var x = Math.random() * 100; return x < 20 ? 'head' : x < 60 ? 'body' : 'foot'; }   // 頭 20%、身 40%、腳 40%
 function ivRoll_() { return Math.floor(Math.random() * 32); }
 /* 神獸的個體值：新拿到的存在 p.iv；舊的（v62 以前抽到的）用寵物編號算一個固定值，不會每次不一樣 */
@@ -663,7 +663,7 @@ function handle_(q) {
       else {
         var tTime=parseInt(tid.split('-').pop(),36);if(!isFinite(tTime)||Math.abs(Date.now()-tTime)>86400000) return {ok:false,err:'expired',p:me};
         var tright=Math.floor(num_(q.right));if(tright<0||tright>8) return {ok:false,err:'bad',p:me};
-        if (Date.now()-num_(tb.lt)<BT_GAP) return {ok:false,err:'gamecool',p:me};
+        if (Date.now()-num_(tb.lt)<BT_GAP) return {ok:false,err:'gamecool',wait:BT_GAP-(Date.now()-num_(tb.lt)),p:me};   // v69：告訴網頁還要等幾毫秒
         var tch=tright>=8?100:tright>=7?60:tright>=5?30:0, tres={right:tright,shard:null,fruit:0,chance:tch};
         if (tch && num_(tb.st)<BT_SHARD_DAY && Math.random()*100<tch) {
           var tk=BEASTS[Math.floor(Math.random()*BEASTS.length)], tp=partRoll_();
