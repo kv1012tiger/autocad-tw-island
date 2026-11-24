@@ -518,6 +518,7 @@ body{overflow:hidden;background:#1581bd}
 .world{position:fixed;left:0;right:0;top:var(--hud,60px);bottom:0;display:flex;touch-action:pan-x pan-y;overflow:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;cursor:grab;background:#0f6fb4;overscroll-behavior:contain}
 .world::-webkit-scrollbar{display:none}
 /* 喜報跑馬燈：船長抽到神獸 */
+.bnt-x{flex:none;display:grid;place-items:center;width:24px;height:24px;margin-left:2px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;font-size:13px;font-weight:800;line-height:1;cursor:pointer}
 .bnt{position:fixed;left:50%;top:calc(var(--hud,60px) + 8px);z-index:60;transform:translateX(-50%);width:min(92vw,520px);display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;background:linear-gradient(90deg,rgba(76,29,149,.92),rgba(124,45,18,.9));border:1px solid rgba(255,215,0,.75);box-shadow:0 4px 16px rgba(0,0,0,.35),0 0 14px rgba(255,200,60,.35);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;overflow:hidden}
 .bnt[hidden]{display:none}
 .bnt-h{flex:none;padding:2px 8px;border-radius:999px;background:#ffd54f;color:#5b2100;font-size:12px;font-weight:900;animation:bntGlow 1.6s ease-in-out infinite}
@@ -1433,7 +1434,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 </header>
 
 <main>
-<button class="bnt" id="bnTick" type="button" hidden aria-label="喜報：船長抽到神獸，點我去扭蛋島"><span class="bnt-h">🎉 喜報</span><span class="bnt-w"><span class="bnt-t" id="bnText"></span></span></button>
+<button class="bnt" id="bnTick" type="button" hidden aria-label="喜報：船長抽到神獸，點我去扭蛋島"><span class="bnt-h">🎉 喜報</span><span class="bnt-w"><span class="bnt-t" id="bnText"></span></span><span class="bnt-x" id="bnClose" role="button" tabindex="0" aria-label="關閉喜報">✕</span></button>
 <section class="world" id="world" aria-label="論壇資源島地圖">
   <div class="map-size" id="mapSize"><div class="map" id="map">
     <svg class="islets" id="islets" aria-hidden="true"></svg>
@@ -1645,7 +1646,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=90dfc180"></script>
+<script src="assets/js/coins.js?v=843ecd51"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -3320,7 +3321,7 @@ window.AIKB_GACHA={
 };
 /* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
 function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
-(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(){location.hash='gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
+(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now())}catch(x){}return}location.hash='gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
   var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null;GA.err=false}
   if(GA.left==null&&code)GA.left=gaLeftCached();
@@ -4749,7 +4750,8 @@ function bnSet(list){
   var sig=list.map(function(x){return x.t+x.b}).join('|');
   if(sig===BN.sig)return;BN.sig=sig;BN.list=list;
   var el=$('bnTick'),tx=$('bnText');if(!el)return;
-  if(!list.length){el.hidden=true;return}
+  var closedT=0;try{closedT=+localStorage.getItem('aikb-bn-closed')||0}catch(e){}
+  if(!list.length||list[0].t<=closedT){el.hidden=true;return}   /* 船長按了 ✕：同一批喜報不再顯示，有更新的才出現 */
   tx.innerHTML=list.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
   tx.style.setProperty('--d',Math.max(10,Math.min(60,list.length*9))+'s');
   el.hidden=false;bnPos();

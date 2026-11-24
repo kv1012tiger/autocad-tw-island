@@ -415,7 +415,7 @@
             var go = r.fid && window.ISLE_VISIT, sail = go ? '<span class="go" aria-hidden="true">⛵</span>' : '';   // 整列可點：航向他的小島參觀
             var isFr = r.fid && (P.fl || []).indexOf(String(r.fid)) >= 0, tg = (isFr ? '<span class="fr">👥 好友</span>' : '') + (r.on ? '<span class="on">🟢 在線</span>' : '');   // 標記放在名字下方一行，名字不會被擠掉
             return '<li class="' + (r.nick === P.nick ? 'me' : '') + (isFr ? ' frd' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (tg ? '<span class="lbtg">' + tg + '</span>' : '') +
-              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + (k === 'beast' && r.bs ? '<span class="s">' + r.bs.map(function (b) { return ({ dragon: '🐉', phoenix: '🔥', qilin: '🦌', tiger: '🐯', tortoise: '🐢' }[b.k] || '🐲') + 'IV' + b.iv + '・Lv' + b.lv; }).join('　') + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
+              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + (k === 'beast' && r.bs ? '<span class="s">' + r.bs.map(function (b) { return ({ dragon: '🐉水靈龍', phoenix: '🔥火鳳凰', qilin: '🦌木麒麟', tiger: '🐯金白虎', tortoise: '🐢土靈龜' }[b.k] || '🐲神獸') + ' IV' + b.iv + '・Lv' + b.lv; }).join('　') + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
         function show(k) {
