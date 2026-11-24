@@ -158,7 +158,8 @@ html.night .spot .tag{box-shadow:0 0 12px rgba(255,190,90,.55)}
 @keyframes wxRain{to{background-position:-60px 220px,-80px 300px}}
 @keyframes wxFlash{0%,88%,92%,100%{background:rgba(20,40,70,.22)}89%,91%{background:rgba(230,240,255,.55)}90%{background:rgba(20,40,70,.22)}}
 @keyframes wxFog{to{opacity:.7}}
-.wx-tag{position:fixed;left:max(10px,env(safe-area-inset-left,0px));top:calc(var(--hud,60px) + 8px);z-index:61;padding:5px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(3,30,48,.78);color:#fff;font:700 12.5px/1.2 inherit;box-shadow:0 4px 12px rgba(0,0,0,.35);cursor:pointer}
+.htog .hwx{color:#fff;font-size:14px;padding-right:8px;border-right:1px solid rgba(255,209,102,.45)}
+.htog .hwx:empty{display:none}
 @media (prefers-reduced-motion:reduce){.wx i,html.night .spot .isle::before,html.night .spot .isle::after{animation:none!important}}
 .spot{position:absolute;left:0;top:0;z-index:2;width:var(--w);transform:translate(-50%,-50%);background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent}
 .isle{position:relative;width:100%;aspect-ratio:1.4/1;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
@@ -1446,7 +1447,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="deco" aria-hidden="true"><div class="moon"></div><span class="bat">🦜</span><span class="bat b2">🦜</span></div>
 
 <header class="hud mini" id="hud">
-  <button class="htog" id="hudTog" type="button" aria-label="展開選單" aria-expanded="false"><span class="gear" aria-hidden="true">⚙️</span><span class="htl">選單</span><span class="hc">🪙 <b id="htogN">0</b></span><span class="hb-dot p" id="htogDot" hidden></span></button>
+  <button class="htog" id="hudTog" type="button" aria-label="展開選單" aria-expanded="false"><span class="hwx" id="wxTag"></span><span class="gear" aria-hidden="true">⚙️</span><span class="htl">選單</span><span class="hc">🪙 <b id="htogN">0</b></span><span class="hb-dot p" id="htogDot" hidden></span></button>
   <a class="logo" href="#"><span>🏝️</span>論壇資源島</a>
   <div class="scene-bar" id="sceneBar"><button class="btn btn-primary btn-sm" id="sceneBack" type="button" aria-label="回大海">⛵<span class="tx"> 回大海</span></button><div class="scene-t"><b id="sceneName"></b><small id="sceneSub"></small></div><div class="acts"><button class="act" id="sceneShare" type="button" aria-label="分享這座島">🔗<span class="tx"> 分享</span></button><button class="act" id="sceneFav" type="button" aria-label="收藏這座島"></button></div></div>
   <button class="candy" id="candyBtn" type="button" aria-label="金幣收集進度">🪙 <b id="candyN">0</b></button>
@@ -1474,7 +1475,6 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
   </div></div>
 </section>
 <div class="wx" id="wx" aria-hidden="true"><i class="wx-a"></i><i class="wx-b"></i></div>
-<button class="wx-tag" id="wxTag" type="button" hidden></button>
 <button class="guide guide-float" id="guideBox" type="button"><span class="tav" aria-hidden="true"></span><span class="bubble" id="guideTxt">嗨！我是蘋果爸。點下面的 ⛵ 展開選單，或直接點一座島出發吧 👇</span></button>
 <nav class="quest mini" id="quest" aria-label="快速功能">
   <button class="qtog" type="button" id="questTog" aria-label="展開選單" aria-expanded="false"><i>⛵</i>選單</button>
@@ -1918,10 +1918,10 @@ var BANK={bank:'合作金庫銀行 雙和分行',code:'006',acct:'1449872294172'
 var SESSIONS=[
  {d:'2026-11-07',dl:'2026-11-04',name:'台北場 1',left:0,tm:'13:15–18:15',place:'台北市（捷運國父紀念館站附近）',room:'捷運國父紀念館站 1 號出口左後轉彎，步行約 3 分鐘',pay:'taipei',url:'https://www.autocad-tw.com/t30749-topic',c:'#5ee7ff',u:3},
  {d:'2026-11-21',dl:'2026-11-18',name:'台北場 2',left:0,tm:'13:15–18:15',place:'台北市（捷運國父紀念館站附近）',room:'捷運國父紀念館站 1 號出口左後轉彎，步行約 3 分鐘',pay:'taipei',url:'https://www.autocad-tw.com/t30751-topic',c:'#a78bfa',u:0},
- {d:'2026-12-05',dl:'2026-11-19',name:'高雄場',left:2,tm:'13:00–18:00',place:'高雄市（輕軌或車站附近）',room:'高雄輕軌籬仔內站附近',pay:'kaohsiung',url:'https://www.autocad-tw.com/t30752-topic',c:'#f5c6a8',u:4},
- {d:'2026-12-19',dl:'2026-12-03',name:'台南場',left:3,tm:'13:00–18:00',place:'台南市（車站附近）',room:'台南火車站附近',pay:'tainan',url:'https://www.autocad-tw.com/t30753-topic',c:'#f0a070',u:2},
+ {d:'2026-12-05',dl:'2026-11-19',name:'高雄場',left:0,tm:'13:00–18:00',place:'高雄市（輕軌或車站附近）',room:'高雄輕軌籬仔內站附近',pay:'kaohsiung',url:'https://www.autocad-tw.com/t30752-topic',c:'#f5c6a8',u:4},
+ {d:'2026-12-19',dl:'2026-12-03',name:'台南場',left:0,tm:'13:00–18:00',place:'台南市（車站附近）',room:'台南火車站附近',pay:'tainan',url:'https://www.autocad-tw.com/t30753-topic',c:'#f0a070',u:2},
  {d:'2027-01-02',dl:'2026-12-17',name:'台中場',left:0,tm:'13:00–18:00',place:'台中市（捷運文心中清站附近）',room:'距離台中捷運文心中清站，步行約 6 分鐘',pay:'taichung',url:'https://www.autocad-tw.com/t30754-topic',c:'#9ee8f0',u:1},
- {d:'2027-01-16',dl:'2027-01-13',name:'台北場 3',left:8,tm:'13:15–18:15',place:'台北市（捷運國父紀念館站附近）',room:'捷運國父紀念館站 1 號出口左後轉彎，步行約 3 分鐘',pay:'taipei',url:'https://www.autocad-tw.com/t30763-topic',c:'#6aa0ff',u:5}
+ {d:'2027-01-16',dl:'2027-01-13',name:'台北場 3',left:3,tm:'13:15–18:15',place:'台北市（捷運國父紀念館站附近）',room:'捷運國父紀念館站 1 號出口左後轉彎，步行約 3 分鐘',pay:'taipei',url:'https://www.autocad-tw.com/t30763-topic',c:'#6aa0ff',u:5}
 ];
 var ONLINE_HTML='<div class="online"><b>💻 準備推出【AI 幫你做】線上課程<span class="tag">即將開課</span></b><span>無法上實體課程的朋友，可以選擇線上課程，在家跟著影片一步一步做。想搶先知道開課消息，請用 LINE@ 告訴蘋果爸「想上線上課程」。</span><div class="row2"><a class="btn btn-line btn-sm" href="'+LINE+'" target="_blank" rel="noopener">LINE@ 登記線上課程 ↗</a></div></div>';
 var WD=['日','一','二','三','四','五','六'];
@@ -5363,10 +5363,9 @@ function wxTick(){
   var night=fn!=null?fn==='1':(t.h<6||t.h>=18);
   if(night!==WX.night){WX.night=night;document.documentElement.classList.toggle('night',night)}
   var w=fw?(WX_T.filter(function(x){return x[0]===fw})[0]||WX_T[0]):wxPick(t);
-  var nx=(Math.floor(t.h/2)+1)*2%24,next=wxPick({y:t.y,m:t.m,d:t.d,h:nx===0?23:nx});
   var el=$('wx'),tg=$('wxTag');
   if(w[0]!==WX.k){WX.k=w[0];el.className='wx '+w[0]}
-  tg.hidden=false;var lb=night&&w[0]==='clear'?'✨ 晴朗夜空':w[2]+' '+w[3];tg.textContent=(night?'🌙 ':'')+lb+(fw?'':'・'+String(nx).padStart(2,'0')+':00 '+(next[0]===w[0]?'持續':'轉'+next[3]));
+  tg.textContent=night&&w[0]==='clear'?'🌙 晴朗夜空':(night?'🌙':'')+w[2]+' '+w[3];
   wxSound();
 }
 /* 下雨、雷雨時的雨聲（音效開著才有） */
@@ -5380,7 +5379,6 @@ function wxSound(){
   WX.snd={src:src,th:WX.k==='storm'?setInterval(function(){if(SFX_ON&&!document.hidden)tone(70,35,1.4,'sawtooth',.06)},7000):0};
 }
 document.addEventListener('visibilitychange',wxSound);
-$('wxTag').addEventListener('click',function(){var w=WX_T.filter(function(x){return x[0]===WX.k})[0]||WX_T[0];toast(w[2]+' 現在是'+w[3]+(WX.night?'的夜晚，每座島都點亮燈火':'')+'；天氣每 2 小時變一次，全島船長看到的都一樣')});
 wxTick();setInterval(wxTick,60000);
 
 if(window.IntersectionObserver&&MINE_SPOT&&MINE_SPOT.el)new IntersectionObserver(function(es){if(es.some(function(e){return e.isIntersecting}))minePrefetch()},{rootMargin:'300px'}).observe(MINE_SPOT.el);
