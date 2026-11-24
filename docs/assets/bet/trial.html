@@ -132,6 +132,11 @@ h2{font-size:1.05rem;margin:0 0 8px;font-weight:900}
 .sumgo{margin-top:8px;padding:8px 14px;font-size:.9rem;animation:sumPulse 1.6s ease-in-out infinite}
 @keyframes sumPulse{50%{box-shadow:0 3px 0 #b86a00,0 0 16px rgba(255,201,74,.9)}}
 @media (prefers-reduced-motion:reduce){.sumgo{animation:none}}
+.rdy .rdy-in{text-align:center;padding:14px 4px 6px;min-height:236px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.rdy-ic{font-size:2.6rem;line-height:1;animation:rdyPop .9s ease-in-out infinite alternate}
+.rdy .big{font-size:1.5rem;font-weight:900;color:var(--gold)}
+@keyframes rdyPop{to{transform:scale(1.15) rotate(-6deg)}}
+@media (prefers-reduced-motion:reduce){.rdy-ic{animation:none}}
 </style></head><body>
 <div class="wrap">
   <section class="box stat" aria-label="今日狀態">
@@ -380,7 +385,7 @@ function render(){
 
 /* ---------- 關卡 ---------- */
 function vPlay(){
-  if(game&&!game.done)return drawQ();
+  if(game&&!game.done)return game.ready?drawReady():drawQ();
   var d=diff(),Dd=DIFF[d],b=bt(),m=b.max||{},full=isFull();
   $('view').innerHTML='<section class="box"><h2>⚔️ 指令快問快答</h2>'+
    '<div class="diffbar"><span class="stars">'+starHTML(d)+'</span><b>難度 '+d+'・'+Dd.n+'</b><span class="sub">每題 '+Dd.sec+' 秒・'+Dd.t+'</span></div>'+
@@ -428,8 +433,18 @@ function startGame(){
     var w=c.o?c.o.slice():sh4(c.L.map(function(x){return x[c.ai]}).filter(function(v,i,arr){return v!==c.a&&arr.indexOf(v)===i})).slice(0,3);
     qs.push({t:c.t,a:c.a,o:sh4(w.concat([c.a]))});
   }
-  seenAdd(qs.map(function(x){return x.t}));
-  game={qs:qs,i:0,right:0,done:false,lock:false,d:d,sec:Dd.sec,id:nid()};drawQ();
+  game={qs:qs,i:0,right:0,done:false,lock:false,d:d,sec:Dd.sec,id:nid(),ready:true};drawReady();
+}
+/* 開始前：先把畫面捲到完整的答題區，跳出「準備開始」讓船長確認後才計時 */
+function drawReady(){
+  $('view').innerHTML='<section class="box rdy"><div class="prog"><span>難度 '+game.d+'・'+DIFF[game.d].n+'</span><span>共 8 題</span></div>'+
+   '<div class="timer"><i style="transform:scaleX(1)"></i></div>'+
+   '<div class="rdy-in"><div class="rdy-ic">⚔️</div><div class="big">準備開始！</div><p class="sub">共 8 題，每題 <b>'+game.sec+'</b> 秒，按下「開始」後馬上計時。</p>'+
+   '<div class="row" style="justify-content:center"><button class="btn" id="rdyGo" type="button">▶ 開始</button><button class="btn ghost" id="rdyX" type="button">取消</button></div></div></section>';
+  $('rdyGo').onclick=function(){game.ready=false;seenAdd(game.qs.map(function(x){return x.t}));drawQ()};
+  $('rdyX').onclick=function(){game=null;render()};
+  var bx=document.querySelector('#view .box');try{bx.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){bx.scrollIntoView()}
+  try{$('rdyGo').focus({preventScroll:true})}catch(e){}
 }
 function drawQ(){
   var q=game.qs[game.i];
