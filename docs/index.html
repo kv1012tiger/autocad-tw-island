@@ -5361,6 +5361,7 @@ function wxTick(){
   var night=fn!=null?fn==='1':(t.h<6||t.h>=18);
   if(night!==WX.night){WX.night=night;document.documentElement.classList.toggle('night',night)}
   var w=fw?(WX_T.filter(function(x){return x[0]===fw})[0]||WX_T[0]):wxPick(t);
+  if(night&&w[0]==='rainbow')w=WX_T[0];   /* 晚上不會有彩虹：改成晴朗夜空 */
   var el=$('wx'),tg=$('wxTag');
   if(w[0]!==WX.k){WX.k=w[0];el.className='wx '+w[0]}
   tg.textContent=night&&w[0]==='clear'?'🌙 晴朗夜空':(night?'🌙':'')+w[2]+' '+w[3];
