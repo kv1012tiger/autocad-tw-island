@@ -848,6 +848,10 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .spot .dbadge.dd{background:radial-gradient(circle at 35% 30%,#f0fbff,#7dd3fc 60%,#0284c7);box-shadow:0 0 0 3px rgba(4,46,64,.9),0 0 22px rgba(125,211,252,.98)}
 .spot .dbadge::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px dashed rgba(255,255,255,.7);animation:spin 5s linear infinite;pointer-events:none}
 .spot .dbadge[hidden]{display:none}
+.spot .chestb{position:absolute;left:84%;top:4%;z-index:7;width:52px;height:52px;margin-left:-26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffeef3,#ff9ab3 60%,#e11d48);display:grid;place-items:center;font-size:29px;cursor:pointer;box-shadow:0 0 0 3px rgba(4,46,64,.9),0 0 24px rgba(255,154,179,.95);animation:dropbob 1.6s ease-in-out infinite}
+.spot .chestb::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px dashed rgba(255,255,255,.75);animation:spin 5s linear infinite;pointer-events:none}
+.spot .chestb[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.spot .chestb,.spot .chestb::after{animation:none}}
 @keyframes dropbob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.08)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spot .dbadge,.spot .rbadge,.spot.qai:not(.done) .badge,.spot .dbadge::after{animation:none}}
@@ -1658,7 +1662,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=e97e6d96"></script>
+<script src="assets/js/coins.js?v=9f604051"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -2205,7 +2209,7 @@ SP.forEach(function(s,i){
     '<span class="tag">'+esc(s.name)+'</span>'+
     '<span class="cnt">'+esc(cnt)+'</span>';
   b.setAttribute('aria-label',s.name+'：'+cnt);
-  b.addEventListener('click',function(){var db=b.querySelector('.dbadge');if(db&&!db.hidden&&COINS.get().code)claimDrop(db.dataset.dk,db);visit(i)});   /* 島上有漂流金幣／鑽石：點島進去時順便領走（旅人不跳登島視窗） */
+  b.addEventListener('click',function(){var db=b.querySelector('.dbadge');if(db&&!db.hidden&&COINS.get().code)claimDrop(db.dataset.dk,db);var cb=b.querySelector('.chestb');if(cb&&!cb.hidden&&COINS.get().code){claimChest(cb,function(){visit(i)});return}visit(i)});   /* 島上有寶箱：先開箱拿資源，再照常進島 */   /* 島上有漂流金幣／鑽石：點島進去時順便領走（旅人不跳登島視窗） */
   s.el=b;spotsEl.appendChild(b);
 });
 var MDECO=[['🦜',53,14,1],['🐚',88,12,0],['⚓',16,38,1],['🐠',84,70,1],['🦑',74,86,0],['🌊',12,82,1],['🦈',50,63,0],['🐋',40,30,1],['🐡',62,47,0],['🐙',24,62,1],['🐠',66,26,1],['🌊',45,88,0]];
@@ -4734,6 +4738,35 @@ $('spots').addEventListener('click',function(e){
   var b=e.target.closest('.dbadge');if(!b)return;
   e.stopPropagation();e.preventDefault();claimDrop(b.dataset.dk,b);
 },true);
+/* ---------- v72 寶箱：在線累計到了，就隨機漂到地圖上的一座島（位置存在 cw-chest.k，撿走前不會換）；點寶箱或那座島：先開箱拿資源，再照常進島 ---------- */
+window.CHEST_MAP=1;
+function ckMapPaint(){
+  var CK=COINS.chest;if(!CK)return;
+  var s=CK.get(),w=COINS.get(),on=!!(w.code&&s.up&&s.n<CK.max);
+  if(on&&(!s.k||!KEYSP[s.k]||!KEYSP[s.k].el)){
+    var ks=Object.keys(KEYSP).filter(function(k){return KEYSP[k].el&&!DR.map[k]});
+    if(!ks.length)ks=Object.keys(KEYSP).filter(function(k){return KEYSP[k].el});
+    s.k=ks[Math.floor(Math.random()*ks.length)];CK.save(s);
+  }
+  Object.keys(KEYSP).forEach(function(k){
+    var el=KEYSP[k].el;if(!el)return;
+    var b=el.querySelector('.chestb'),show=on&&k===s.k;
+    if(!b){if(!show)return;b=document.createElement('span');b.className='chestb';b.setAttribute('role','button');b.setAttribute('aria-label','打開寶箱');b.textContent='🎁';el.appendChild(b)}
+    b.hidden=!show;
+  });
+}
+function claimChest(b,then){
+  var rc=b.getBoundingClientRect(),cx=rc.left+rc.width/2,cy=rc.top+rc.height/2;
+  COINS.chest.open().then(function(r){
+    if(r.busy)return;
+    if(r.ok){burst(cx,cy,['🎁','✨',r.text.split(' ')[0],'⭐']);playSfx('chest');toast('🎁 打開寶箱：'+r.text+'！（今天第 '+r.n+'/'+r.max+' 個）')}
+    else toast('⚠️ '+r.msg);
+    ckMapPaint();
+    setTimeout(then,r.ok?700:300);
+  });
+}
+COINS.on(function(ev){if(!ev||ev.t==='chest'||ev.t==='logout'||ev.t==='identity'||ev.t==='sync')ckMapPaint()});
+ckMapPaint();
 /* 資源島：現在可以採集（今天還有存量、我今天沒採滿、這座島的冷卻已過）就浮出資源符號 */
 var RSV={t:0,left:null,op:null,timer:0,tm:0,tm2:0};
 /* 留言碼頭有新留言：地圖上那座島浮出紅色「💬 新留言」，點一下就進去看；進留言碼頭就算看過 */
