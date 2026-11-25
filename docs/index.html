@@ -1075,7 +1075,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mb-img{display:block;margin:8px 0;padding:0;border:0;background:none;cursor:zoom-in;max-width:100%}.mb-img img{display:block;max-width:100%;max-height:360px;border-radius:12px;object-fit:contain;background:rgba(0,0,0,.2)}
 .mb-pv{position:relative;display:inline-block;margin:8px 0 2px}.mb-pv img{display:block;max-height:140px;max-width:220px;border-radius:10px}.mb-pv button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
 .mb-ld{display:inline-block;padding:18px 22px;border-radius:12px;background:rgba(0,0,0,.25);color:var(--muted);font-size:14px}
-.mb-lb{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}.mb-lb img{max-width:100%;max-height:100%;border-radius:8px}
+.mb-lb{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}.mb-lb img{max-width:100%;max-height:100%;border-radius:8px}.mb-lbx{position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:301;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;border:2px solid rgba(255,255,255,.85);background:rgba(15,23,42,.85);color:#fff;font-family:inherit;font-weight:900;font-size:16px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}.mb-lbx:hover{background:#ef4444}
 .rs-bag span:only-child{grid-column:1/-1;white-space:normal;text-align:left}
 .rs-bag span.bump{animation:rsGot .45s}
 @keyframes rsGot{40%{transform:scale(1.22);background:rgba(255,209,102,.45);box-shadow:0 0 16px rgba(255,209,102,.9);border-color:#ffd166}}
@@ -2796,7 +2796,7 @@ pBody.addEventListener('click',function(e){
   var t=e.target.closest('button');if(!t||V.t!=='msg')return;
   var d=t.dataset;
   if(d.yt){var yf=document.createElement('div');yf.className='yt-f';yf.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+d.yt+'?autoplay=1&playsinline=1&rel=0" title="YouTube 影片" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';t.replaceWith(yf);return}
-  if(d.mimg){var im0=t.querySelector('img');if(!im0)return;var lb=document.createElement('div');lb.className='mb-lb';lb.innerHTML='<img src="'+im0.src+'" alt="留言圖片">';lb.addEventListener('click',function(){lb.remove()});document.body.appendChild(lb);return}
+  if(d.mimg){var im0=t.querySelector('img');if(!im0)return;var lb=document.createElement('div');lb.className='mb-lb';lb.setAttribute('role','dialog');lb.setAttribute('aria-label','放大的留言圖片');lb.innerHTML='<img src="'+im0.src+'" alt="留言圖片"><button class="mb-lbx" type="button" aria-label="關閉放大圖片">✕ 關閉</button>';function lbClose(){lb.remove();document.removeEventListener('keydown',lbKey)}function lbKey(e){if(e.key==='Escape')lbClose()}lb.addEventListener('click',lbClose);document.addEventListener('keydown',lbKey);document.body.appendChild(lb);lb.querySelector('.mb-lbx').focus();return}
   if(t.id==='mbPic'){$('mbFile').click();return}
   if(d.mpvx!=null){MB.pic=null;mbPvPaint();return}
   if(d.rpic!=null){var rf=pBody.querySelector('[data-rfile]');if(rf)rf.click();return}
