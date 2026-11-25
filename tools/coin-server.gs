@@ -279,6 +279,7 @@ function beastGive_(o, k, iv, aff) {
 }
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
+var LOCK_WAIT = 15000;   // v75：等寫入鎖最多 15 秒
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
 var MSG_IMG_MAX = 400000, MSG_IMG_CHUNK = 45000;   // v59 圖片 base64 上限（前台先縮到 1024px JPEG）；每格最多 45000 字（試算表一格上限 50000）
 var NOTE_LEN = 100, NOTE_DAY = 20;
@@ -524,8 +525,10 @@ function handle_(q) {
     return { ok: true, add: 0, friends: friendsOf_(fRows, fr0), p: profile_(fr0) };
   }
   if (a === 'island' && q.fid) { var fv = islandVisit_(q); if (fv) return fv; } // 參觀別人的島：同樣只讀（訪客紀錄由前台另外送 a:'isvisit'）
-  var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  var lock = LockService.getScriptLock(), lk0 = Date.now();
+  /* v75：排不到寫入鎖就回 busy（什麼都還沒寫，前台可以放心自動重試），不再丟例外變成「網路不穩」 */
+  if (!lock.tryLock(LOCK_WAIT)) { logAct_(a, 'busy', Date.now() - lk0, 0); return { ok: false, err: 'busy' }; }
+  var lk1 = Date.now(); logAct_(a, 'start', lk1 - lk0, 0);   // 先記一筆：萬一這次卡到 6 分鐘被強制停掉，也看得出是哪個動作
   try {
     var sh = players_();
     var rows = rows_(sh);
@@ -1230,8 +1233,10 @@ function handle_(q) {
     return res;
   } finally {
     lock.releaseLock();
+    logAct_(a, 'ok', lk1 - lk0, Date.now() - lk1);   // v75：執行紀錄裡看得到每次寫入是哪個動作、等鎖與執行各花多久
   }
 }
+function logAct_(a, st, wait, run) { try { console.log('act=' + a + ' ' + st + ' wait=' + wait + 'ms run=' + run + 'ms' + (run > 8000 ? ' SLOW' : '')); } catch (e) {} }
 
 /* 造訪紀錄：一次掃過整張表，算好每座島的人數與最近 12 位，快取 2 分鐘（有人新留下足跡就清掉） */
 var VIS_TTL = 120;

@@ -46,9 +46,11 @@
       });
   }
   /* 帶登島碼呼叫，自動更新錢包；登島碼失效就登出 */
-  function api(o, post) {
+  function api(o, post, busyTry) {
     var requestedCode = P.code; o.code = requestedCode;
     return call(o, post).then(function (j) {
+      /* v75：伺服器排不到寫入鎖（busy）時什麼都還沒寫入，等一下自動再送一次 */
+      if (j && !j.ok && j.err === 'busy' && !busyTry) { toast('⏳ 伺服器忙線，自動再試一次…'); return new Promise(function (ok) { setTimeout(ok, 1500); }).then(function () { return api(o, post, true); }); }
       if (P.code !== requestedCode) return j;
       if (j && j.p) apply(j.p);
       if (j && !j.ok && j.err === 'nocode') { logout(); toast('請重新登島'); }
@@ -65,7 +67,7 @@
     nofid: '找不到這個海島編號，請再確認一次', self: '這是你自己的海島編號喔', fmax: '好友最多 50 位',
     notfriend: '要先互加好友才行', gifted: '今天已經送過這位好友了，明天再送', few: '數量不夠喔',
     trademax: '今天的兌換次數用完了，明天再來', nobeast: '神獸收藏裡沒有這隻了', noshard: '碎片不夠，要同一隻神獸的頭、身、腳各一片', nobfruit: '沒有神獸果了：神獸試煉島、扭蛋島、拉霸都拿得到', bfedmax: '這隻神獸今天已經吃了 2 顆神獸果，明天再餵', gamecool: '太快了，休息幾秒再試', gachamax: '今天 3 次扭蛋抽完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', buymax: '今天買這樣東西的次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
-    msgshort: '留言至少要 2 個字', imgbad: '圖片格式不對或太大，換一張試試', imgfail: '圖片存檔失敗，請稍後再試', msgmax: '今天的留言次數用完了，明天再來', admin: '只有站長可以這樣做',
+    busy: '伺服器忙線中，請稍等一下再試', msgshort: '留言至少要 2 個字', imgbad: '圖片格式不對或太大，換一張試試', imgfail: '圖片存檔失敗，請稍後再試', msgmax: '今天的留言次數用完了，明天再來', admin: '只有站長可以這樣做',
     tired: '今天在這座島採夠了，明天再來', closed: '這座島的資源剛消失了，每 20 分鐘會隨機換一批，到地圖上找有徽章的島吧', empty: '這座島今天的物資被採光了，明天會再長出來',
     maxed: '已經蓋到最高級了', busy: '這塊田已經種了東西', notyet: '還沒長好喔，再等等', nohouse: '要先蓋小屋才能領養寵物',
     petowned: '這種動物已經領養過了', petmax: '小屋住滿了，升級小屋就能多養一隻', nocoin: '金幣不夠喔', petfull: '牠已經吃得飽飽的了', patted: '今天已經摸過牠了',

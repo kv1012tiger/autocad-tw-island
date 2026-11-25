@@ -851,6 +851,7 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .spot .chestb{position:absolute;left:84%;top:4%;z-index:7;width:52px;height:52px;margin-left:-26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffeef3,#ff9ab3 60%,#e11d48);display:grid;place-items:center;font-size:29px;cursor:pointer;box-shadow:0 0 0 3px rgba(4,46,64,.9),0 0 24px rgba(255,154,179,.95);animation:dropbob 1.6s ease-in-out infinite}
 .spot .chestb::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px dashed rgba(255,255,255,.75);animation:spin 5s linear infinite;pointer-events:none}
 .spot .chestb[hidden]{display:none}
+.spot .chestb.opening{opacity:.6;filter:grayscale(.3);animation:none}
 @media (prefers-reduced-motion:reduce){.spot .chestb,.spot .chestb::after{animation:none}}
 @keyframes dropbob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.08)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1662,7 +1663,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=9f604051"></script>
+<script src="assets/js/coins.js?v=38c80f06"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -4763,8 +4764,11 @@ function ckMapPaint(){
 }
 function claimChest(b,then){
   var rc=b.getBoundingClientRect(),cx=rc.left+rc.width/2,cy=rc.top+rc.height/2;
+  if(b.classList.contains('opening')){toast('🎁 寶箱打開中，請稍等…');return}
+  b.classList.add('opening');toast('🎁 正在打開寶箱…');
   COINS.chest.open().then(function(r){
-    if(r.busy)return;
+    b.classList.remove('opening');
+    if(r.busy){toast('🎁 寶箱打開中，請稍等…');return}
     if(r.ok){burst(cx,cy,['🎁','✨',r.text.split(' ')[0],'⭐']);playSfx('chest');toast('🎁 打開寶箱：'+r.text+'！（今天第 '+r.n+'/'+r.max+' 個）')}
     else toast('⚠️ '+r.msg);
     ckMapPaint();
