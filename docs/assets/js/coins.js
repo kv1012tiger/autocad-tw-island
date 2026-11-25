@@ -187,6 +187,7 @@
     '.cw-fr>div{padding:9px 10px;border-radius:12px;background:rgba(0,0,0,.2)}' +
     '.cw-fr .h{display:flex;align-items:center;gap:8px}.cw-fr .h i{font-style:normal;font-size:24px}.cw-fr .h b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
     '.cw-fr .d{font-size:13px;color:#b9d8e4;margin:3px 0 6px}.cw-fr .k{display:flex;gap:6px;flex-wrap:wrap}' +
+    '.cw-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px}.cw-pager small{margin:0;font-size:13px}' +
     '.cw-note{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.5}.cw-note small{display:inline;margin:0;font-size:12px}' +
     '.cw-dot{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ff5e62;color:#fff;font:800 12px/18px sans-serif;text-align:center}' +
     '.cw-ta{width:100%;box-sizing:border-box;min-height:70px;margin:6px 0 2px;padding:8px 10px;border-radius:12px;border:1.5px solid #ffd166;background:#06344a;color:#fff;font:15px/1.5 "Noto Sans TC",sans-serif;resize:vertical}' +
@@ -472,7 +473,7 @@
     modal('<div class="cw-ic">🎒</div><h3>' + av(P) + ' ' + esc(P.nick) + ' 的背包</h3><div data-box></div>' +
       '<div class="cw-row cw-fl"><button class="cw-b p" type="button" data-x>✕ 關閉</button></div>',
       function (ov, close) {
-        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {};
+        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {}, inPg = 0;
         ov.querySelector('[data-x]').addEventListener('click', close);
         function questHTML() {
           var qs = P.qs || [];
@@ -529,7 +530,8 @@
         function inboxHTML() {
           if (!INBOX) return inboxFail ? '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>' : '<small>載入中…</small>';
           if (!INBOX.length) return '<small>還沒有人傳悄悄話給你。</small>';
-          return INBOX.map(function (n) { return '<div class="cw-note">' + av(n) + ' <b>' + esc(n.nick) + '</b> <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + (String(n.text || '').indexOf('📮 回覆了你的留言：') === 0 ? '<br><button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + '</div>'; }).join('');
+          var IN_PER = 5, pages = Math.ceil(INBOX.length / IN_PER); if (inPg >= pages) inPg = pages - 1; if (inPg < 0) inPg = 0;   /* 悄悄話 5 則一頁 */
+          return INBOX.slice(inPg * IN_PER, inPg * IN_PER + IN_PER).map(function (n) { return '<div class="cw-note">' + av(n) + ' <b>' + esc(n.nick) + '</b> <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + (String(n.text || '').indexOf('📮 回覆了你的留言：') === 0 ? '<br><button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + '</div>'; }).join('') + (pages > 1 ? '<div class="cw-pager"><button class="cw-mini" type="button" data-inpg="-1"' + (inPg ? '' : ' disabled') + '>‹ 上一頁</button><small>' + (inPg + 1) + ' / ' + pages + '</small><button class="cw-mini" type="button" data-inpg="1"' + (inPg < pages - 1 ? '' : ' disabled') + '>下一頁 ›</button></div>' : '');
         }
         function busy(btn) { if (btn) { btn.disabled = true; btn.textContent = '…'; } }
         function fail(j) { toast('⚠️ ' + errText(j)); paint(); }
@@ -537,6 +539,7 @@
         ov.addEventListener('click', function (e) {
           var t = e.target.closest('button'); if (!t || !box.contains(t)) return;
           var d = t.dataset;
+          if (d.inpg != null) { inPg += +d.inpg; paint(); var pg = ov.querySelector('.cw-pager'), nt = pg && pg.parentNode.querySelector('.cw-note'); if (nt) nt.scrollIntoView({ block: 'nearest' }); return; }
           if (d.msgdock != null) { close(); if (location.hash !== '#msg') location.hash = '#msg'; else window.dispatchEvent(new Event('hashchange')); }
           else if (d.qclaim) {
             busy(t);
