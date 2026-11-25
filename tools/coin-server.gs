@@ -37,6 +37,18 @@ var C = { code: 0, nick: 1, bal: 2, earned: 3, streak: 4, last: 5, first: 6, see
   av: 16, fid: 17, friends: 18, fruit: 19, iron: 20, wood: 21, stone: 22, dia: 23, tres: 24, tdia: 25,
   gToday: 26, gLast: 27, trades: 28, gifts: 29, msgN: 30, msgLast: 31, noteN: 32, unread: 33, isle: 34, open: 35, annSeen: 36, ann: 37 };
 var D_HEAD = ['時間', '暱稱', '登島碼', '文章', '文章網址', '檔案', '下載後剩餘金幣', '備註'];
+/* v71：解壓縮密碼放在私人試算表的「解壓密碼」工作表（文章編號｜密碼｜備註），不寫進公開的程式碼；會員下載成功後才回傳 */
+var PW_HEAD = ['文章編號', '密碼', '備註'];
+function dlPw_(page) {
+  var m = /(?:^|\/)t(\d+)\//.exec(String(page || '')); if (!m) return '';
+  var map = cget_('dlpw');
+  if (!map) {
+    map = {}; var sh = sheet_('解壓密碼', PW_HEAD), n = sh.getLastRow() - 1;
+    if (n > 0) sh.getRange(2, 1, n, 2).getValues().forEach(function (v) { var id = String(v[0]).replace(/\D/g, ''); if (id && String(v[1]).trim()) map[id] = String(v[1]).trim(); });
+    cput_('dlpw', map, 600);
+  }
+  return map[m[1]] || '';
+}
 var V_HEAD = ['時間', '暱稱', '登島碼', '小島代號', '小島', '日期', '管理員'];
 var M_HEAD = ['編號', '時間', '暱稱', '登島碼', '頭像', '內容', '回覆', '回覆時間', '回覆修改時間', '狀態'];
 var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內容'];
@@ -762,6 +774,7 @@ function handle_(q) {
       r[C.recent] = [item].concat(String(r[C.recent] || '').split('\n').filter(String)).slice(0, 10).join('\n');
       sheet_('下載紀錄', D_HEAD).appendRow([new Date(), r[C.nick], r[C.code], text_(q.title, 100), SITE + text_(q.page, 80),
         text_(q.file, 100), num_(r[C.bal]), note]);
+      var pw = dlPw_(q.page); if (pw) res.pw = pw;   // v71：有解壓縮密碼就一起回傳
     } else if (a === 'visit') {
       var isle = text_(q.isle, 40), vs = sheet_('造訪紀錄', V_HEAD), t2 = day_(), dup = false;
       var vn = vs.getLastRow() - 1;

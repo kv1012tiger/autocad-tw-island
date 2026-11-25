@@ -188,6 +188,7 @@
     '.cw-fr .h{display:flex;align-items:center;gap:8px}.cw-fr .h i{font-style:normal;font-size:24px}.cw-fr .h b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
     '.cw-fr .d{font-size:13px;color:#b9d8e4;margin:3px 0 6px}.cw-fr .k{display:flex;gap:6px;flex-wrap:wrap}' +
     '.cw-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px}.cw-pager small{margin:0;font-size:13px}' +
+    '.cw-pwrow{background:rgba(255,209,102,.14);border:1.5px dashed #ffd166;border-radius:12px;padding:8px 12px;word-break:break-all}.cw-pw{font:700 1.05em ui-monospace,Consolas,monospace;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:6px;user-select:all;-webkit-user-select:all}.cw-pwc{margin-left:6px;padding:4px 12px;border-radius:999px;border:0;background:#ffd166;color:#3a1a08;font:700 13.5px "Noto Sans TC",sans-serif;cursor:pointer}' +
     '.cw-note{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.5}.cw-note small{display:inline;margin:0;font-size:12px}' +
     '.cw-dot{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ff5e62;color:#fff;font:800 12px/18px sans-serif;text-align:center}' +
     '.cw-ta{width:100%;box-sizing:border-box;min-height:70px;margin:6px 0 2px;padding:8px 10px;border-radius:12px;border:1.5px solid #ffd166;background:#06344a;color:#fff;font:15px/1.5 "Noto Sans TC",sans-serif;resize:vertical}' +
@@ -320,6 +321,34 @@
       '<div class="cw-row"><button class="cw-b p" type="button" data-x>知道了</button></div>',
       function (ov, close) { ov.querySelector('[data-x]').addEventListener('click', close); });
   }
+  /* v71：解壓縮密碼（後端在下載成功後才給；記在這台裝置，之後打開文章就直接顯示，可一鍵複製） */
+  var PW_TIP = '檔案有解壓縮密碼，下載後會顯示在這裡';
+  function pwPage() { var pg = location.pathname.replace(/^.*?\/([^\/]+\/t\d+\/)/, '$1'); if (/\/$/.test(pg)) pg += 'index.html'; return pg; }
+  function pwGet() { try { return localStorage.getItem('cw-pw:' + pwPage()) || ''; } catch (e) { return ''; } }
+  function pwCopy(pw, btn) {
+    function done() { if (btn) { btn.textContent = '✅ 已複製'; setTimeout(function () { btn.textContent = '📋 複製'; }, 1800); } toast('🔑 密碼已複製，解壓縮時貼上就好'); }
+    function old() { var t = document.createElement('textarea'); t.value = pw; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('請長按密碼自行複製'); } t.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pw).then(done, old); else old();
+  }
+  function pwBox(pw) { return '🔑 解壓縮密碼：<code class="cw-pw">' + esc(pw) + '</code> <button class="cw-pwc" type="button">📋 複製</button>'; }
+  function pwPaint() {
+    var pw = pwGet(); if (!pw) return;
+    [].forEach.call(document.querySelectorAll('p,li,span'), function (el) {
+      if (el.dataset.cwPw || el.children.length > 2 || (el.textContent || '').indexOf(PW_TIP) < 0) return;
+      el.dataset.cwPw = '1'; el.classList.add('cw-pwrow'); el.innerHTML = pwBox(pw);
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.cw-pwc'); if (!b) return;
+    var c = b.parentNode.querySelector('.cw-pw'); if (c) pwCopy(c.textContent, b);
+  });
+  function pwShow(pw) {
+    try { localStorage.setItem('cw-pw:' + pwPage(), pw); } catch (e) {}
+    pwPaint();
+    modal('<div class="cw-ic">🔑</div><h3>解壓縮密碼</h3><p class="cw-pwrow" style="font-size:17px">' + pwBox(pw) + '</p><p>解壓縮時貼上這組密碼。之後打開這篇文章也會顯示在文章裡。</p>' +
+      '<div class="cw-row"><button class="cw-b" type="button" data-x>關閉</button></div>',
+      function (ov, close) { ov.querySelector('[data-x]').addEventListener('click', close); });
+  }
   function confirmDownload(a) {
     if (!P.code) { welcome(function (ok) { if (ok) confirmDownload(a); }); return; }
     /* 網址可能是 …/memberb/t30372/ 或 …/memberb/t30372/index.html，兩種都算會員島（免扣金幣） */
@@ -348,6 +377,7 @@
             toast(memberIsland ? '📦 已記錄點擊，請以會員 Google 帳號開啟' : P.admin ? '📦 開始下載' : '📦 已扣 1 枚金幣，開始下載（剩 ' + P.bal + ' 枚）');
             if (win) { try { win.opener = null; } catch (e) {} win.location.href = a.href; }
             else { a.dataset.cwPaid = '1'; a.click(); setTimeout(function () { delete a.dataset.cwPaid; }, 500); }
+            if (j.pw) pwShow(j.pw);
           }).catch(function () { if (win) win.close(); netFail(); });
         });
       });
@@ -358,6 +388,7 @@
     e.preventDefault(); e.stopPropagation();
     load(); confirmDownload(a);
   }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pwPaint); else pwPaint();
 
   /* ---------- 排行榜 ---------- */
   var TABS = [['coin', '🪙 金幣'], ['res', '🧺 物資'], ['dia', '💎 鑽石'], ['isle', '🏝️ 島主'], ['beast', '🐲 神獸']];
