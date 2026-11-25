@@ -52,7 +52,8 @@ function dlPw_(page) {
 var V_HEAD = ['時間', '暱稱', '登島碼', '小島代號', '小島', '日期', '管理員'];
 var M_HEAD = ['編號', '時間', '暱稱', '登島碼', '頭像', '內容', '回覆', '回覆時間', '回覆修改時間', '狀態'];
 var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內容', '圖片'];   // v74：回覆也能附圖（圖片編號，圖存在「留言圖片」）
-var MI_HEAD = ['留言編號', '片', '內容'];   // v59 留言圖片：JPEG base64 切成多片存在這個工作表（不用雲端硬碟授權）
+var MI_HEAD = ['留言編號', '片', '內容'];
+var LK_HEAD = ['目標編號', '登島碼', '暱稱', '時間'];   // v76 按讚：一列一個讚（收回就清空那一列）；目標＝留言編號，或回覆的「留言編號_回覆時間毫秒」   // v59 留言圖片：JPEG base64 切成多片存在這個工作表（不用雲端硬碟授權）
 var R_HEAD = ['代號', '物資島', '日期', '今日總量', '已採集', '鑽石藏在第幾份', '已撿到鑽石'];
 var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容'];
 var DAILY = 3;      // 第 1 天 3 枚、第 2 天 4 枚
@@ -279,7 +280,8 @@ function beastGive_(o, k, iv, aff) {
 }
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
-var LOCK_WAIT = 15000;   // v75：等寫入鎖最多 15 秒
+var LOCK_WAIT = 15000;
+var LIKE_DAY = 100, LIKE_GAP = 2000;   // v76：按讚每天最多 100 次、兩次至少隔 2 秒（不算在留言額度）   // v75：等寫入鎖最多 15 秒
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
 var MSG_IMG_MAX = 400000, MSG_IMG_CHUNK = 45000;   // v59 圖片 base64 上限（前台先縮到 1024px JPEG）；每格最多 45000 字（試算表一格上限 50000）
 var NOTE_LEN = 100, NOTE_DAY = 20;
@@ -1183,6 +1185,19 @@ function handle_(q) {
       r[C.msgLast] = Date.now();
       sheet_('留言板', M_HEAD).appendRow([newMid, new Date(), r[C.nick], r[C.code], r[C.av], body, '', '', '', '']);
       bump_('msgs');
+    } else if (a === 'like') {
+      var lt = likeTarget_(String(q.id || ''));
+      if (!lt) return { ok: false, err: 'bad', p: me };
+      if (lt.w === String(r[C.code]).toUpperCase()) return { ok: false, err: 'likeself', p: me };
+      var lio = isleOf_(r), lkd = day_(), lkq = lio.lk && lio.lk.d === lkd ? lio.lk : { d: lkd, n: 0, t: 0 };
+      if (Date.now() - num_(lkq.t) < LIKE_GAP) return { ok: false, err: 'likefast', p: me };
+      if (num_(lkq.n) >= LIKE_DAY) return { ok: false, err: 'likemax', p: me };
+      var lsh = sheet_('按讚', LK_HEAD), ln = lsh.getLastRow() - 1, lvals = ln > 0 ? lsh.getRange(2, 1, ln, 2).getValues() : [], lmine = 0, lcnt = 0, lcode = String(r[C.code]).toUpperCase();
+      lvals.forEach(function (v, x) { if (String(v[0]) !== lt.id) return; lcnt++; if (String(v[1]).toUpperCase() === lcode) lmine = x + 2; });
+      if (lmine) { lsh.getRange(lmine, 1, 1, LK_HEAD.length).setValues([['', '', '', '']]); lcnt--; res.liked = false; }
+      else { lsh.appendRow([lt.id, r[C.code], r[C.nick], new Date()]); lcnt++; res.liked = true; }
+      res.likes = lcnt; lkq.n = num_(lkq.n) + 1; lkq.t = Date.now(); lio.lk = lkq; r[C.isle] = JSON.stringify(lio);
+      bump_('msgs');
     } else if (a === 'msgreply') {
       var parentSheet = sheet_('留言板', M_HEAD), parentRow = msgRow_(parentSheet, q.id);
       if (!parentRow) return { ok: false, err: 'bad', p: me };
@@ -1744,10 +1759,11 @@ function msgsBuild_(admin, prefix) {
   var replySheet = sheet_('留言回覆', MR_HEAD), replyCount = replySheet.getLastRow() - 1, byParent = {};
   if (replyCount > 0) replySheet.getRange(2, 1, replyCount, MR_HEAD.length).getValues().forEach(function (v) {
     var id = String(v[0] || ''), who = String(v[3] || '').toUpperCase(); if (!id) return;
-    (byParent[id] || (byParent[id] = [])).push({ t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]), img: String(v[6] || '') || undefined });
+    (byParent[id] || (byParent[id] = [])).push({ id: id + '_' + new Date(v[1]).getTime(), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]), img: String(v[6] || '') || undefined, w: who });
   });
+  var likes = likesMap_();
   var imgs = msgImgMap_();
-  list.forEach(function (m) { m.replies = byParent[m.id] || []; if (imgs[m.id]) m.img = 1; });
+  list.forEach(function (m) { m.replies = byParent[m.id] || []; if (imgs[m.id]) m.img = 1; m.lk = likes[m.id] || []; m.replies.forEach(function (rp) { rp.lk = likes[rp.id] || []; }); });
   var total = list.length, pages = Math.max(1, Math.ceil(total / MSG_PAGE)), all = {}, first = {};
   for (var p = 1; p <= Math.min(pages, MSG_CACHE_PAGES); p++) {
     first = { total: total, pending: admin ? pending : 0, pages: pages, list: list.slice((p - 1) * MSG_PAGE, p * MSG_PAGE) };
@@ -1768,8 +1784,32 @@ function msgs_(q) {
   }
   return { ok: true, total: pg.total, pending: pg.pending, admin: admin, page: page, pages: pg.pages,
     list: pg.list.map(function (m) {
-      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, replies: m.replies || [], hidden: m.hidden, mine: !!code && m.w === code, img: m.img || undefined };
+      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, hidden: m.hidden, mine: !!code && m.w === code, img: m.img || undefined, lk: likePub_(m.lk, code),
+        replies: (m.replies || []).map(function (rp) { return { id: rp.id, t: rp.t, nick: rp.nick, av: rp.av, text: rp.text, img: rp.img, mine: !!code && rp.w === code, lk: likePub_(rp.lk, code) }; }) };
     }) };
+}
+
+/* v76 按讚：整張「按讚」讀成 {目標: [{c 登島碼, n 暱稱}]}（只在後台與快取裡，不對外）；對外只給讚數、暱稱、自己有沒有按 */
+function likesMap_() {
+  var sh = sheet_('按讚', LK_HEAD), n = sh.getLastRow() - 1, m = {};
+  if (n > 0) sh.getRange(2, 1, n, 3).getValues().forEach(function (v) { if (!v[0]) return; (m[String(v[0])] || (m[String(v[0])] = [])).push({ c: String(v[1]).toUpperCase(), n: plain_(v[2]) }); });
+  return m;
+}
+function likePub_(lk, code) {
+  lk = lk || []; if (!lk.length) return undefined;
+  return { n: lk.length, who: lk.map(function (x) { return x.n; }), me: !!code && lk.some(function (x) { return x.c === code; }) };
+}
+/* 找按讚的目標：留言（沒被刪、沒被隱藏）或某則回覆；回傳 {id, w 作者登島碼} */
+function likeTarget_(id) {
+  if (!/^M[0-9A-Z]{4,20}(_\d{9,15})?$/.test(id)) return null;
+  var parts = id.split('_'), ms = sheet_('留言板', M_HEAD), mr = msgRow_(ms, parts[0]);
+  if (!mr) return null;
+  var mv = ms.getRange(mr, 1, 1, M_HEAD.length).getValues()[0];
+  if (mv[9] === '隱藏' || mv[9] === '刪除') return null;
+  if (parts.length === 1) return { id: id, w: String(mv[3]).toUpperCase() };
+  var rs = sheet_('留言回覆', MR_HEAD), rn = rs.getLastRow() - 1, found = null;
+  if (rn > 0) rs.getRange(2, 1, rn, 4).getValues().forEach(function (v) { if (!found && String(v[0]) === parts[0] && String(new Date(v[1]).getTime()) === parts[1]) found = { id: id, w: String(v[3]).toUpperCase() }; });
+  return found;
 }
 
 /* ---------- 站長帳號：在 Apps Script 編輯器執行一次 ---------- */

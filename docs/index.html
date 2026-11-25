@@ -1000,6 +1000,11 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .mb-pend{opacity:.72;border-style:dashed!important}.mb-pend small{color:#ffd166}
 .mb-r{margin-top:10px}.mb-r p{margin:2px 0 0;word-break:break-word;overflow-wrap:anywhere}
 .mb-k{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mb-lkr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 2px}
+.mb-like{padding:4px 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:var(--ink);font-size:13.5px;font-weight:700;cursor:pointer}
+.mb-like.on{background:#2563eb;border-color:#60a5fa;color:#fff}
+.mb-like.own{cursor:default;opacity:.75}
+.mb-lkw{border:0;background:none;color:var(--muted);font-size:12.5px;padding:2px 4px;cursor:pointer;text-align:left;font-family:inherit}
 .mb-b{padding:5px 12px;border-radius:999px;border:1.5px solid rgba(255,209,102,.55);background:transparent;color:var(--ink);font-size:13.5px;font-weight:700;cursor:pointer}
 .mb-b:hover{background:rgba(255,209,102,.15)}
 /* 物資島：連點採集舞台，四座島各有自己的背景 */
@@ -1663,7 +1668,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=38c80f06"></script>
+<script src="assets/js/coins.js?v=f9ba1730"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -2775,11 +2780,22 @@ function mbPvPaint(){var pv=$('mbPv');if(!pv)return;pv.hidden=!MB.pic;pv.innerHT
 /* v74：回覆也能附一張圖（MB.rpic），只更新預覽、不重畫整則，打到一半的字不會不見 */
 function mbRpvPaint(){var pv=pBody.querySelector('[data-rpv]');if(!pv)return;pv.hidden=!MB.rpic;pv.innerHTML=MB.rpic?'<img src="'+MB.rpic+'" alt="要附上的圖片"><button type="button" data-rpvx aria-label="拿掉圖片">✕</button>':''}
 pBody.addEventListener('change',function(e){var f0=e.target;if(!f0.matches||!f0.matches('[data-rfile]'))return;var f=f0.files&&f0.files[0];f0.value='';if(!f)return;if(!/^image\//.test(f.type)){toast('只能附圖片檔');return}toast('🖼️ 圖片處理中…');mbShrink(f).then(function(d){MB.rpic=d;mbRpvPaint()}).catch(function(){toast('⚠️ 這張圖片讀不出來，換一張試試')})});
+/* v76 按讚：留言與回覆都能按 👍（自己的不能按），下面列出誰按讚；超過 3 人先收起，點一下展開 */
+function lkHTML(o,pid){
+  var lk=o.lk||{n:0,who:[],me:false},n=lk.n||0,id=o.id;if(!id)return '';
+  var btn=o.mine?(n?'<span class="mb-like own" title="自己的不能按讚">👍 '+n+'</span>':''):'<button class="mb-like'+(lk.me?' on':'')+'" type="button" data-like="'+esc(id)+'" data-lp="'+esc(pid)+'" aria-pressed="'+(lk.me?'true':'false')+'">👍 '+(lk.me?'已讚':'讚')+(n?' '+n:'')+'</button>';
+  var who=lk.who||[],open=MB.lkOpen&&MB.lkOpen[id],names='';
+  if(n)names=(open||n<=3)?who.map(esc).join('、'):who.slice(0,3).map(esc).join('、')+' 等 '+n+' 人';
+  var nm=n?(n>3?'<button class="mb-lkw" type="button" data-lkw="'+esc(id)+'" data-lp="'+esc(pid)+'">'+names+(open?'（收起）':'（看全部）')+'</button>':'<span class="mb-lkw">'+names+'</span>'):'';
+  return btn||nm?'<div class="mb-lkr">'+btn+nm+'</div>':'';
+}
+/* 重畫一則留言但保留正在打的回覆字與附圖預覽 */
+function redrawKeep(id){var f=pBody.querySelector('.mb[data-mid="'+id+'"] [data-thread-text]'),v=f?f.value:null;redrawMsg(id);if(v!=null){var f2=pBody.querySelector('.mb[data-mid="'+id+'"] [data-thread-text]');if(f2)f2.value=v;mbRpvPaint()}}
 function msgHTML(m){
   var ed=MB.edit===m.id;
   return '<article class="mb'+(m.hidden?' hid':'')+'" data-mid="'+esc(m.id)+'"><div class="mb-h"><span class="mb-av">'+COINS.av(m)+'</span><b>'+esc(m.nick)+'</b><small>'+esc(m.t)+'</small>'+(m.hidden?'<em>已隱藏</em>':'')+'</div>'+
-    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img?m.id:'')+ytHTML(m.text)+
-    (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small>'+(r.text?'<p>'+COINS.linkify(r.text)+'</p>':'')+mbImgHTML(r.img||'')+ytHTML(r.text)+'</div></div>'}).join('')+
+    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img?m.id:'')+ytHTML(m.text)+(m.hidden?'':lkHTML(m,m.id))+
+    (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small>'+(r.text?'<p>'+COINS.linkify(r.text)+'</p>':'')+mbImgHTML(r.img||'')+ytHTML(r.text)+(m.hidden?'':lkHTML(r,m.id))+'</div></div>'}).join('')+
     (m.reply&&!ed?'<div class="qa-a mb-r"><span class="tav" aria-hidden="true"></span><div><small>🍎 蘋果爸回覆・'+esc(m.rt)+(m.re?'・已編輯 '+esc(m.re):'')+'</small><p>'+COINS.linkify(m.reply)+'</p>'+ytHTML(m.reply)+'</div></div>':'')+
     (ed?'<textarea class="mb-ta" data-rta maxlength="300" placeholder="回覆內容（清空後儲存＝刪除回覆）">'+esc(m.reply||'')+'</textarea><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-msave="'+esc(m.id)+'">💾 儲存回覆</button><button class="btn btn-ghost btn-sm" type="button" data-mcancel>取消</button></div>':
      (MB.admin||m.mine?'<div class="mb-k">'+(MB.admin?'<button class="mb-b" type="button" data-mrep="'+esc(m.id)+'">'+(m.reply?'✏️ 編輯回覆':'💬 回覆')+'</button><button class="mb-b" type="button" data-mhide="'+esc(m.id)+'" data-h="'+(m.hidden?0:1)+'">'+(m.hidden?'👁️ 取消隱藏':'🙈 隱藏')+'</button>':'')+
@@ -2800,6 +2816,18 @@ pBody.addEventListener('click',function(e){
   if(d.mimg){var im0=t.querySelector('img');if(!im0)return;var lb=document.createElement('div');lb.className='mb-lb';lb.setAttribute('role','dialog');lb.setAttribute('aria-label','放大的留言圖片');lb.innerHTML='<img src="'+im0.src+'" alt="留言圖片"><button class="mb-lbx" type="button" aria-label="關閉放大圖片">✕ 關閉</button>';function lbClose(){lb.remove();document.removeEventListener('keydown',lbKey)}function lbKey(e){if(e.key==='Escape')lbClose()}lb.addEventListener('click',lbClose);document.addEventListener('keydown',lbKey);document.body.appendChild(lb);lb.querySelector('.mb-lbx').focus();return}
   if(t.id==='mbPic'){$('mbFile').click();return}
   if(d.mpvx!=null){MB.pic=null;mbPvPaint();return}
+  if(d.lkw){MB.lkOpen=MB.lkOpen||{};MB.lkOpen[d.lkw]=!MB.lkOpen[d.lkw];redrawKeep(d.lp);return}
+  if(d.like){
+    if(!COINS.get().code){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
+    var lid=d.like,lp=d.lp,pm=MB.list.filter(function(x){return x.id===lp})[0],tg=pm&&(lid===lp?pm:(pm.replies||[]).filter(function(x){return x.id===lid})[0]);
+    if(!tg)return;MB.lkBusy=MB.lkBusy||{};if(MB.lkBusy[lid])return;MB.lkBusy[lid]=1;
+    var prev=tg.lk?JSON.parse(JSON.stringify(tg.lk)):null,lk=tg.lk||{n:0,who:[],me:false},me0=COINS.get().nick;lk.who=lk.who||[];
+    if(lk.me){lk.me=false;lk.n=Math.max(0,(lk.n||0)-1);var wi=lk.who.lastIndexOf(me0);if(wi>=0)lk.who.splice(wi,1)}else{lk.me=true;lk.n=(lk.n||0)+1;lk.who.push(me0);playSfx('candy')}
+    tg.lk=lk;redrawKeep(lp);
+    function lkBack(msg){tg.lk=prev;redrawKeep(lp);toast(msg)}
+    COINS.api({a:'like',id:lid}).then(function(j){MB.lkBusy[lid]=0;if(!j.ok){lkBack('⚠️ '+COINS.errText(j));return}if(tg.lk){tg.lk.n=j.likes;tg.lk.me=!!j.liked;redrawKeep(lp)}}).catch(function(){MB.lkBusy[lid]=0;lkBack('⚠️ 暫時連不上，讚沒有按成功')});
+    return;
+  }
   if(d.rpic!=null){var rf=pBody.querySelector('[data-rfile]');if(rf)rf.click();return}
   if(d.rpvx!=null){MB.rpic=null;mbRpvPaint();return}
   if(d.mjoin!=null){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
