@@ -4771,10 +4771,10 @@ function msgNote(ma){
   msgPaint(ma>seen);
   if(ma>seen&&MSGA.toasted!==ma){MSGA.toasted=ma;toast('📮 留言碼頭有新留言，到地圖上點紅色「新留言」去看看')}
 }
-/* 喜報跑馬燈：船長在扭蛋島抽到神獸（後台給最近 24 小時、最多 10 則） */
+/* 喜報跑馬燈：船長在扭蛋島抽到、或在試煉島召喚出神獸（後台給最近 24 小時、最多 10 則；src 標明來源，舊資料沒有就寫「得到」） */
 var BN={list:[],sig:''},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
 function bnAgo(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前'}
-function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> 在扭蛋島抽到 '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
+function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> '+(x.src==='trial'?'在試煉島召喚成功':x.src==='gacha'?'在扭蛋島抽到':'得到')+' '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
 function bnSet(list){
   if(!Array.isArray(list))return;
   var sig=list.map(function(x){return x.t+x.b}).join('|');
@@ -4791,7 +4791,7 @@ function bnSet(list){
     if(seen&&top.nick!==COINS.get().nick)toast('🎉 船長 '+top.nick+' 抽到 '+(BN_IC[top.b]||'🐲')+top.name+'！')}
   if(V&&V.t==='gacha'&&$('bnList'))$('bnList').innerHTML=bnListHTML();
 }
-function bnListHTML(){return BN.list.length?BN.list.map(function(x){return '<div>🎉 '+bnLine(x)+'<small>'+bnAgo(x.t)+'</small></div>'}).join(''):'<p>最近 24 小時還沒有人抽到神獸，搶第一個！</p>'}
+function bnListHTML(){return BN.list.length?BN.list.map(function(x){return '<div>🎉 '+bnLine(x)+'<small>'+bnAgo(x.t)+'</small></div>'}).join(''):'<p>最近 24 小時還沒有人得到神獸，搶第一個！</p>'}
 /* 最後一次實際操作（點擊、觸控、按鍵、捲動）的時間：用來判斷「在線」 */
 var LAST_ACT=Date.now();['pointerdown','keydown','wheel','touchstart','scroll'].forEach(function(ev){addEventListener(ev,function(){LAST_ACT=Date.now()},{passive:true,capture:true})});
 function resLoad(){

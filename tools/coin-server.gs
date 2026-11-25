@@ -223,8 +223,8 @@ function bcolSet_(o, col) { o.bcol = {}; o.bbag = {}; BEASTS.forEach(function (k
 var BEAST_BASE = { dragon: 105, phoenix: 85, qilin: 100, tiger: 90, tortoise: 120 };   // 與前端 BEAST_BASE 一致
 function beastHp_(k, iv, lv) { return Math.round((BEAST_BASE[k] || 100) * (1 + iv / 31 * 0.5) * (1 + (lv - 1) * 0.15)); }
 function lowIdx_(arr) { var b = 0; arr.forEach(function (x, i) { if (x.iv < arr[b].iv) b = i; }); return b; }
-/* 喜報跑馬燈：船長抽到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則 */
-var BN_HEAD = ['時間', '暱稱', '神獸', '收藏'], BN_KEEP = 10, BN_HOURS = 24;
+/* 喜報跑馬燈：船長得到神獸就記一筆（工作表「喜報」），地圖與扭蛋島顯示最近 24 小時、最多 10 則；v70 多記「來源」：gacha＝扭蛋島、trial＝試煉島召喚 */
+var BN_HEAD = ['時間', '暱稱', '神獸', '收藏', '來源'], BN_KEEP = 10, BN_HOURS = 24;
 function bnews_() {
   var hit = cget_('bnews'); if (hit) return hit;
   var sh = sheet_('喜報', BN_HEAD), n = sh.getLastRow() - 1, out = [], since = Date.now() - BN_HOURS * 3600000;
@@ -233,14 +233,14 @@ function bnews_() {
     for (var x = v.length - 1; x >= 0 && out.length < BN_KEEP; x--) {
       var t = +new Date(v[x][0]), b = String(v[x][2]);
       if (!t || t < since || !ANIMALS[b]) continue;
-      out.push({ t: t, nick: plain_(v[x][1]), b: b, name: ANIMALS[b].name, dup: v[x][3] === '是' ? 1 : 0 });
+      out.push({ t: t, nick: plain_(v[x][1]), b: b, name: ANIMALS[b].name, dup: v[x][3] === '是' ? 1 : 0, src: String(v[x][4] || '') });
     }
   }
   cput_('bnews', out, 300);
   return out;
 }
-function bnewsAdd_(nick, b, dup) {
-  sheet_('喜報', BN_HEAD).appendRow([new Date(), String(nick || '船長'), b, dup ? '是' : '']);
+function bnewsAdd_(nick, b, dup, src) {
+  sheet_('喜報', BN_HEAD).appendRow([new Date(), String(nick || '船長'), b, dup ? '是' : '', src || '']);
   /* v67：新神獸住進小島時，官方自動在留言碼頭發一篇喜報（重複的不發） */
   if (!dup && ANIMALS[b]) { try {
     sheet_('留言板', M_HEAD).appendRow(['M' + Date.now().toString(36).toUpperCase() + 'BN', new Date(), '論壇資源島', 'SYSTEM', '🎉', '🎉 喜報：恭喜船長「' + plain_(nick || '船長') + '」得到五行神獸「' + ANIMALS[b].name + '」，已經住進小島、點亮五行神殿！大家也到 🐲 神獸試煉島、🎁 扭蛋島試試手氣吧～', '', '', '', '']);
@@ -619,7 +619,7 @@ function handle_(q) {
             var bk=BEASTS[Math.floor(Math.random()*BEASTS.length)];gr.b=bk;gr.name=ANIMALS[bk].name;gr.el=ANIMALS[bk].beast;
             var giv=ivRoll_(),gw=beastGive_(gIsle,bk,giv,0);gr.iv=giv;gr.where=gw;
             if (gw!=='pet') gr.dup=1;
-            bnewsAdd_(r[C.nick],bk,gr.dup);
+            bnewsAdd_(r[C.nick],bk,gr.dup,'gacha');
           }
           else if (pick[0]==='shard'){var gsb=btOf_(gIsle),gsk=BEASTS[Math.floor(Math.random()*BEASTS.length)],gsp=partRoll_();gsb.sh[gsk+'.'+gsp]=num_(gsb.sh[gsk+'.'+gsp])+1;gr.b=gsk;gr.part=gsp;gr.name=ANIMALS[gsk].name;gr.el=ANIMALS[gsk].beast;}
           else if (pick[0]==='bfruit'){var gfb=btOf_(gIsle);gfb.fr+=pick[1];}
@@ -685,7 +685,7 @@ function handle_(q) {
         if (!BT_PARTS.every(function(pp){return num_(fb.sh[fk+'.'+pp])>0})) return {ok:false,err:'noshard',p:me};
         BT_PARTS.forEach(function(pp){fb.sh[fk+'.'+pp]=num_(fb.sh[fk+'.'+pp])-1;if(!fb.sh[fk+'.'+pp])delete fb.sh[fk+'.'+pp]});
         var frate=Math.min(100,BT_FORGE+BT_PITY*num_(fb.pity[fk])), fwin=Math.random()*100<frate, fres={k:fk,name:ANIMALS[fk].name,rate:frate,win:fwin};
-        if (fwin) { fb.pity[fk]=0; var fiv=ivRoll_(), fw=beastGive_(fI,fk,fiv,0); fres.iv=fiv; fres.where=fw; bnewsAdd_(r[C.nick],fk,fw!=='pet'); }
+        if (fwin) { fb.pity[fk]=0; var fiv=ivRoll_(), fw=beastGive_(fI,fk,fiv,0); fres.iv=fiv; fres.where=fw; bnewsAdd_(r[C.nick],fk,fw!=='pet','trial'); }
         else { fb.pity[fk]=num_(fb.pity[fk])+1; fres.next=Math.min(100,BT_FORGE+BT_PITY*fb.pity[fk]); }
         fb.receipts.push({id:fxid,result:fres}); res.forge=fres;
       }
