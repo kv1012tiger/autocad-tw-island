@@ -289,6 +289,15 @@ var DROP_COINS = 3;               // 每批有幾座島出現金幣
 var DROP_DIA_CHANCE = 0.5;        // 每批另外有一座島出現鑽石的機率
 var DROP_COIN_DAY = 4, DROP_DIA_DAY = 2;   // 每人每天最多撿幾枚金幣、幾顆鑽石
 var DROP_SALT = 'isle-drop-v1';
+/* v72 寶箱：常來、而且真的有在操作的人才撿得到。網頁只在「開著＋3 分鐘內有點擊／捲動」時累計在線時間，
+   每 15 分鐘（新來訪只要 5 分鐘）跳出一個寶箱；伺服器再檢查：兩個寶箱至少隔 CHEST_GAP、每天最多 CHEST_DAY 個、最近 ONLINE_WIN 內有實際操作 */
+var CHEST_DAY = 4, CHEST_GAP = 5 * 60 * 1000;
+var CHEST = [['coin', 3, 5, 30], ['wood', 5, 15, 20], ['iron', 5, 15, 20], ['stone', 5, 15, 20], ['dia', 1, 3, 7], ['shard', 1, 1, 3]];   // [種類, 最少, 最多, 機率%]
+function chestRoll_() {
+  var tot = 0, x; CHEST.forEach(function (c) { tot += c[3]; }); x = Math.random() * tot;
+  for (var i = 0; i < CHEST.length; i++) { x -= CHEST[i][3]; if (x < 0) return CHEST[i]; }
+  return CHEST[0];
+}
 var QUEST_N = 3, QUEST_COIN = 1;  // 每天 3 個任務，每個 1 枚金幣
 /* 網站地圖上每座島的代號（和網頁的 ISLAND_KEYS 一致；新增島嶼時要一起加） */
 var DROP_SPOTS = [
@@ -1047,6 +1056,29 @@ function handle_(q) {
       if (od.dr.k.length > 12) od.dr.k = od.dr.k.slice(-12);
       r[C.isle] = JSON.stringify(od);
       res.got = { t: spawn.t, k: dk };
+    } else if (a === 'chest') {   // v72 寶箱
+      var cid = String(q.id || '');
+      if (!/^[A-Za-z0-9_-]{8,80}$/.test(cid)) return { ok: false, err: 'bad', p: me };
+      var co = isleOf_(r), cday = day_(), cnow = Date.now();
+      if (!co.ck || co.ck.d !== cday) co.ck = { d: cday, n: 0, t: num_(co.ck && co.ck.t), rc: [] };
+      co.ck.rc = Array.isArray(co.ck.rc) ? co.ck.rc.slice(-CHEST_DAY) : [];
+      var cold = null; co.ck.rc.forEach(function (x) { if (x.id === cid) cold = x; });
+      if (cold) { res.chest = cold.r; res.ck = { n: num_(co.ck.n), max: CHEST_DAY }; }
+      else {
+        if (num_(co.ck.n) >= CHEST_DAY) return { ok: false, err: 'chestmax', p: me, ck: { n: num_(co.ck.n), max: CHEST_DAY } };
+        if (cnow - num_(co.ck.t) < CHEST_GAP) return { ok: false, err: 'chestwait', p: me, wait: Math.ceil((CHEST_GAP - (cnow - num_(co.ck.t))) / 1000) };
+        if (!r[C.seen] || cnow - new Date(r[C.seen]).getTime() >= ONLINE_WIN) return { ok: false, err: 'chestidle', p: me };
+        var cp = chestRoll_(), cn = cp[1] + Math.floor(Math.random() * (cp[2] - cp[1] + 1)), cr = { k: cp[0], n: cn };
+        if (cp[0] === 'coin') res.add = cn;
+        else if (cp[0] === 'dia') { r[C.dia] = num_(r[C.dia]) + cn; r[C.tdia] = num_(r[C.tdia]) + cn; }
+        else if (cp[0] === 'shard') {
+          var cb = btOf_(co), csk = BEASTS[Math.floor(Math.random() * BEASTS.length)], csp = partRoll_();
+          cb.sh[csk + '.' + csp] = num_(cb.sh[csk + '.' + csp]) + 1; cr.b = csk; cr.part = csp; cr.name = ANIMALS[csk].name; cr.el = ANIMALS[csk].beast;
+        } else r[BAG_COL[cp[0]]] = num_(r[BAG_COL[cp[0]]]) + cn;
+        co.ck.n = num_(co.ck.n) + 1; co.ck.t = cnow; co.ck.rc.push({ id: cid, r: cr });
+        r[C.isle] = JSON.stringify(co);
+        res.chest = cr; res.ck = { n: co.ck.n, max: CHEST_DAY };
+      }
     } else if (a === 'qclaim') {
       var oq = isleOf_(r);
       qState_(oq, r);

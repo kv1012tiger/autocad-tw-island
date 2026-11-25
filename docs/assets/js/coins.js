@@ -69,7 +69,7 @@
     tired: '今天在這座島採夠了，明天再來', closed: '這座島的資源剛消失了，每 20 分鐘會隨機換一批，到地圖上找有徽章的島吧', empty: '這座島今天的物資被採光了，明天會再長出來',
     maxed: '已經蓋到最高級了', busy: '這塊田已經種了東西', notyet: '還沒長好喔，再等等', nohouse: '要先蓋小屋才能領養寵物',
     petowned: '這種動物已經領養過了', petmax: '小屋住滿了，升級小屋就能多養一隻', nocoin: '金幣不夠喔', petfull: '牠已經吃得飽飽的了', patted: '今天已經摸過牠了',
-    watered: '今天已經幫他澆過水了', nocrop: '他的田裡現在沒有在長的菜', closed: '這座島的主人沒有開放參觀', nodrop: '這個寶物已經被海浪沖走了', got: '你已經領過了', dropmax: '今天撿到的寶物夠多了，明天再來', notyet: '這個任務還沒完成喔', annshort: '公告內容至少要 2 個字'
+    watered: '今天已經幫他澆過水了', nocrop: '他的田裡現在沒有在長的菜', closed: '這座島的主人沒有開放參觀', nodrop: '這個寶物已經被海浪沖走了', chestmax: '今天的寶箱都撿完了，明天再來', chestidle: '要在島上有動作才撿得到寶箱', got: '你已經領過了', dropmax: '今天撿到的寶物夠多了，明天再來', notyet: '這個任務還沒完成喔', annshort: '公告內容至少要 2 個字'
   };
   function errText(j) {
     if (!j) return ERR.bad;
@@ -117,6 +117,61 @@
       else save();
     }, tick);
   }
+  /* ---------- v72 寶箱：網頁開著＋3 分鐘內有點擊／觸控／捲動／按鍵才算在線；累計 15 分鐘跳出一個 🎁。
+     離開 30 分鐘以上再回來算新來訪，只要 5 分鐘就出現（常來的人機會多）；每天最多 4 個，伺服器再檢查一次 ---------- */
+  var CK_KEY = 'cw-chest', CK_TICK = 15000, CK_IDLE = 180000, CK_VISIT = 1800000, CK_FIRST = 5 * 60000, CK_EVERY = 15 * 60000, CK_MAX = 4;
+  var ckAct = Date.now(), ckEl = null, ckBusy = false;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (ev) { addEventListener(ev, function () { ckAct = Date.now(); }, { passive: true, capture: true }); });
+  function ckGet() {
+    var s = null, t = today(); try { s = JSON.parse(localStorage.getItem(CK_KEY) || 'null'); } catch (e) {}
+    if (!s || s.d !== t) s = { d: t, n: 0, ms: 0, need: CK_FIRST, last: s ? num(s.last) : 0, up: false, id: '' };
+    return s;
+  }
+  function num(x) { return Number(x) || 0; }
+  function ckSave(s) { try { localStorage.setItem(CK_KEY, JSON.stringify(s)); } catch (e) {} }
+  function ckPaint() {
+    var s = ckGet(), on = !!(P.code && s.up && s.n < CK_MAX);
+    if (on && !ckEl && document.body) {
+      ckEl = document.createElement('button'); ckEl.type = 'button'; ckEl.className = 'cw-chest'; ckEl.setAttribute('aria-label', '打開寶箱');
+      ckEl.innerHTML = '🎁<small>寶箱</small>'; ckEl.addEventListener('click', ckOpen); document.body.appendChild(ckEl);
+    } else if (!on && ckEl) { ckEl.remove(); ckEl = null; }
+  }
+  function ckTick() {
+    if (!P.code || (document.visibilityState && document.visibilityState !== 'visible')) return;
+    var now = Date.now(); if (now - ckAct > CK_IDLE) return;   // 閒置（掛網）不累計
+    var s = ckGet();
+    if (now - num(s.last) > CK_VISIT && s.need - s.ms > CK_FIRST) s.ms = s.need - CK_FIRST;   // 新來訪：只要再 5 分鐘
+    s.last = now;
+    if (s.n < CK_MAX && !s.up) { s.ms += CK_TICK; if (s.ms >= s.need) s.up = true; }
+    ckSave(s); ckPaint();
+  }
+  var CK_NAME = { coin: ['🪙', '金幣'], wood: ['🪵', '木材'], iron: ['🔩', '鐵礦'], stone: ['🪨', '石頭'], dia: ['💎', '鑽石'] }, CK_PART = { head: '頭', body: '身', foot: '腳' };
+  function ckOpen() {
+    if (ckBusy) return; ckBusy = true;
+    var s = ckGet(); if (!s.id) { s.id = 'ck-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); ckSave(s); }
+    var id = s.id;
+    function go(retry) {
+      return api({ a: 'chest', id: id }).then(function (j) {
+        if (j && !j.ok && j.err === 'chestidle' && !retry) return api({ a: 'me' }).then(function () { return go(true); });   // 剛剛有點擊：先回報在線再開一次
+        return j;
+      });
+    }
+    go(false).then(function (j) {
+      ckBusy = false; var s = ckGet();
+      if (j && j.ok && j.chest) {
+        s.n = num(j.ck && j.ck.n); s.up = false; s.ms = 0; s.need = CK_EVERY; s.id = ''; ckSave(s); ckPaint();
+        var c = j.chest, nm = CK_NAME[c.k], line = c.k === 'shard' ? '🧩 ' + esc(c.name || '神獸') + '的' + (CK_PART[c.part] || '') + '碎片 ×1' : nm[0] + ' ' + nm[1] + ' ×' + c.n;
+        modal('<div class="cw-ic">🎁</div><h3>打開寶箱！</h3><p style="font-size:21px;font-weight:800;color:#ffd166">' + line + '</p>' +
+          (c.k === 'shard' ? '<p>碎片放進神獸試煉島，集滿頭、身、腳就能召喚神獸。</p>' : '') +
+          '<p><small>今天第 ' + s.n + ' / ' + CK_MAX + ' 個寶箱' + (s.n < CK_MAX ? '，常來島上逛逛還會再出現' : '，明天再來') + '</small></p>' +
+          '<div class="cw-row"><button class="cw-b p" type="button" data-x>收下</button></div>',
+          function (ov, close) { ov.querySelector('[data-x]').addEventListener('click', close); });
+      } else if (j && j.err === 'chestmax') { s.n = CK_MAX; s.up = false; s.id = ''; ckSave(s); ckPaint(); toast(ERR.chestmax); }
+      else if (j && j.err === 'chestwait') toast('寶箱還在漂過來，' + Math.max(1, Math.ceil(num(j.wait) / 60)) + ' 分鐘後再打開');
+      else toast(errText(j));
+    }).catch(function () { ckBusy = false; toast('網路不穩，等一下再點寶箱'); });
+  }
+  function chest() { ckPaint(); setInterval(ckTick, CK_TICK); }
   function read(href) {
     if (!href || !P.code) return;
     var m = String(href).match(/([^\/]+\/t\d+)\//);
@@ -187,6 +242,10 @@
     '.cw-fr>div{padding:9px 10px;border-radius:12px;background:rgba(0,0,0,.2)}' +
     '.cw-fr .h{display:flex;align-items:center;gap:8px}.cw-fr .h i{font-style:normal;font-size:24px}.cw-fr .h b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
     '.cw-fr .d{font-size:13px;color:#b9d8e4;margin:3px 0 6px}.cw-fr .k{display:flex;gap:6px;flex-wrap:wrap}' +
+    '.cw-chest{position:fixed;right:14px;bottom:calc(110px + env(safe-area-inset-bottom));z-index:9990;display:flex;flex-direction:column;align-items:center;padding:0;border:0;background:none;cursor:pointer;font-size:46px;line-height:1;filter:drop-shadow(0 4px 10px rgba(255,209,102,.75));animation:cwChest 1.4s ease-in-out infinite}' +
+    '.cw-chest small{margin-top:2px;padding:1px 8px;border-radius:999px;background:#ffd166;color:#3a1a08;font:800 12px "Noto Sans TC",sans-serif}' +
+    '@keyframes cwChest{0%,100%{transform:translateY(0) rotate(0)}20%{transform:translateY(-6px) rotate(-8deg)}40%{transform:translateY(0) rotate(8deg)}60%{transform:translateY(-3px) rotate(-4deg)}}' +
+    '@media (prefers-reduced-motion:reduce){.cw-chest{animation:none}}' +
     '.cw-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px}.cw-pager small{margin:0;font-size:13px}' +
     '.cw-pwrow{background:rgba(255,209,102,.14);border:1.5px dashed #ffd166;border-radius:12px;padding:8px 12px;word-break:break-all}.cw-pw{font:700 1.05em ui-monospace,Consolas,monospace;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:6px;user-select:all;-webkit-user-select:all}.cw-pwc{margin-left:6px;padding:4px 12px;border-radius:999px;border:0;background:#ffd166;color:#3a1a08;font:700 13.5px "Noto Sans TC",sans-serif;cursor:pointer}' +
     '.cw-note{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.5}.cw-note small{display:inline;margin:0;font-size:12px}' +
@@ -836,7 +895,7 @@
       if (!TOP || started) { if (opt.done) opt.done(); return; }
       started = true;
       var begin = function () {
-        var d = daily(); online();
+        var d = daily(); online(); chest();
         // 首頁：先在背景把排行榜抓好，按 🏆 時就不用等
         if (opt.ask !== false) setTimeout(function () { fetchTop().catch(function () {}); }, 2500);
         if (opt.ask !== false) setTimeout(function () { loadVisAll().catch(function () {}); }, 1800);

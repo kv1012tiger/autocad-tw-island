@@ -141,9 +141,6 @@ html.night .spot .isle::after{content:"";position:absolute;inset:8% 8% 14%;z-ind
 @keyframes ntGlow{to{opacity:.7}}
 @keyframes ntTw{0%{opacity:.75}50%{opacity:1}100%{opacity:.85}}
 html.night .spot .tag{box-shadow:0 0 12px rgba(255,190,90,.55)}
-/* 選單列的白天／夜晚標籤 */
-.htog .hwx{color:#fff;font-size:14px;padding-right:8px;border-right:1px solid rgba(255,209,102,.45)}
-.htog .hwx:empty{display:none}
 @media (prefers-reduced-motion:reduce){html.night .spot .isle::before,html.night .spot .isle::after{animation:none!important}}
 .spot{position:absolute;left:0;top:0;z-index:2;width:var(--w);transform:translate(-50%,-50%);background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent}
 .isle{position:relative;width:100%;aspect-ratio:1.4/1;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
@@ -1431,7 +1428,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="deco" aria-hidden="true"><div class="moon"></div><span class="bat">🦜</span><span class="bat b2">🦜</span></div>
 
 <header class="hud mini" id="hud">
-  <button class="htog" id="hudTog" type="button" aria-label="展開選單" aria-expanded="false"><span class="hwx" id="wxTag"></span><span class="gear" aria-hidden="true">⚙️</span><span class="htl">選單</span><span class="hc">🪙 <b id="htogN">0</b></span><span class="hb-dot p" id="htogDot" hidden></span></button>
+  <button class="htog" id="hudTog" type="button" aria-label="展開選單" aria-expanded="false"><span class="gear" aria-hidden="true">⚙️</span><span class="htl">選單</span><span class="hc">🪙 <b id="htogN">0</b></span><span class="hb-dot p" id="htogDot" hidden></span></button>
   <a class="logo" href="#"><span>🏝️</span>論壇資源島</a>
   <div class="scene-bar" id="sceneBar"><button class="btn btn-primary btn-sm" id="sceneBack" type="button" aria-label="回大海">⛵<span class="tx"> 回大海</span></button><div class="scene-t"><b id="sceneName"></b><small id="sceneSub"></small></div><div class="acts"><button class="act" id="sceneShare" type="button" aria-label="分享這座島">🔗<span class="tx"> 分享</span></button><button class="act" id="sceneFav" type="button" aria-label="收藏這座島"></button></div></div>
   <button class="candy" id="candyBtn" type="button" aria-label="金幣收集進度">🪙 <b id="candyN">0</b></button>
@@ -1661,7 +1658,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=c7404523"></script>
+<script src="assets/js/coins.js?v=e97e6d96"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -5342,7 +5339,6 @@ function twNow(){var d=new Date(Date.now()+8*3600000);return {h:d.getUTCHours()}
 function dnTick(){
   var fn=(location.search.match(/[?&]night=(\d)/)||[])[1],night=fn!=null?fn==='1':(function(h){return h<6||h>=18})(twNow().h);
   if(night===DN.night)return;DN.night=night;document.documentElement.classList.toggle('night',night);
-  $('wxTag').textContent=night?'🌙 夜晚':'☀️ 白天';
 }
 dnTick();setInterval(dnTick,60000);
 
