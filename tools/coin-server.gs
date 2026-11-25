@@ -203,7 +203,7 @@ var BEAST_SELL = { wood: 66, stone: 66, iron: 66, dia: 6 };   // 重複的神獸
 var BEAST_SELL_IV = 2;   // v62：換資源依個體值加成，IV 每 1 點木、石、鐵各多 2
 /* v62 神獸試煉島：碎片（5 隻神獸 × 頭身腳）、合成、個體值 IV（0～31）、神獸果（只有神獸能吃，親密度 +5） */
 var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 5, BT_FRUIT_DAY = 5, BT_FORGE = 40, BT_PITY = 20;
-var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, BT_GAP = 6 * 1000;   // v69：試煉兩場結算間隔 15→6 秒（8 題不可能 6 秒內答完）
+var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, SLOT_SHARD_P = 0.03, SLOT_SHARD_DAY = 1, BT_GAP = 6 * 1000;   // v69：試煉兩場結算間隔 15→6 秒（8 題不可能 6 秒內答完）
 function partRoll_() { var x = Math.random() * 100; return x < 20 ? 'head' : x < 60 ? 'body' : 'foot'; }   // 頭 20%、身 40%、腳 40%
 function ivRoll_() { return Math.floor(Math.random() * 32); }
 /* 神獸的個體值：新拿到的存在 p.iv；舊的（v62 以前抽到的）用寵物編號算一個固定值，不會每次不一樣 */
@@ -211,15 +211,16 @@ function ivOf_(p) { return p && p.iv != null && isFinite(p.iv) ? Math.max(0, Mat
 function btOf_(o) {
   var b = o.bt && typeof o.bt === 'object' ? o.bt : {}, td = day_();
   b.sh = b.sh && typeof b.sh === 'object' ? b.sh : {}; b.pity = b.pity && typeof b.pity === 'object' ? b.pity : {}; b.fr = num_(b.fr);
-  if (b.d !== td) { b.d = td; b.st = 0; b.ft = 0; b.sf = 0; }
+  if (b.d !== td) { b.d = td; b.st = 0; b.ft = 0; b.sf = 0; b.ss = 0; }
+  b.ss = num_(b.ss);   // v73：今天從拉霸掉到的碎片數
   b.receipts = Array.isArray(b.receipts) ? b.receipts.slice(-60) : [];
   o.bt = b; return b;
 }
 function btPub_(o) {
   var b = btOf_(o), kinds = {};
   (o.pets || []).forEach(function (p) { if (isBeast_(p.k)) kinds[p.k] = 1; });
-  return { sh: b.sh, fr: b.fr, pity: b.pity, st: num_(b.st), ft: num_(b.ft), sf: num_(b.sf), kinds: Object.keys(kinds).length,
-    max: { shard: BT_SHARD_DAY, fruit: BT_FRUIT_DAY, slot: SLOT_FRUIT_DAY, feed: BT_FEED_DAY, lv: BEAST_LV_MAX }, forge: BT_FORGE, pityStep: BT_PITY };
+  return { sh: b.sh, fr: b.fr, pity: b.pity, st: num_(b.st), ft: num_(b.ft), sf: num_(b.sf), ss: num_(b.ss), kinds: Object.keys(kinds).length,
+    max: { shard: BT_SHARD_DAY, fruit: BT_FRUIT_DAY, slot: SLOT_FRUIT_DAY, slotShard: SLOT_SHARD_DAY, feed: BT_FEED_DAY, lv: BEAST_LV_MAX }, forge: BT_FORGE, pityStep: BT_PITY };
 }
 /* 神獸收藏改成一隻一隻記（isle.bcol = {種類: [{iv, aff}]}），isle.bbag 的數量跟著同步；舊的只有數量，就補上固定的 IV */
 function bcolOf_(o) {
@@ -611,7 +612,7 @@ function handle_(q) {
           }
           r[C.bal]=num_(r[C.bal])-1+paid;r[C.earned]=num_(r[C.earned])+Math.max(0,paid-1);bets[bt]=num_(bets[bt])+1;
           if(bdia)r[C.dia]=num_(r[C.dia])+bdia;
-          res.bet={kind:bt,roll:roll,paid:paid,result:result};if(bdia)res.bet.dia=bdia;if(streak!==null)res.bet.streak=streak;if(bt==='slot'){var sfb=btOf_(betIsland);if(sfb.sf<SLOT_FRUIT_DAY&&Math.random()<SLOT_FRUIT_P){sfb.sf++;sfb.fr++;res.bet.bfruit=1;}}bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
+          res.bet={kind:bt,roll:roll,paid:paid,result:result};if(bdia)res.bet.dia=bdia;if(streak!==null)res.bet.streak=streak;if(bt==='slot'){var sfb=btOf_(betIsland);if(sfb.sf<SLOT_FRUIT_DAY&&Math.random()<SLOT_FRUIT_P){sfb.sf++;sfb.fr++;res.bet.bfruit=1;}if(sfb.ss<SLOT_SHARD_DAY&&Math.random()<SLOT_SHARD_P){var ssk=BEASTS[Math.floor(Math.random()*BEASTS.length)],ssp=partRoll_();sfb.ss++;sfb.sh[ssk+'.'+ssp]=num_(sfb.sh[ssk+'.'+ssp])+1;res.bet.bshard={b:ssk,part:ssp,name:ANIMALS[ssk].name,el:ANIMALS[ssk].beast};}}bets.receipts.push({id:bid,kind:bt,result:res.bet});if(bets.receipts.length>100)bets.receipts=bets.receipts.slice(-100);
         }
       }
       betIsland.bets=bets;r[C.isle]=JSON.stringify(betIsland);res.betstats={slot:10-num_(bets.slot),rps:10-num_(bets.rps),rs:num_(bets.rs)};

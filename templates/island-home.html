@@ -3390,7 +3390,7 @@ function betPlay(k,choice,retry){
   return COINS.api({a:'betplay',kind:k,choice:pending.choice,id:pending.id}).then(function(j){
     state.busy=false;if(COINS.get().code!==owner)return {ok:false,msg:'帳號已切換'};
     if(!j||!j.ok){if(j&&j.err!=='bad'){state.pending=null;betStore(k,null)}return {ok:false,msg:j&&j.err==='betmax'?'今天次數已用完':COINS.errText(j)}}
-    state.pending=null;betStore(k,null);state.result=j.bet;if(j.bet&&j.bet.bfruit)setTimeout(function(){toast('🍑 額外掉了一顆神獸果！到神獸試煉島餵神獸')},1600);if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0}
+    state.pending=null;betStore(k,null);state.result=j.bet;if(j.bet&&j.bet.bfruit)setTimeout(function(){toast('🍑 額外掉了一顆神獸果！到神獸試煉島餵神獸')},1600);if(j.bet&&j.bet.bshard){var bsh=j.bet.bshard;setTimeout(function(){toast('🧩 額外掉了一片神獸碎片：'+(bsh.name||'神獸')+'的'+({head:'頭',body:'身',foot:'腳'}[bsh.part]||'')+'！')},j.bet.bfruit?4200:1600)}if(j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0}
     return {ok:true,bet:j.bet};
   }).catch(function(){state.busy=false;return {ok:false,msg:'網路中斷，請按「確認上一局結果」'}});
 }
