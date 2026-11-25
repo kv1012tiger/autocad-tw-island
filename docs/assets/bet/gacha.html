@@ -24,7 +24,7 @@ body.solo{background:#0a0820;overflow:auto;padding:12px max(12px,env(safe-area-i
 h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color:var(--gold);text-shadow:0 2px 0 #7a3b00,0 0 18px rgba(255,209,102,.5)}
 .sub{text-align:center;font-size:13px;color:var(--muted);margin:0 0 6px}
 /* 機台 */
-.stage{position:relative;height:330px}
+.stage{position:relative;height:330px;transition:height .35s ease}
 .mach{position:absolute;left:50%;top:6px;width:230px;margin-left:-115px;transform-origin:50% 100%}
 .mach.shake{animation:shake .12s linear 8}
 @keyframes shake{25%{transform:translateX(-3px) rotate(-1deg)}75%{transform:translateX(3px) rotate(1deg)}}
@@ -77,8 +77,9 @@ h1{margin:10px 0 2px;font-size:22px;text-align:center;letter-spacing:.06em;color
 @keyframes beam{0%{opacity:0;transform:scaleX(.2)}30%{opacity:1;transform:scaleX(1.4)}100%{opacity:.5;transform:scaleX(1)}}
 .fx{position:fixed;left:0;top:0;pointer-events:none;z-index:50;font-size:22px;line-height:1}
 /* 按鈕 */
-.act{display:flex;justify-content:center;gap:10px;margin-top:4px;position:relative;z-index:7}
-.btn{font:900 17px/1 inherit;font-family:inherit;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;color:#3a1600;
+.act{display:flex;justify-content:center;gap:10px;margin-top:10px;position:relative;z-index:7}
+#go{font-size:21px;padding:16px 30px}
+.btn{font-family:inherit;font-weight:900;font-size:17px;line-height:1.1;border:0;border-radius:999px;padding:14px 26px;cursor:pointer;color:#3a1600;
   background:linear-gradient(180deg,#ffe082,#ffb300);box-shadow:0 5px 0 #b26a00,0 10px 18px rgba(0,0,0,.4);touch-action:manipulation}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b26a00}
 /* 不能按的狀態（抽完了、讀取中、金幣不夠）：深底金字、字放大，不再變灰變淡 */
@@ -293,6 +294,8 @@ $('bst').innerHTML=['dragon','phoenix','qilin','tiger','tortoise'].map(function(
 
 /* ---- 獎品表（要和後台 GACHA 一致） ---- */
 var TIER={w:['#f4f1ea','安慰獎'],g:['#66bb6a','普通'],b:['#42a5f5','不錯'],p:['#ab47bc','稀有'],y:['#ffca28','超稀有'],r:['conic-gradient(#ff5252,#ffca28,#66bb6a,#42a5f5,#ab47bc,#ff5252)','神獸']};
+/* 獎項卡片比扭蛋機區塊高時，把區塊撐高，卡片就不會蓋到下面的「再轉一次」按鈕 */
+function fitStage(){var st=$('stage'),pz=$('prize');if(!st||!pz)return;var need=pz.offsetTop+pz.offsetHeight+24;st.style.height=need>330?need+'px':'';setTimeout(fit,400)}
 var TABLE=[['fruit',10,11,'w'],['wood',20,15,'g'],['stone',20,15,'g'],['iron',20,15,'g'],['coin',15,10,'b'],['dia',1,10,'p'],['dia',3,3,'y'],['beast',1,6,'r'],['shard',1,10,'p'],['bfruit',2,5,'g']];
 var RN={fruit:['🍎','水果'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],dia:['💎','鑽石'],beast:['🐲','神獸'],shard:['🧩','神獸碎片'],bfruit:['🍑','神獸果']};
 var PARTN={head:'頭',body:'身',foot:'腳'};
@@ -342,7 +345,7 @@ function spin(){
   if(!S.login){if(API)API.login();return}
   if(S.left==null){if(S.err&&API&&API.reload){S.err=false;API.reload()}return}
   if(S.busy||S.cap||S.left<=0||S.coins<5)return;
-  S.busy=true;S.res=null;$('prize').className='prize';$('rays').className='rays';$('dark').className='dark';$('beam').className='beam';$('msg').textContent='';
+  S.busy=true;S.res=null;$('prize').className='prize';$('stage').style.height='';$('rays').className='rays';$('dark').className='dark';$('beam').className='beam';$('msg').textContent='';
   var cap=$('cap');cap.className='cap';cap.style.removeProperty('--gl');
   sync();sClick();
   var cr=$('crank');cr.classList.remove('spin');void cr.getBBox();cr.classList.add('spin');
@@ -384,7 +387,7 @@ function openCap(g){
     else if(g.k==='shard'){em.innerHTML=beastSVG(g.b,0);nm.textContent='🧩 '+g.name+' 的「'+(PARTN[g.part]||'')+'」碎片';ds.textContent='稀有・到神獸試煉島湊齊頭、身、腳就能召喚'}
     else if(g.k==='bfruit'){em.textContent='🍑';nm.textContent='神獸果 ×'+g.n;ds.textContent='普通・餵神獸親密度 +5（每隻每天 2 顆）'}
     else{em.textContent=RN[g.k][0];nm.textContent=RN[g.k][1]+' ×'+g.n;ds.textContent=TIER[g.tier][1]+(g.tier==='w'?'・下次一定更好！':'・已放進背包')}
-    $('prize').classList.add('on');
+    $('prize').classList.add('on');fitStage();
     sWin(big);
     if(g.tier==='r')burst(c[0],c[1]-40,['✨','🌟','💫',{dragon:'💧',phoenix:'🔥',qilin:'🌸',tiger:'⭐',tortoise:'🪨'}[g.b]||'✨'],26,180);
     else if(big)burst(c[0],c[1]-30,[RN[g.k][0],'✨','🌟'],16,140);
