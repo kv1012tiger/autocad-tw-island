@@ -34,7 +34,7 @@
   }
 
   /* ---------- 呼叫試算表（長文字用 POST） ---------- */
-  var READ_ONLY = { me: 1, login: 1, island: 1, isles: 1, top: 1, msgs: 1, mimg: 1, visitors: 1, visall: 1, friends: 1, anns: 1, voyage: 1, drops: 1, isl: 1 };
+  var READ_ONLY = { me: 1, login: 1, island: 1, isles: 1, top: 1, msgs: 1, mimg: 1, visitors: 1, visall: 1, friends: 1, anns: 1, voyage: 1, drops: 1, isl: 1, unread: 1 };
   function call(o, post, retried) {
     var req = post ? fetch(API, { method: 'POST', body: JSON.stringify(o), cache: 'no-store' })
       : fetch(API + '?q=' + encodeURIComponent(JSON.stringify(o)), { cache: 'no-store' });
@@ -106,6 +106,21 @@
       apply(j.p);
       if (j.add) { emit({ t: 'add', n: j.add }); toast('🪙 +' + j.add + '　' + (j.p.streak > 1 ? '每日登島（連續 ' + j.p.streak + ' 天）' : '每日登島')); }
     }).catch(function () {});
+  }
+  /* v77 新悄悄話：網頁開著、人在畫面上時每 60 秒問一次（只讀、很輕），有新的就跳通知、更新紅點；背包開著就順便刷新收件匣 */
+  var INBOX_LIVE = null;
+  function unreadPoll() {
+    setInterval(function () {
+      if (!P.code || (document.visibilityState && document.visibilityState !== 'visible')) return;
+      var c0 = P.code;
+      call({ a: 'unread', code: c0 }).then(function (j) {
+        if (!j || !j.ok || P.code !== c0) return;
+        var n = num(j.unread), was = num(P.unread);
+        if (n === was) return;
+        P.unread = n; save(); emit({ t: 'sync' });
+        if (n > was) { toast('✉️ 你有 ' + n + ' 則新悄悄話，打開背包看看'); if (INBOX_LIVE) INBOX_LIVE(); }
+      }).catch(function () {});
+    }, 60000);
   }
   function online() {
     var tick = 15000;
@@ -229,6 +244,7 @@
     '.cw-tabs button.on{background:#ffd166;color:#3a1a08;border-color:#ffd166}' +
     '.cw-lb .lbtg{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:3px 4px;margin-top:3px;white-space:nowrap}.cw-lb .on,.cw-lb .fr{display:inline-block;padding:0 6px;border-radius:999px;font-size:11.5px;font-weight:700;line-height:1.5}.cw-lb .on{background:rgba(74,222,128,.18);color:#86efac}.cw-lb .fr{background:rgba(196,181,253,.2);color:#ddd6fe}.cw-lb li.frd{box-shadow:inset 3px 0 0 #a78bfa}' +
     '.cw-lb .a{flex:none;font-size:22px;width:28px;text-align:center}.cw-lb .s{display:block;font-size:12px;color:#b9d8e4;font-weight:400}' +
+    '.cw-lb .bsl{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;white-space:normal}.cw-lb .bsl i{font-style:normal;padding:1px 8px;border-radius:8px;background:rgba(255,255,255,.09);font-size:12.5px;line-height:1.6;color:#cfe6ef}.cw-lb .bsl b{color:#ffd166;font-weight:700;white-space:nowrap}.cw-lb .bsl u{text-decoration:none;white-space:nowrap}' +
     '.cw-sec{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,209,102,.25);text-align:left}' +
     '.cw-sec h4{margin:0 0 8px;font-size:16px;color:#ffd166}' +
     '.cw-bag{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center}' +
@@ -504,7 +520,7 @@
             var go = r.fid && window.ISLE_VISIT, sail = go ? '<span class="go" aria-hidden="true">⛵</span>' : '';   // 整列可點：航向他的小島參觀
             var isFr = r.fid && (P.fl || []).indexOf(String(r.fid)) >= 0, tg = (isFr ? '<span class="fr">👥 好友</span>' : '') + (r.on ? '<span class="on">🟢 在線</span>' : '');   // 標記放在名字下方一行，名字不會被擠掉
             return '<li class="' + (r.nick === P.nick ? 'me' : '') + (isFr ? ' frd' : '') + '"' + (go ? ' data-sail="' + esc(r.fid) + '" data-n="' + esc(r.nick) + '" role="button" tabindex="0"' : '') + '><span class="r">' + (['🥇', '🥈', '🥉'][i] || (i + 1)) + '</span><span class="a">' + av(r) + '</span><span class="n">' + esc(r.nick) + (tg ? '<span class="lbtg">' + tg + '</span>' : '') +
-              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + (k === 'beast' && r.bs ? '<span class="s">' + r.bs.map(function (b) { return ({ dragon: '🐉水靈龍', phoenix: '🔥火鳳凰', qilin: '🦌木麒麟', tiger: '🐯金白虎', tortoise: '🐢土靈龜' }[b.k] || '🐲神獸') + ' IV' + b.iv + '・Lv' + b.lv; }).join('　') + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
+              (k === 'res' ? '<span class="s">' + bagLine(r.bag) + '</span>' : '') + (k === 'beast' && r.bs ? '<span class="bsl">' + r.bs.map(function (b) { return '<i><u>' + ({ dragon: '🐉 水靈龍', phoenix: '🔥 火鳳凰', qilin: '🦌 木麒麟', tiger: '🐯 金白虎', tortoise: '🐢 土靈龜' }[b.k] || '🐲 神獸') + '</u> <u>IV' + b.iv + '・Lv' + b.lv + '</u>' + (b.hp != null ? ' <b>HP ' + b.hp + '</b>' : '') + '</i>'; }).join('') + '</span>' : '') + '</span><span class="c">' + v + '</span>' + sail + '</li>';
           }).join('') + '</ol>';
         }
         function show(k) {
@@ -561,7 +577,7 @@
     modal('<div class="cw-ic">🎒</div><h3>' + av(P) + ' ' + esc(P.nick) + ' 的背包</h3><div data-box></div>' +
       '<div class="cw-row cw-fl"><button class="cw-b p" type="button" data-x>✕ 關閉</button></div>',
       function (ov, close) {
-        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {}, inPg = 0;
+        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {}, inPg = 0, rOpen = -1;
         ov.querySelector('[data-x]').addEventListener('click', close);
         function questHTML() {
           var qs = P.qs || [];
@@ -589,9 +605,10 @@
             '<div class="cw-add"><input class="cw-in" maxlength="6" placeholder="輸入好友的海島編號" autocapitalize="characters" data-fidin><button class="cw-mini p" type="button" data-fadd>加好友</button></div><div class="cw-err" data-ferr></div></div>';
           h += '<div class="cw-sec"><h4>👥 好友' + (FR ? '（' + FR.length + '）' : '') + '</h4>' + friendsHTML() + '</div>';
           h += '<div class="cw-sec"><h4>✉️ 悄悄話' + (P.unread ? '<span class="cw-dot">' + P.unread + '</span>' : '') + '</h4>' + inboxHTML() + '</div>';
-          var keep = ov.querySelector('[data-fidin]'), kv = keep ? keep.value : '';
+          var keep = ov.querySelector('[data-fidin]'), kv = keep ? keep.value : '', rk = ov.querySelector('[data-rt]'), rv = rk ? rk.value : '';
           box.innerHTML = h;
           if (kv) ov.querySelector('[data-fidin]').value = kv;
+          var rk2 = ov.querySelector('[data-rt]'); if (rk2 && rv) rk2.value = rv;   // 重畫時保留正在打的回覆
         }
         function friendsHTML() {
           if (!FR) return '<small>載入中…</small>';
@@ -619,7 +636,13 @@
           if (!INBOX) return inboxFail ? '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>' : '<small>載入中…</small>';
           if (!INBOX.length) return '<small>還沒有人傳悄悄話給你。</small>';
           var IN_PER = 5, pages = Math.ceil(INBOX.length / IN_PER); if (inPg >= pages) inPg = pages - 1; if (inPg < 0) inPg = 0;   /* 悄悄話 5 則一頁 */
-          return INBOX.slice(inPg * IN_PER, inPg * IN_PER + IN_PER).map(function (n) { return '<div class="cw-note">' + av(n) + ' <b>' + esc(n.nick) + '</b> <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + (String(n.text || '').indexOf('📮 回覆了你的留言：') === 0 ? '<br><button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + '</div>'; }).join('') + (pages > 1 ? '<div class="cw-pager"><button class="cw-mini" type="button" data-inpg="-1"' + (inPg ? '' : ' disabled') + '>‹ 上一頁</button><small>' + (inPg + 1) + ' / ' + pages + '</small><button class="cw-mini" type="button" data-inpg="1"' + (inPg < pages - 1 ? '' : ' disabled') + '>下一頁 ›</button></div>' : '');
+          return INBOX.slice(inPg * IN_PER, inPg * IN_PER + IN_PER).map(function (n, i) {
+            var ix = inPg * IN_PER + i, isFr = n.fid && (P.fl || []).indexOf(String(n.fid)) >= 0, dock = String(n.text || '').indexOf('📮 回覆了你的留言：') === 0;
+            /* v77 每則悄悄話可以直接回覆（對方要是好友；就是寄一則悄悄話給他） */
+            var btns = (dock ? '<button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + (isFr ? '<button class="cw-mini" type="button" data-rp="' + ix + '">↩️ 回覆</button>' : '');
+            return '<div class="cw-note">' + av(n) + ' <b>' + esc(n.nick) + '</b> <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + (btns ? '<div class="k" style="margin-top:6px">' + btns + '</div>' : '') +
+              (rOpen === ix && isFr ? '<textarea class="cw-ta" maxlength="98" placeholder="回覆 ' + esc(n.nick) + '（100 字內）" data-rt="' + ix + '"></textarea><button class="cw-mini p" type="button" data-rsend="' + ix + '">送出回覆</button>' : '') + '</div>';
+          }).join('') + (pages > 1 ? '<div class="cw-pager"><button class="cw-mini" type="button" data-inpg="-1"' + (inPg ? '' : ' disabled') + '>‹ 上一頁</button><small>' + (inPg + 1) + ' / ' + pages + '</small><button class="cw-mini" type="button" data-inpg="1"' + (inPg < pages - 1 ? '' : ' disabled') + '>下一頁 ›</button></div>' : '');
         }
         function busy(btn) { if (btn) { btn.disabled = true; btn.textContent = '…'; } }
         function fail(j) { toast('⚠️ ' + errText(j)); paint(); }
@@ -689,7 +712,19 @@
               open[d.send] = ''; paint(); toast('✉️ 悄悄話送出了');
             }).catch(function () { netFail(); paint(); });
           } else if (d.inbox != null) { busy(t); inboxFail = false; loadInbox(); }
+          else if (d.rp != null) { var ri = +d.rp; rOpen = rOpen === ri ? -1 : ri; paint(); var rta = ov.querySelector('[data-rt]'); if (rta) rta.focus(); }
+          else if (d.rsend != null) {
+            var rn = INBOX && INBOX[+d.rsend], rta2 = ov.querySelector('[data-rt]'), rmsg = rta2 ? rta2.value.trim() : '';
+            if (!rn) return;
+            if (!rmsg) { if (rta2) rta2.focus(); return; }
+            busy(t);
+            api({ a: 'note', fid: rn.fid, text: '↩️ ' + rmsg }, true).then(function (j) {
+              if (!j.ok) return fail(j);
+              rOpen = -1; paint(); toast('↩️ 已回覆 ' + rn.nick);
+            }).catch(function () { netFail(); paint(); });
+          }
         });
+        INBOX_LIVE = function () { if (!ov.parentNode) { INBOX_LIVE = null; return; } if (rOpen < 0) loadInbox(); };   // 背包開著收到新悄悄話就刷新（正在打回覆時不打斷）
         paint();
         var frScrolled = false;
         function frScroll() { if (focus !== 'friends' || frScrolled || !FR) return; var s = [].filter.call(ov.querySelectorAll('.cw-sec'), function (x) { var h = x.querySelector('h4'); return h && h.textContent.indexOf('好友') >= 0; })[0]; if (s) { s.scrollIntoView(); frScrolled = true; } }
@@ -894,7 +929,7 @@
       if (!TOP || started) { if (opt.done) opt.done(); return; }
       started = true;
       var begin = function () {
-        var d = daily(); online(); chest();
+        var d = daily(); online(); chest(); unreadPoll();
         // 首頁：先在背景把排行榜抓好，按 🏆 時就不用等
         if (opt.ask !== false) setTimeout(function () { fetchTop().catch(function () {}); }, 2500);
         if (opt.ask !== false) setTimeout(function () { loadVisAll().catch(function () {}); }, 1800);

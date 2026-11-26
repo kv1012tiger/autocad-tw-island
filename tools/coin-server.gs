@@ -526,6 +526,11 @@ function handle_(q) {
     var fr0 = fRows[fi]; resetDay_(fr0);
     return { ok: true, add: 0, friends: friendsOf_(fRows, fr0), p: profile_(fr0) };
   }
+  if (a === 'unread') { // v77 網頁每 60 秒問一次有沒有新悄悄話：只讀、不排隊等鎖
+    var uRows = rows_(players_()), ui = find_(uRows, q.code);
+    if (ui < 0) return { ok: false, err: 'nocode' };
+    return { ok: true, unread: num_(uRows[ui][C.unread]) };
+  }
   if (a === 'island' && q.fid) { var fv = islandVisit_(q); if (fv) return fv; } // 參觀別人的島：同樣只讀（訪客紀錄由前台另外送 a:'isvisit'）
   var lock = LockService.getScriptLock(), lk0 = Date.now();
   /* v75：排不到寫入鎖就回 busy（什麼都還沒寫，前台可以放心自動重試），不再丟例外變成「網路不穩」 */
@@ -1285,7 +1290,7 @@ function topLists_() {
   rows.forEach(function (r, x) { scoreOf[x] = isleScore_(isl[x]); });
   /* v65 神獸榜：小島上每隻神獸的 HP 加總（神獸戰力）；bs 是擁有的神獸與 IV、等級 */
   var powOf = {}, bsOf = {};
-  rows.forEach(function (r, x) { var p = 0, bs = []; (isl[x].pets || []).forEach(function (pt) { if (!isBeast_(pt.k)) return; var iv = ivOf_(pt), lv = petLv_(pt); p += beastHp_(pt.k, iv, lv); bs.push({ k: pt.k, iv: iv, lv: lv }); }); powOf[x] = p; bsOf[x] = bs; });
+  rows.forEach(function (r, x) { var p = 0, bs = []; (isl[x].pets || []).forEach(function (pt) { if (!isBeast_(pt.k)) return; var iv = ivOf_(pt), lv = petLv_(pt); var hp = beastHp_(pt.k, iv, lv); p += hp; bs.push({ k: pt.k, iv: iv, lv: lv, hp: hp }); }); powOf[x] = p; bsOf[x] = bs; });   // v77 排行榜每隻多帶 HP
   [['coin', C.bal], ['res', C.tres], ['dia', C.dia], ['isle', -1], ['beast', -2]].forEach(function (kc) {   // v61：鑽石榜改看手上現有的鑽石
     var k = kc[0], col = kc[1];
     var val = function (r) { return col === -2 ? powOf[rows.indexOf(r)] : col < 0 ? scoreOf[rows.indexOf(r)] : num_(r[col]); };
