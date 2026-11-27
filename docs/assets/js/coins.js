@@ -28,7 +28,7 @@
   function apply(p) {
     if (!p) return;
     P.code = p.code; P.nick = p.nick; P.bal = p.bal; P.earned = p.earned; P.streak = p.streak; P.admin = !!p.admin; P.qa = p.qa || [];
-    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'bsellIv', 'bcol', 'bt', 'unread', 'friends', 'fl', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
+    ['av', 'fid', 'bag', 'dia', 'tres', 'tdia', 'today', 'gLast', 'trades', 'tradeMax', 'swaps', 'swapMax', 'diaSells', 'diaSellMax', 'buys', 'buyMax', 'diaBuyMax', 'bbag', 'bsell', 'bsellIv', 'bcol', 'bt', 'bin', 'unread', 'friends', 'fl', 'veg', 'score', 'open', 'annSeen', 'ann', 'dr', 'drMax', 'qs', 'qCoin', 'ship', 'cd', 'pg', 'starterGuide'].forEach(function (k) { if (p[k] !== undefined) P[k] = p[k]; });
     if (p.cd !== undefined) P.cdT = Date.now();
     save(); emit({ t: 'sync' });
   }
@@ -66,7 +66,7 @@
     noinv: '封測期間要有邀請碼才能登島，請向蘋果爸索取一組', badinv: '邀請碼不正確，請再確認一次（英文字母和數字）', invfull: '這組邀請碼名額已滿（每組限 2 位），請向蘋果爸索取新的一組', bad: '資料有誤，請重新整理後再試',
     nofid: '找不到這個海島編號，請再確認一次', self: '這是你自己的海島編號喔', fmax: '好友最多 50 位',
     notfriend: '要先互加好友才行', gifted: '今天已經送過這位好友了，明天再送', few: '數量不夠喔',
-    trademax: '今天的兌換次數用完了，明天再來', nobeast: '神獸收藏裡沒有這隻了', noshard: '碎片不夠，要同一隻神獸的頭、身、腳各一片', nobfruit: '沒有神獸果了：神獸試煉島、扭蛋島、拉霸都拿得到', bfedmax: '這隻神獸今天已經吃了 2 顆神獸果，明天再餵', gamecool: '太快了，休息幾秒再試', gachamax: '今天 3 次扭蛋抽完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', buymax: '今天買這樣東西的次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
+    trademax: '今天的兌換次數用完了，明天再來', nobeast: '神獸收藏裡沒有這隻了', nogift: '這份神獸禮物已經處理過或退回了', binfull: '對方還有 10 份神獸禮物沒處理，等他處理完再送', noshard: '碎片不夠，要同一隻神獸的頭、身、腳各一片', nobfruit: '沒有神獸果了：神獸試煉島、扭蛋島、拉霸都拿得到', bfedmax: '這隻神獸今天已經吃了 2 顆神獸果，明天再餵', gamecool: '太快了，休息幾秒再試', gachamax: '今天 3 次扭蛋抽完了，明天再來', swapmax: '今天的物資互換次數用完了（每天 5 次），明天再來', diamax: '今天的鑽石換金幣次數用完了（每天 3 次），明天再來', buymax: '今天買這樣東西的次數用完了，明天再來', notemax: '今天的悄悄話已經用完了，明天再聊',
     busy: '伺服器忙線中，請稍等一下再試', likeself: '不能幫自己按讚喔', likefast: '按太快了，等一下再按', likemax: '今天按讚次數用完了，明天再來', msgshort: '留言至少要 2 個字', imgbad: '圖片格式不對或太大，換一張試試', imgfail: '圖片存檔失敗，請稍後再試', msgmax: '今天的留言次數用完了，明天再來', admin: '只有站長可以這樣做',
     tired: '今天在這座島採夠了，明天再來', closed: '這座島的資源剛消失了，每 20 分鐘會隨機換一批，到地圖上找有徽章的島吧', empty: '這座島今天的物資被採光了，明天會再長出來',
     maxed: '已經蓋到最高級了', busy: '這塊田已經種了東西', notyet: '還沒長好喔，再等等', nohouse: '要先蓋小屋才能領養寵物',
@@ -603,6 +603,7 @@
           h += '<div class="cw-sec"><h4>🪪 我的海島編號</h4><div class="cw-fid"><b>#' + esc(P.fid || '……') + '</b>' + (P.fid ? '<button class="cw-mini" type="button" data-copyfid>複製</button>' : '') + '</div>' +
             '<small>把海島編號給朋友，對方在這裡輸入就能互加好友。登島碼是你的鑰匙，不要給別人。</small>' +
             '<div class="cw-add"><input class="cw-in" maxlength="6" placeholder="輸入好友的海島編號" autocapitalize="characters" data-fidin><button class="cw-mini p" type="button" data-fadd>加好友</button></div><div class="cw-err" data-ferr></div></div>';
+          if (P.bin && P.bin.length) h += '<div class="cw-sec"><h4>🐲 待接收的神獸<span class="cw-dot">' + P.bin.length + '</span></h4>' + binHTML() + '</div>';   /* v78 */
           h += '<div class="cw-sec"><h4>👥 好友' + (FR ? '（' + FR.length + '）' : '') + '</h4>' + friendsHTML() + '</div>';
           h += '<div class="cw-sec"><h4>✉️ 悄悄話' + (P.unread ? '<span class="cw-dot">' + P.unread + '</span>' : '') + '</h4>' + inboxHTML() + '</div>';
           var keep = ov.querySelector('[data-fidin]'), kv = keep ? keep.value : '', rk = ov.querySelector('[data-rt]'), rv = rk ? rk.value : '';
@@ -627,10 +628,20 @@
         }
         /* 神獸收藏（重複抽到的）可以送給好友；不算每天送禮次數，互送就是交換 */
         var BNAME = { dragon: ['🐉', '水靈龍'], phoenix: ['🔥', '火鳳凰'], qilin: ['🦌', '木麒麟'], tiger: ['🐯', '金白虎'], tortoise: ['🐢', '土靈龜'] };
+        /* v78 好友送的神獸要自己接受：住進小島或收藏起來，也可以婉拒（退回）；都不會讓試煉島變難 */
+        function binHTML() {
+          return (P.bin || []).map(function (g) {
+            var bn = BNAME[g.k] || ['🐲', g.k], days = Math.max(1, Math.ceil((g.left || 0) / 86400000));
+            return '<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:8px"><div><b>' + bn[0] + ' ' + bn[1] + '</b> <small style="display:inline">IV ' + g.iv + '・來自 ' + esc(g.nick || '好友') + '・' + days + ' 天內要決定</small></div>' +
+              '<div class="k" style="margin-top:6px"><button class="cw-mini p" type="button" data-bin="' + esc(g.id) + '" data-do="pet">🏝️ 住進小島</button>' +
+              '<button class="cw-mini p" type="button" data-bin="' + esc(g.id) + '" data-do="bag">📦 收藏起來</button>' +
+              '<button class="cw-mini" type="button" data-bin="' + esc(g.id) + '" data-do="no">↩️ 婉拒</button></div></div>';
+          }).join('') + '<small>住進小島時，如果島上已經有同一種，原本那隻會放進收藏。收下好友送的神獸不會讓試煉島變難。</small>';
+        }
         function beastGiftHTML(fid) {
           var bb = P.bbag || {}, ks = Object.keys(bb).filter(function (k) { return bb[k] > 0 && BNAME[k]; });
           if (!ks.length) return '';
-          return '<div class="k" style="margin-top:6px">' + ks.map(function (k) { return '<button class="cw-mini p" type="button" data-bgift="' + k + '" data-f="' + esc(fid) + '">' + BNAME[k][0] + ' 送' + BNAME[k][1] + '（收藏 ' + bb[k] + '）</button>'; }).join('') + '</div><small>🐲 神獸收藏可以送給好友：他沒有就住進他的小島，有了就放進他的收藏。互送就是交換。</small>';
+          return '<div class="k" style="margin-top:6px">' + ks.map(function (k) { return '<button class="cw-mini p" type="button" data-bgift="' + k + '" data-f="' + esc(fid) + '">' + BNAME[k][0] + ' 送' + BNAME[k][1] + '（收藏 ' + bb[k] + '）</button>'; }).join('') + '</div><small>🐲 神獸收藏可以送給好友：對方會收到通知，自己選住進小島或收藏起來（7 天內沒回應會退回）。互送就是交換。</small>';
         }
         function inboxHTML() {
           if (!INBOX) return inboxFail ? '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>' : '<small>載入中…</small>';
@@ -682,13 +693,24 @@
             busy(t);
             api({ a: 'fdel', fid: d.fdel }).then(function (j) { if (j.ok) { FR = j.friends; frSave(FR); } paint(); }).catch(function () { netFail(); paint(); });
           } else if (d.op) { open[d.f] = open[d.f] === d.op ? '' : d.op; paint(); var ta = ov.querySelector('[data-nt="' + d.f + '"]'); if (ta) ta.focus(); }
+          else if (d.bin) {
+            var bdo = d.do;
+            if (bdo === 'no' && !confirm('要婉拒這隻神獸嗎？牠會退回給送的人。')) return;
+            busy(t);
+            api({ a: 'bin', id: d.bin, do: bdo }).then(function (j) {
+              if (!j.ok) return fail(j);
+              var bi = j.bin || {}, bn2 = BNAME[bi.k] || ['🐲', bi.name || ''];
+              paint();
+              toast(bdo === 'no' ? '↩️ 已婉拒，' + bn2[1] + '退回給好友了' : bdo === 'bag' ? '📦 ' + bn2[1] + '放進神獸收藏了' : bi.to === 'swap' ? '🏝️ ' + bn2[1] + '住進小島了，原本那隻放進收藏' : '🏝️ ' + bn2[1] + '住進你的小島了！');
+            }).catch(function () { netFail(); paint(); });
+          }
           else if (d.bgift) {
             var bk = d.bgift, bf = d.f, bn = BNAME[bk] || ['🐲', ''];
             busy(t);
             api({ a: 'bgift', fid: bf, k: bk }).then(function (j) {
               if (!j.ok) return fail(j);
               FR = j.friends || FR; frSave(FR); open[bf] = ''; paint();
-              toast('🐲 把' + bn[1] + '送出去了！' + (j.bgift && j.bgift.to === 'pet' ? '牠住進好友的小島了' : '放進好友的神獸收藏了'));
+              toast('🐲 已把' + bn[1] + '送出，等好友接受（7 天內沒回應會退回你的收藏）');
             }).catch(function () { netFail(); paint(); });
           }
           else if (d.gift) {

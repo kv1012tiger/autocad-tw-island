@@ -394,7 +394,7 @@ function vPlay(){
   var d=diff(),Dd=DIFF[d],b=bt(),m=b.max||{},full=isFull();
   $('view').innerHTML='<section class="box"><h2>⚔️ 指令快問快答</h2>'+
    '<div class="diffbar"><span class="stars">'+starHTML(d)+'</span><b>難度 '+d+'・'+Dd.n+'</b><span class="sub">每題 '+Dd.sec+' 秒・'+Dd.t+'</span></div>'+
-   '<p class="sub">看題目選出正確答案，共 8 題。答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%），也送 🍑 神獸果（5 題 1 顆、全對 2 顆）。擁有的神獸種類愈多，難度愈高。</p>'+
+   '<p class="sub">看題目選出正確答案，共 8 題。答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%），也送 🍑 神獸果（5 題 1 顆、全對 2 顆）。自己在試煉島召喚成功的神獸種類愈多，難度愈高（扭蛋抽到、好友送的不算）；難度愈高，召喚出的神獸 IV 保底也愈高（難度 1 起 15，每升一級 +3，難度 5 起 27）。</p>'+
    (game&&game.done?resultHtml():'')+
    '<div class="row" style="margin-top:12px">'+(D.fresh&&full?'<b>✅ 今天的碎片和神獸果都拿滿了，明天再來試煉！</b>':'<button class="btn" id="go" type="button"'+(D.busy?' disabled':'')+'>'+(game?'再挑戰一次':'開始挑戰')+'</button>')+
    '<span class="sub">今天碎片 '+(b.st||0)+' / '+(m.shard||5)+'・神獸果 '+(b.ft||0)+' / '+(m.fruit||5)+'</span></div></section>';
@@ -525,7 +525,7 @@ function forge(k){
       if(!r.win){inn.innerHTML='<div class="orb" style="--c:#555;filter:grayscale(1)">'+art(k,0)+'</div><div class="big">召喚失敗</div><p class="sub">碎片化成了靈氣，'+b.n+' 下次成功率提高到 <b style="color:var(--gold)">'+r.next+'%</b>。</p><button class="btn" type="button" id="ovx">知道了</button>';$('ovx').onclick=function(){ov.remove();render()};return}
       var st=stars(r.iv),msg=r.where==='pet'?'住進你的小島了！':r.where==='swap'?'比原本那隻強，住進小島；原本那隻放進收藏。':'沒有比小島上那隻強，放進神獸收藏。';
       inn.innerHTML='<div class="orb" style="--c:'+b.c+'">'+art(k,3)+'</div><div class="big">🎉 召喚成功！'+b.n+'</div><div class="stars">'+starHTML(st)+'</div>'+
-        '<p class="sub">個體值 IV <b>'+r.iv+'</b>・Lv 1・HP <b style="color:var(--ok)">'+hp(b,r.iv,1)+'</b></p><p>'+msg+'</p><button class="btn" type="button" id="ovx">去看神獸</button>';
+        '<p class="sub">'+(r.floor?'難度 '+r.d+' 保底 IV '+r.floor+'・':'')+'個體值 IV <b>'+r.iv+'</b>・Lv 1・HP <b style="color:var(--ok)">'+hp(b,r.iv,1)+'</b></p><p>'+msg+'</p><button class="btn" type="button" id="ovx">去看神獸</button>';
       $('ovx').onclick=function(){ov.remove();view='dex';render()};
     },Math.max(0,1700-(Date.now()-t0)));
   });

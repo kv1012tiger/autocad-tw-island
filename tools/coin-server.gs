@@ -207,6 +207,11 @@ var BT_PARTS = ['head', 'body', 'foot'], BT_SHARD_DAY = 5, BT_FRUIT_DAY = 5, BT_
 var BT_FRUIT_AFF = 5, BT_FEED_DAY = 2, BEAST_LV_MAX = 10, SLOT_FRUIT_P = 0.08, SLOT_FRUIT_DAY = 3, SLOT_SHARD_P = 0.03, SLOT_SHARD_DAY = 1, BT_GAP = 6 * 1000;   // v69：試煉兩場結算間隔 15→6 秒（8 題不可能 6 秒內答完）
 function partRoll_() { var x = Math.random() * 100; return x < 20 ? 'head' : x < 60 ? 'body' : 'foot'; }   // 頭 20%、身 40%、腳 40%
 function ivRoll_() { return Math.floor(Math.random() * 32); }
+/* v78 試煉島召喚靠自己答題，IV 保底：難度 1 起 15、每升一級 +3（難度 5 起 27）；扭蛋維持 0～31 隨機 */
+function ivFloor_(d) { return 12 + 3 * Math.max(1, Math.min(5, d)); }
+function ivTrial_(d) { var lo = ivFloor_(d); return lo + Math.floor(Math.random() * (32 - lo)); }
+/* v78 試煉難度只算「自己在試煉島召喚成功過」的種類（bt.earn）；扭蛋抽到、好友送的都不算 */
+function earnN_(b) { return BEASTS.filter(function (k) { return b.earn && b.earn[k]; }).length; }
 /* 神獸的個體值：新拿到的存在 p.iv；舊的（v62 以前抽到的）用寵物編號算一個固定值，不會每次不一樣 */
 function ivOf_(p) { return p && p.iv != null && isFinite(p.iv) ? Math.max(0, Math.min(31, Math.floor(Number(p.iv)))) : hash_('iv|' + String(p && p.id || '')) % 32; }
 function btOf_(o) {
@@ -214,13 +219,13 @@ function btOf_(o) {
   b.sh = b.sh && typeof b.sh === 'object' ? b.sh : {}; b.pity = b.pity && typeof b.pity === 'object' ? b.pity : {}; b.fr = num_(b.fr);
   if (b.d !== td) { b.d = td; b.st = 0; b.ft = 0; b.sf = 0; b.ss = 0; }
   b.ss = num_(b.ss);   // v73：今天從拉霸掉到的碎片數
+  b.earn = b.earn && typeof b.earn === 'object' ? b.earn : {};   // v78
   b.receipts = Array.isArray(b.receipts) ? b.receipts.slice(-60) : [];
   o.bt = b; return b;
 }
 function btPub_(o) {
-  var b = btOf_(o), kinds = {};
-  (o.pets || []).forEach(function (p) { if (isBeast_(p.k)) kinds[p.k] = 1; });
-  return { sh: b.sh, fr: b.fr, pity: b.pity, st: num_(b.st), ft: num_(b.ft), sf: num_(b.sf), ss: num_(b.ss), kinds: Object.keys(kinds).length,
+  var b = btOf_(o), kinds = earnN_(b);
+  return { sh: b.sh, fr: b.fr, pity: b.pity, st: num_(b.st), ft: num_(b.ft), sf: num_(b.sf), ss: num_(b.ss), kinds: kinds, earn: BEASTS.filter(function (k) { return b.earn[k]; }), ivFloor: ivFloor_(kinds + 1),
     max: { shard: BT_SHARD_DAY, fruit: BT_FRUIT_DAY, slot: SLOT_FRUIT_DAY, slotShard: SLOT_SHARD_DAY, feed: BT_FEED_DAY, lv: BEAST_LV_MAX }, forge: BT_FORGE, pityStep: BT_PITY };
 }
 /* 神獸收藏改成一隻一隻記（isle.bcol = {種類: [{iv, aff}]}），isle.bbag 的數量跟著同步；舊的只有數量，就補上固定的 IV */
@@ -277,6 +282,65 @@ function beastGive_(o, k, iv, aff) {
   }
   var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: aff, pd: 0, iv: iv });
   return 'pet';
+}
+/* v78 送神獸要對方接受：神獸先從送的人收藏扣下來，放在收禮人的 isle.bin（待接收）；送的人記在 isle.bout。
+   收禮人選「住進小島」或「收藏起來」，或婉拒（退回）；7 天沒回應自動退回送的人 */
+var BGIFT_DAYS = 7, BIN_MAX = 10;
+function binOf_(o) { o.bin = Array.isArray(o.bin) ? o.bin.filter(function (x) { return x && x.id && isBeast_(x.k); }) : []; return o.bin; }
+function boutOf_(o) { o.bout = Array.isArray(o.bout) ? o.bout.filter(function (x) { return x && x.id; }) : []; return o.bout; }
+function colPut_(o, k, iv, aff) { var col = bcolOf_(o); col[k] = col[k] || []; col[k].push({ iv: iv, aff: num_(aff) }); bcolSet_(o, col); }
+/* 收禮人選「住進小島」：島上沒有就住進去；已經有同一種 → 新的上島，原本那隻（連同親密度）放進收藏 */
+function beastPlace_(o, k, iv) {
+  o.pets = Array.isArray(o.pets) ? o.pets : [];
+  var cur = null; o.pets.forEach(function (x) { if (x.k === k) cur = x; });
+  if (cur) { colPut_(o, k, ivOf_(cur), cur.aff); cur.iv = iv; cur.aff = 0; return 'swap'; }
+  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: 0, pd: 0, iv: iv });
+  return 'pet';
+}
+function binPub_(o) { var now = Date.now(); return binOf_(o).map(function (g) { return { id: g.id, k: g.k, iv: num_(g.iv), nick: plain_(g.nick), left: Math.max(0, BGIFT_DAYS * 86400000 - (now - num_(g.t))) }; }); }
+function giftNote_(fromRow, toRow, text) { sheet_('悄悄話', N_HEAD).appendRow([new Date(), fromRow[C.fid], fromRow[C.nick], toRow[C.fid], toRow[C.nick], text]); }
+/* 過期的贈禮退回送的人（收禮人或送的人有寫入動作時順便檢查） */
+function giftSweep_(rows, i, touched) {
+  var r = rows[i], raw = String(r[C.isle] || '');
+  if (raw.indexOf('"bin"') < 0 && raw.indexOf('"bout"') < 0) return;
+  var o = isleOf_(r), now = Date.now(), lim = BGIFT_DAYS * 86400000, ch = false, bin = binOf_(o), bout = boutOf_(o);
+  for (var x = bin.length - 1; x >= 0; x--) {
+    var g = bin[x]; if (now - num_(g.t) < lim) continue;
+    bin.splice(x, 1); ch = true;
+    var js = findFid_(rows, g.from); if (js < 0 || js === i) continue;
+    var so = isleOf_(rows[js]); colPut_(so, g.k, num_(g.iv), 0); so.bout = boutOf_(so).filter(function (b) { return b.id !== g.id; });
+    rows[js][C.isle] = JSON.stringify(so); rows[js][C.unread] = num_(rows[js][C.unread]) + 1; touched[js] = 1;
+    giftNote_(r, rows[js], '↩️ 你送的神獸「' + ANIMALS[g.k].name + '」' + BGIFT_DAYS + ' 天沒被領取，已退回你的神獸收藏。');
+  }
+  for (var y = bout.length - 1; y >= 0; y--) {
+    var b = bout[y]; if (now - num_(b.t) < lim) continue;
+    bout.splice(y, 1); ch = true;
+    var jr = findFid_(rows, b.to); if (jr < 0 || jr === i) continue;
+    var ro = isleOf_(rows[jr]), rb = binOf_(ro), hit = -1; rb.forEach(function (gg, z) { if (gg.id === b.id) hit = z; });
+    if (hit < 0) continue;
+    var back = rb.splice(hit, 1)[0]; colPut_(o, back.k, num_(back.iv), 0); rows[jr][C.isle] = JSON.stringify(ro); touched[jr] = 1;
+    r[C.unread] = num_(r[C.unread]) + 1;
+    giftNote_(rows[jr], r, '↩️ 你送的神獸「' + ANIMALS[back.k].name + '」' + BGIFT_DAYS + ' 天沒被領取，已退回你的神獸收藏。');
+  }
+  if (ch) r[C.isle] = JSON.stringify(o);
+}
+/* v78 一次性搬移：難度改看 bt.earn。現有的神獸照舊算（看當下小島上的種類），但確定是好友送的（悄悄話有送神獸紀錄）不算 */
+function migrate78_(sh, rows) {
+  var props; try { props = PropertiesService.getScriptProperties(); } catch (e) { return; }   // 測試環境沒有 PropertiesService
+  if (props.getProperty('mig78')) return;
+  var gifted = {}, nameK = {}; BEASTS.forEach(function (k) { nameK[ANIMALS[k].name] = k; });
+  var ns = sheet_('悄悄話', N_HEAD), nn = ns.getLastRow() - 1;
+  if (nn > 0) ns.getRange(2, 1, nn, N_HEAD.length).getValues().forEach(function (v) {
+    var m = /^🐲 送你一隻神獸「([^」]+)」/.exec(String(v[5])); if (m && nameK[m[1]]) { var to = String(v[3]); (gifted[to] = gifted[to] || {})[nameK[m[1]]] = 1; }
+  });
+  rows.forEach(function (r, x) {
+    var raw = String(r[C.isle] || ''); if (raw.indexOf('"pets"') < 0) return;
+    var o = isleOf_(r), b = btOf_(o), g = gifted[String(r[C.fid])] || {}, e = {}, any = false;
+    (o.pets || []).forEach(function (p) { if (isBeast_(p.k) && !g[p.k]) { e[p.k] = 1; any = true; } });
+    if (!any && !Object.keys(g).length) return;
+    b.earn = e; r[C.isle] = JSON.stringify(o); sh.getRange(x + 2, 1, 1, P_HEAD.length).setValues([r]);
+  });
+  props.setProperty('mig78', String(Date.now()));
 }
 var BAG_COL = { fruit: C.fruit, iron: C.iron, wood: C.wood, stone: C.stone, dia: C.dia };
 /* 留言碼頭與悄悄話 */
@@ -469,7 +533,7 @@ function profile_(r) {
     tres: num_(r[C.tres]), tdia: num_(r[C.tdia]), today: counts_(r[C.gToday]), gLast: num_(r[C.gLast]),
     trades: num_(r[C.trades]), tradeMax: TRADE_MAX,
     swaps: io.xd && io.xd.d === pd ? num_(io.xd.sw) : 0, swapMax: SWAP_DAY, diaSells: io.xd && io.xd.d === pd ? num_(io.xd.ds) : 0, diaSellMax: DIA_SELL_DAY,
-    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, bsellIv: BEAST_SELL_IV, bcol: bcolOf_(io), bt: btPub_(io), unread: num_(r[C.unread]), friends: list_(r[C.friends]).length, fl: list_(r[C.friends]).map(String), // fl：好友的好友碼（排行榜標「好友」用）
+    buys: io.xd && io.xd.d === pd && io.xd.b ? io.xd.b : {}, buyMax: BUY_DAY, diaBuyMax: DIA_BUY_DAY, bbag: bbagOf_(io), bsell: BEAST_SELL, bsellIv: BEAST_SELL_IV, bcol: bcolOf_(io), bt: btPub_(io), bin: binPub_(io), unread: num_(r[C.unread]), friends: list_(r[C.friends]).length, fl: list_(r[C.friends]).map(String), // fl：好友的好友碼（排行榜標「好友」用）
     veg: io.veg, score: isleScore_(io), ship: io.ship, pg: !!io.pg, starterGuide:io.starterGuide===0?0:1,
     cd: (function () { var m = {}, nw = Date.now(); Object.keys(io.cd).forEach(function (k) { m[k] = Math.ceil((io.cd[k] - nw) / 1000); }); return m; })(),
     open: r[C.open] !== '否', annSeen: num_(r[C.annSeen]), ann: r[C.admin] === '是' || r[C.ann] === '是',
@@ -568,13 +632,15 @@ function handle_(q) {
 
     var i = find_(rows, q.code);
     if (i < 0) return { ok: false, err: 'nocode' };
+    migrate78_(sh, rows);   // v78：只跑一次
     var r = rows[i];
     if (!r[C.fid]) r[C.fid] = newFid_(rows);
     resetDay_(r);
     questSync_(r);
+    var touched = {}; // 一起被改到的其他玩家（加好友、送禮、悄悄話）
+    giftSweep_(rows, i, touched);   // v78：過期的神獸贈禮退回
     var me = profile_(r);
     var res = { ok: true, add: 0 };
-    var touched = {}; // 一起被改到的其他玩家（加好友、送禮、悄悄話）
     /* 商店請求識別碼與交易結果一起存入玩家資料，同一請求重送不重複扣款。 */
     var shopId = String(q.tx || ''), shopOp = a === 'xbuy' || a === 'xswap' || a === 'trade', shopSig = '', shopRecords = null;
     if (shopOp && shopId) {
@@ -672,20 +738,38 @@ function handle_(q) {
       for (var bs in BEAST_SELL) { sgot[bs]=BEAST_SELL[bs]+(bs==='dia'?0:sold.iv*BEAST_SELL_IV); r[BAG_COL[bs]]=num_(r[BAG_COL[bs]])+sgot[bs]; }
       r[C.isle]=JSON.stringify(sIsle); res.sold={k:sk,iv:sold.iv,got:sgot};
     } else if (a === 'bgift') {
-      /* 送一隻收藏的神獸給好友（不算每天送禮的次數；互送就是交換） */
+      /* 送一隻收藏的神獸給好友（不算每天送禮的次數）。v78：先放進對方的「待接收」，對方選住進小島／收藏起來，或婉拒退回 */
       var bk2=String(q.k||''), jb=findFid_(rows, q.fid);
-      if (!ANIMALS[bk2]||!ANIMALS[bk2].beast||jb<0) return {ok:false,err:'bad',p:me};
+      if (!ANIMALS[bk2]||!ANIMALS[bk2].beast||jb<0||jb===i) return {ok:false,err:'bad',p:me};
       var bfid=String(rows[jb][C.fid]);
       if (list_(r[C.friends]).indexOf(bfid)<0) return {ok:false,err:'notfriend',p:me};
       var myIsle=isleOf_(r), mcol=bcolOf_(myIsle), marr=mcol[bk2]||[];
       if (!marr.length) return {ok:false,err:'nobeast',p:me};
+      var fIsle=isleOf_(rows[jb]), fbin=binOf_(fIsle);
+      if (fbin.length>=BIN_MAX) return {ok:false,err:'binfull',p:me};
       var midx=q.i!=null&&q.i!==''?Math.floor(num_(q.i)):lowIdx_(marr);
       if (midx<0||midx>=marr.length) return {ok:false,err:'bad',p:me};
-      var mgive=marr.splice(midx,1)[0]; bcolSet_(myIsle,mcol); r[C.isle]=JSON.stringify(myIsle);
-      var fIsle=isleOf_(rows[jb]), where=beastGive_(fIsle,bk2,mgive.iv,0); rows[jb][C.isle]=JSON.stringify(fIsle);
+      var mgive=marr.splice(midx,1)[0], gid='G'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*46656).toString(36).toUpperCase(), gnow=Date.now();
+      bcolSet_(myIsle,mcol); boutOf_(myIsle).push({id:gid,to:bfid,k:bk2,t:gnow}); r[C.isle]=JSON.stringify(myIsle);
+      fbin.push({id:gid,k:bk2,iv:mgive.iv,from:String(r[C.fid]),nick:plain_(r[C.nick]),t:gnow}); rows[jb][C.isle]=JSON.stringify(fIsle);
       rows[jb][C.unread]=num_(rows[jb][C.unread])+1; touched[jb]=1;
-      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], bfid, rows[jb][C.nick], '🐲 送你一隻神獸「'+ANIMALS[bk2].name+'」'+'（IV '+mgive.iv+'）'+(where==='pet'?'，已經住進你的小島了！':where==='swap'?'，比你原本的強，已經住進小島（原本那隻放進收藏）。':'，放在你的神獸收藏裡。')]);
-      res.friends=friendsOf_(rows, r); res.bgift={k:bk2,to:where};
+      giftNote_(r, rows[jb], '🐲 想送你一隻神獸「'+ANIMALS[bk2].name+'」（IV '+mgive.iv+'）！打開背包的「🐲 待接收的神獸」，選擇住進小島或收藏起來（'+BGIFT_DAYS+' 天內沒回應會退回）。');
+      res.friends=friendsOf_(rows, r); res.bgift={k:bk2,to:'wait'};
+    } else if (a === 'bin') {
+      /* v78 收禮人處理待接收的神獸：pet＝住進小島、bag＝收藏起來、no＝婉拒（退回送的人的收藏）。都不影響試煉難度 */
+      var nI=isleOf_(r), nb=binOf_(nI), nid=String(q.id||''), ndo=String(q.do||''), nx=-1;
+      if (['pet','bag','no'].indexOf(ndo)<0) return {ok:false,err:'bad',p:me};
+      nb.forEach(function(g,z){if(g.id===nid)nx=z});
+      if (nx<0) return {ok:false,err:'nogift',p:me};
+      var ng=nb.splice(nx,1)[0], njs=findFid_(rows,ng.from), nwhere=ndo, nname=ANIMALS[ng.k].name;
+      if (ndo==='pet') nwhere=beastPlace_(nI,ng.k,num_(ng.iv)); else if (ndo==='bag') colPut_(nI,ng.k,num_(ng.iv),0);
+      if (njs>=0 && njs!==i) {
+        var nso=isleOf_(rows[njs]); nso.bout=boutOf_(nso).filter(function(b){return b.id!==ng.id});
+        if (ndo==='no') colPut_(nso,ng.k,num_(ng.iv),0);
+        rows[njs][C.isle]=JSON.stringify(nso); rows[njs][C.unread]=num_(rows[njs][C.unread])+1; touched[njs]=1;
+        giftNote_(r, rows[njs], ndo==='no'?'↩️ 婉拒了你送的神獸「'+nname+'」，已退回你的神獸收藏。':'🙏 收下了你送的神獸「'+nname+'」'+(ndo==='pet'?'，讓牠住進小島了！':'，放進神獸收藏了。'));
+      }
+      r[C.isle]=JSON.stringify(nI); res.bin={k:ng.k,name:nname,iv:num_(ng.iv),to:nwhere}; res.island=islePub_(r,true);
     } else if (a === 'trial') {
       /* v62 神獸試煉島關卡結算：網頁回報答對幾題（0～8），伺服器決定掉不掉碎片／神獸果；同一個 id 重送只回原結果 */
       var tIsle=isleOf_(r), tb=btOf_(tIsle), tid=String(q.id||'');
@@ -717,7 +801,7 @@ function handle_(q) {
         if (!BT_PARTS.every(function(pp){return num_(fb.sh[fk+'.'+pp])>0})) return {ok:false,err:'noshard',p:me};
         BT_PARTS.forEach(function(pp){fb.sh[fk+'.'+pp]=num_(fb.sh[fk+'.'+pp])-1;if(!fb.sh[fk+'.'+pp])delete fb.sh[fk+'.'+pp]});
         var frate=Math.min(100,BT_FORGE+BT_PITY*num_(fb.pity[fk])), fwin=Math.random()*100<frate, fres={k:fk,name:ANIMALS[fk].name,rate:frate,win:fwin};
-        if (fwin) { fb.pity[fk]=0; var fiv=ivRoll_(), fw=beastGive_(fI,fk,fiv,0); fres.iv=fiv; fres.where=fw; bnewsAdd_(r[C.nick],fk,fw!=='pet','trial'); }
+        if (fwin) { fb.pity[fk]=0; var fd=Math.min(5,earnN_(fb)+1), fiv=ivTrial_(fd), fw=beastGive_(fI,fk,fiv,0); fb.earn[fk]=1; fres.iv=fiv; fres.d=fd; fres.floor=ivFloor_(fd); fres.where=fw; bnewsAdd_(r[C.nick],fk,fw!=='pet','trial'); }   // v78：IV 依難度保底、記成自己召喚的
         else { fb.pity[fk]=num_(fb.pity[fk])+1; fres.next=Math.min(100,BT_FORGE+BT_PITY*fb.pity[fk]); }
         fb.receipts.push({id:fxid,result:fres}); res.forge=fres;
       }
