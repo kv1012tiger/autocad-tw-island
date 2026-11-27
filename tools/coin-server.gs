@@ -290,11 +290,11 @@ function binOf_(o) { o.bin = Array.isArray(o.bin) ? o.bin.filter(function (x) { 
 function boutOf_(o) { o.bout = Array.isArray(o.bout) ? o.bout.filter(function (x) { return x && x.id; }) : []; return o.bout; }
 function colPut_(o, k, iv, aff) { var col = bcolOf_(o); col[k] = col[k] || []; col[k].push({ iv: iv, aff: num_(aff) }); bcolSet_(o, col); }
 /* 收禮人選「住進小島」：島上沒有就住進去；已經有同一種 → 新的上島，原本那隻（連同親密度）放進收藏 */
-function beastPlace_(o, k, iv) {
+function beastPlace_(o, k, iv, aff) {
   o.pets = Array.isArray(o.pets) ? o.pets : [];
   var cur = null; o.pets.forEach(function (x) { if (x.k === k) cur = x; });
-  if (cur) { colPut_(o, k, ivOf_(cur), cur.aff); cur.iv = iv; cur.aff = 0; return 'swap'; }
-  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: 0, pd: 0, iv: iv });
+  if (cur) { colPut_(o, k, ivOf_(cur), cur.aff); cur.iv = iv; cur.aff = num_(aff); return 'swap'; }
+  var t = Date.now(); o.pets.push({ id: 'P' + t.toString(36).toUpperCase() + 'B' + Math.floor(Math.random() * 1296).toString(36).toUpperCase(), k: k, n: ANIMALS[k].name, full: 80, ft: t, aff: num_(aff), pd: 0, iv: iv });
   return 'pet';
 }
 function binPub_(o) { var now = Date.now(); return binOf_(o).map(function (g) { return { id: g.id, k: g.k, iv: num_(g.iv), nick: plain_(g.nick), left: Math.max(0, BGIFT_DAYS * 86400000 - (now - num_(g.t))) }; }); }
@@ -762,7 +762,7 @@ function handle_(q) {
       nb.forEach(function(g,z){if(g.id===nid)nx=z});
       if (nx<0) return {ok:false,err:'nogift',p:me};
       var ng=nb.splice(nx,1)[0], njs=findFid_(rows,ng.from), nwhere=ndo, nname=ANIMALS[ng.k].name;
-      if (ndo==='pet') nwhere=beastPlace_(nI,ng.k,num_(ng.iv)); else if (ndo==='bag') colPut_(nI,ng.k,num_(ng.iv),0);
+      if (ndo==='pet') nwhere=beastPlace_(nI,ng.k,num_(ng.iv),0); else if (ndo==='bag') colPut_(nI,ng.k,num_(ng.iv),0);
       if (njs>=0 && njs!==i) {
         var nso=isleOf_(rows[njs]); nso.bout=boutOf_(nso).filter(function(b){return b.id!==ng.id});
         if (ndo==='no') colPut_(nso,ng.k,num_(ng.iv),0);
@@ -821,9 +821,18 @@ function handle_(q) {
       /* v62 收藏裡的某一隻換上小島，原本在小島的那隻進收藏（IV、親密度各自跟著走） */
       var wI=isleOf_(r), wk=String(q.k||''), wcol=bcolOf_(wI), warr=wcol[wk]||[], wi=Math.floor(num_(q.i)), wp=null;
       (wI.pets||[]).forEach(function(pp){if(pp.k===wk)wp=pp});
-      if (!wp||wi<0||wi>=warr.length) return {ok:false,err:'bad',p:me};
+      if (wi<0||wi>=warr.length) return {ok:false,err:'bad',p:me};
+      if (!wp) { var wput=warr.splice(wi,1)[0]; bcolSet_(wI,wcol); beastPlace_(wI,wk,ivOf_(wput),wput.aff); r[C.isle]=JSON.stringify(wI); res.island=islePub_(r,true); }   // v79：小島上沒有這種 → 直接住上去
+      else {
       var wit=warr[wi]; warr[wi]={iv:ivOf_(wp),aff:num_(wp.aff)}; wp.iv=wit.iv; wp.aff=num_(wit.aff); bcolSet_(wI,wcol);
-      r[C.isle]=JSON.stringify(wI); res.island=islePub_(r,true);
+      r[C.isle]=JSON.stringify(wI); res.island=islePub_(r,true); }
+    } else if (a === 'bstash') {
+      /* v79 小島上的神獸收進收藏（IV、親密度跟著走），之後可以送好友、換資源，或再換上小島 */
+      var kI=isleOf_(r), kp=null, kx=-1;
+      (kI.pets||[]).forEach(function(pp,z){if(pp.id===String(q.id||'')){kp=pp;kx=z}});
+      if (!kp||!isBeast_(kp.k)) return {ok:false,err:'bad',p:me};
+      kI.pets.splice(kx,1); colPut_(kI,kp.k,ivOf_(kp),kp.aff);
+      r[C.isle]=JSON.stringify(kI); res.bstash={k:kp.k,name:ANIMALS[kp.k].name}; res.island=islePub_(r,true);
     } else if (a === 'login' || a === 'me') {
       // 只回傳資料
     } else if (a === 'daily') {

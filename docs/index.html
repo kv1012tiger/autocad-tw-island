@@ -3338,7 +3338,7 @@ function betStore(k,p){try{if(p)localStorage.setItem(betKey(k),JSON.stringify(p)
 function betId(){var a=new Uint32Array(4);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296);return Array.from(a).map(function(x){return x.toString(36)}).join('-')+'-'+Date.now().toString(36)}
 function betStatus(k){var owner=COINS.get().code;COINS.api({a:'betstatus'}).then(function(j){if(COINS.get().code===owner&&j&&j.ok&&j.betstats){BET.slot.left=j.betstats.slot;BET.rps.left=j.betstats.rps;BET.rps.rs=j.betstats.rs||0;if(V.t===k)betDraw(k)}}).catch(function(){if(V.t===k)toast('⚠️ 暫時無法讀取今日次數')})}
 /* 畫面在 iframe（assets/bet/slot.html、rps.html）裡：拉霸機台、海盜船長猜拳。輸贏與派彩仍由伺服器決定，iframe 透過 window.AIKB_BET 呼叫這裡 */
-var BET_V='2026112202',GACHA_V='2026112306',TRIAL_V='2026112701';
+var BET_V='2026112202',GACHA_V='2026112306',TRIAL_V='2026112702';
 /* 扭蛋島：頁面在 assets/bet/gacha.html（iframe），結果由後台 gacha 決定；網路斷掉時同一個 id 重送，不會重複扣 */
 var GA={owner:null,left:null,log:[],pend:null,err:false};
 function gaKey(){return 'aikb-gacha-pend-'+(COINS.get().code||'')}

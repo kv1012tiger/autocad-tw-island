@@ -534,15 +534,17 @@ function forge(k){
 
 /* ---------- 神獸 ---------- */
 function vDex(){
-  var own=B.filter(function(b){return beasts()[b.k]}),maxHp=hp(BK.tortoise,31,10),b0=bt(),feedMax=(b0.max||{}).feed||2,sellIv=(D.p&&D.p.bsellIv)||2,sell=(D.p&&D.p.bsell)||{wood:66,stone:66,iron:66,dia:6};
-  $('view').innerHTML='<section class="box"><h2>📖 我的神獸</h2><p class="sub">每種神獸只有一隻住小島（預設 IV 最高的），其他放收藏，可以換上小島，或換成資源（IV 愈高換愈多）。🍑 神獸果：<b>'+(b0.fr||0)+'</b> 顆，每隻每天最多餵 '+feedMax+' 顆。</p>'+
-   (own.length?'<div class="cards">'+own.map(function(b){var x=beasts()[b.k],lv=x.lv||1,h=hp(b,x.iv||0,lv),st=stars(x.iv||0),aff=x.aff||0,fed=x.bfn||0,cl=coll(b.k);
+  var own=B.filter(function(b){return beasts()[b.k]||coll(b.k).length}),maxHp=hp(BK.tortoise,31,10),b0=bt(),feedMax=(b0.max||{}).feed||2,sellIv=(D.p&&D.p.bsellIv)||2,sell=(D.p&&D.p.bsell)||{wood:66,stone:66,iron:66,dia:6};
+  function clistHTML(b,cl){return (cl.length?'<div class="clist"><b>🗃 收藏中（'+cl.length+' 隻）</b>'+cl.map(function(c,i){var cs=stars(c.iv),g=sell.wood+c.iv*sellIv;return '<div class="citem"><span class="stars">'+starHTML(cs)+'</span><span>IV '+c.iv+'・HP '+hp(b,c.iv,1+Math.min(9,Math.floor((c.aff||0)/10)))+'</span><span class="cbtns"><button class="btn ghost sm" type="button" data-sw="'+b.k+'" data-i="'+i+'">換上小島</button><button class="btn ghost sm" type="button" data-sell="'+b.k+'" data-i="'+i+'" title="換成 🪵'+g+' 🪨'+g+' 🔩'+g+' 💎'+sell.dia+'">🏪 換 🪵🪨🔩'+g+'</button></span></div>'}).join('')+'</div>':'')}
+  function emptyCard(b){var cl=coll(b.k);return '<article class="bcard" style="--c:'+b.c+'"><div class="bhead"><div class="emo" style="opacity:.55">'+art(b.k,2)+'</div><div><b class="big">'+b.n+'</b><div class="sub">小島上沒有住'+b.n+'，可以從收藏挑一隻換上去</div></div></div>'+clistHTML(b,cl)+'</article>'}
+  $('view').innerHTML='<section class="box"><h2>📖 我的神獸</h2><p class="sub">每種神獸只有一隻住小島（預設 IV 最高的），其他放收藏，可以換上小島，或換成資源（IV 愈高換愈多）。小島上的也能「📦 收進收藏」，收藏裡的可以送給好友。🍑 神獸果：<b>'+(b0.fr||0)+'</b> 顆，每隻每天最多餵 '+feedMax+' 顆。</p>'+
+   (own.length?'<div class="cards">'+own.map(function(b){var x=beasts()[b.k];if(!x)return emptyCard(b);var lv=x.lv||1,h=hp(b,x.iv||0,lv),st=stars(x.iv||0),aff=x.aff||0,fed=x.bfn||0,cl=coll(b.k);
     return '<article class="bcard" style="--c:'+b.c+'"><div class="bhead"><div class="emo">'+art(b.k,2)+'</div><div><b class="big">'+b.n+'</b><div class="stars">'+starHTML(st)+'</div></div></div>'+
     '<div class="hp"><span>HP</span><b>'+h+'</b><span class="sub">最高 '+hp(b,31,10)+'</span></div><div class="hpbar"><i style="width:'+Math.round(h/maxHp*100)+'%"></i></div>'+
     '<div class="kv"><span>屬性</span><b>'+b.el+'</b><span>等級</span><b>Lv '+lv+' / 10</b><span>個體值 IV</span><b>'+(x.iv||0)+' / 31</b><span>基礎 HP</span><b>'+b.base+'</b></div>'+
     '<div class="affl"><span>親密度 <b>'+aff+'</b>'+(lv<10?'（下一級還差 '+(10-aff%10)+'）':'（已滿級）')+'</span><div class="hpbar aff"><i style="width:'+(lv>=10?100:(aff%10)*10)+'%"></i></div></div>'+
-    '<div class="row"><button class="btn" type="button" data-feed="'+esc(x.id)+'"'+(lv>=10||!b0.fr||fed>=feedMax||D.busy?' disabled':'')+'>🍑 餵神獸果 '+fed+'/'+feedMax+'</button></div>'+
-    (cl.length?'<div class="clist"><b>🗃 收藏中（'+cl.length+' 隻）</b>'+cl.map(function(c,i){var cs=stars(c.iv),g=sell.wood+c.iv*sellIv;return '<div class="citem"><span class="stars">'+starHTML(cs)+'</span><span>IV '+c.iv+'・HP '+hp(b,c.iv,1+Math.min(9,Math.floor((c.aff||0)/10)))+'</span><span class="cbtns"><button class="btn ghost sm" type="button" data-sw="'+b.k+'" data-i="'+i+'">換上小島</button><button class="btn ghost sm" type="button" data-sell="'+b.k+'" data-i="'+i+'" title="換成 🪵'+g+' 🪨'+g+' 🔩'+g+' 💎'+sell.dia+'">🏪 換 🪵🪨🔩'+g+'</button></span></div>'}).join('')+'</div>':'')+
+    '<div class="row"><button class="btn" type="button" data-feed="'+esc(x.id)+'"'+(lv>=10||!b0.fr||fed>=feedMax||D.busy?' disabled':'')+'>🍑 餵神獸果 '+fed+'/'+feedMax+'</button><button class="btn ghost" type="button" data-stash="'+esc(x.id)+'"'+(D.busy?' disabled':'')+'>📦 收進收藏</button></div>'+
+    clistHTML(b,cl)+
     '</article>'}).join('')+'</div>'
    :'<div class="empty">還沒有神獸。<br>到「⚔️ 關卡」拿碎片召喚，或到扭蛋島試試手氣。</div>')+
    '<h2 style="margin-top:14px">各神獸 HP 範圍</h2><div class="tblw"><table class="tbl"><tr><th>神獸</th><th>Lv1 IV0</th><th>Lv1 IV31</th><th>Lv10 IV0</th><th>Lv10 IV31</th></tr>'+
@@ -550,6 +552,9 @@ function vDex(){
    '<p class="sub">HP = 基礎 HP ×（1 + IV÷31×0.5）×（1 +（Lv−1）×0.15）。親密度每 10 點升一級：小島上摸摸、餵食都會加，神獸果一顆 +5。</p></section>';
   function act(q,ok){if(D.busy)return;D.busy=true;render();api(q).then(function(j){D.busy=false;if(!j.ok)toast('⚠️ '+errMsg(j));else if(ok)toast(ok(j));render()})}
   document.querySelectorAll('[data-feed]').forEach(function(x){x.onclick=function(){act({a:'bfeed',id:x.dataset.feed},function(j){return '💕 親密度 +5'+(j.bfed?'・Lv '+j.bfed.lv:'')})}});
+  document.querySelectorAll('[data-stash]').forEach(function(x){x.onclick=function(){
+    if(x.dataset.arm!=='1'){x.dataset.arm='1';x.textContent='確定收進收藏？';setTimeout(function(){if(x.isConnected)render()},3000);return}
+    act({a:'bstash',id:x.dataset.stash},function(j){return '📦 '+((j.bstash||{}).name||'神獸')+'收進收藏了'})}});
   document.querySelectorAll('[data-sw]').forEach(function(x){x.onclick=function(){act({a:'bswap',k:x.dataset.sw,i:+x.dataset.i},function(){return '已換上小島'})}});
   document.querySelectorAll('[data-sell]').forEach(function(x){x.onclick=function(){
     if(x.dataset.arm!=='1'){x.dataset.arm='1';x.textContent='確定換？';setTimeout(function(){if(x.isConnected)render()},3000);return}
