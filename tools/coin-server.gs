@@ -50,12 +50,12 @@ function dlPw_(page) {
   return map[m[1]] || '';
 }
 var V_HEAD = ['時間', '暱稱', '登島碼', '小島代號', '小島', '日期', '管理員'];
-var M_HEAD = ['編號', '時間', '暱稱', '登島碼', '頭像', '內容', '回覆', '回覆時間', '回覆修改時間', '狀態'];
-var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內容', '圖片'];   // v74：回覆也能附圖（圖片編號，圖存在「留言圖片」）
+var M_HEAD = ['編號', '時間', '暱稱', '登島碼', '頭像', '內容', '回覆', '回覆時間', '回覆修改時間', '狀態', '圖片', '修改時間'];   // v81 加「圖片」（多張，逗號分隔）、「修改時間」
+var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內容', '圖片', '修改時間', '狀態'];   // v81 圖片可多張（逗號分隔）；加「修改時間」「狀態」（刪除）   // v74：回覆也能附圖（圖片編號，圖存在「留言圖片」）
 var MI_HEAD = ['留言編號', '片', '內容'];
 var LK_HEAD = ['目標編號', '登島碼', '暱稱', '時間'];   // v76 按讚：一列一個讚（收回就清空那一列）；目標＝留言編號，或回覆的「留言編號_回覆時間毫秒」   // v59 留言圖片：JPEG base64 切成多片存在這個工作表（不用雲端硬碟授權）
 var R_HEAD = ['代號', '物資島', '日期', '今日總量', '已採集', '鑽石藏在第幾份', '已撿到鑽石'];
-var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容', '圖片'];   // v80 加「圖片」：悄悄話圖片編號（W 開頭，只有寄件人、收件人讀得到）
+var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容', '圖片', '修改時間', '狀態', '收件人刪除'];   // v81 圖片可多張；狀態「收回」＝雙方都看不到；收件人刪除＝只從收件人那邊拿掉   // v80 加「圖片」：悄悄話圖片編號（W 開頭，只有寄件人、收件人讀得到）
 var DAILY = 3;      // 第 1 天 3 枚、第 2 天 4 枚
 var DAILY_MAX = 5;  // 第 3 天起每天固定 5 枚
 var CAP = { online: 3, read: 6, qa: 9 };
@@ -1258,33 +1258,54 @@ function handle_(q) {
       sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], gfid, rows[jg][C.nick], '🎁 送你 5 個' + RES[gk].item]);
       res.friends = friendsOf_(rows, r);
     } else if (a === 'note') {
-      var jn = findFid_(rows, q.fid), txt = body_(q.text, NOTE_LEN), nimg = String(q.img || ''), nimgId = '';
-      if (nimg && (nimg.length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(nimg))) return { ok: false, err: 'imgbad', p: me };
-      if (jn < 0 || (!txt && !nimg)) return { ok: false, err: 'bad', p: me };
+      var jn = findFid_(rows, q.fid), txt = body_(q.text, NOTE_LEN), nimgs = imgsIn_(q, IMG_MAX_N), nimgId = '';
+      if (!nimgs) return { ok: false, err: 'imgbad', p: me };
+      if (jn < 0 || (!plain_(txt) && !nimgs.length)) return { ok: false, err: 'bad', p: me };
       if (list_(r[C.friends]).indexOf(String(rows[jn][C.fid])) < 0) return { ok: false, err: 'notfriend', p: me };
       if (num_(r[C.noteN]) >= NOTE_DAY) return { ok: false, err: 'notemax', p: me };
       r[C.noteN] = num_(r[C.noteN]) + 1;
       rows[jn][C.unread] = num_(rows[jn][C.unread]) + 1;
       touched[jn] = 1;
-      if (nimg) { nimgId = 'W' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 46656).toString(36).toUpperCase(); try { msgImgSave_(nimgId, nimg); } catch (nie) { return { ok: false, err: 'imgfail', p: me }; } }
-      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], rows[jn][C.fid], rows[jn][C.nick], txt, nimgId]);
+      if (nimgs.length) { try { nimgId = imgsSave_('W', nimgs).join(','); } catch (nie) { return { ok: false, err: 'imgfail', p: me }; } }
+      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], rows[jn][C.fid], rows[jn][C.nick], txt, nimgId, '', '', '']);
+    } else if (a === 'nedit' || a === 'ndel') {
+      /* v81 悄悄話：寄件人可以編輯、收回（雙方都看不到）；收件人可以從自己的收件匣刪掉（對方那邊還在） */
+      var nf = noteRow_(q.id), myf = String(r[C.fid] || '');
+      if (!nf || !myf || nf.v[8] === '收回') return { ok: false, err: 'bad', p: me };
+      var nS = String(nf.v[1]) === myf, nR = String(nf.v[3]) === myf, nold = idList_(nf.v[6]);
+      if (a === 'nedit') {
+        if (!nS || sysNote_(nf.v[5])) return { ok: false, err: 'bad', p: me };
+        var ntx = body_(q.text, NOTE_LEN), nadd = imgsIn_(q, IMG_MAX_N), nkeep = keepList_(q.keep, nold), nnew;
+        if (!nadd || nkeep.length + nadd.length > IMG_MAX_N) return { ok: false, err: 'imgbad', p: me };
+        if (!plain_(ntx) && !nkeep.length && !nadd.length) return { ok: false, err: 'bad', p: me };
+        try { nnew = nkeep.concat(imgsSave_('W', nadd)); } catch (neie) { return { ok: false, err: 'imgfail', p: me }; }
+        nold.forEach(function (k) { if (nnew.indexOf(k) < 0) msgImgTrash_(k); });
+        editLog_('編輯悄悄話', q.id, r, plain_(nf.v[5]), nold, plain_(ntx), nnew);
+        nf.v[5] = ntx; nf.v[6] = nnew.join(','); nf.v[7] = new Date();
+      } else if (nS && !sysNote_(nf.v[5])) {
+        nf.v[8] = '收回'; nold.forEach(msgImgTrash_);
+        editLog_('收回悄悄話', q.id, r, plain_(nf.v[5]), nold, '', []);
+      } else if (nR) nf.v[9] = 1;
+      else return { ok: false, err: 'bad', p: me };
+      nf.sh.getRange(nf.row, 1, 1, N_HEAD.length).setValues([nf.v]);
+      res.inbox = inbox_(rows, myf);
     } else if (a === 'inbox') {
       res.inbox = inbox_(rows, String(r[C.fid]));
       r[C.unread] = 0;
 
     /* ----- 留言碼頭 ----- */
     } else if (a === 'msg') {
-      var body = body_(q.text, MSG_LEN), img = String(q.img || '');
-      if (img && (img.length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(img))) return { ok: false, err: 'imgbad', p: me };
-      if (plain_(body).length < 2 && !img) return { ok: false, err: 'msgshort', p: me };
+      var body = body_(q.text, MSG_LEN), mimgs = imgsIn_(q, IMG_MAX_N), mids = [];
+      if (!mimgs) return { ok: false, err: 'imgbad', p: me };
+      if (plain_(body).length < 2 && !mimgs.length) return { ok: false, err: 'msgshort', p: me };
       var mw = num_(r[C.msgLast]) + MSG_GAP - Date.now();
       if (mw > 0 && !me.admin) return { ok: false, err: 'msgcool', wait: Math.ceil(mw / 1000), p: me };
       if (num_(r[C.msgN]) >= MSG_DAY && !me.admin) return { ok: false, err: 'msgmax', p: me };
       var newMid = 'M' + Date.now().toString(36).toUpperCase();
-      if (img) { try { msgImgSave_(newMid, img); } catch (ie) { return { ok: false, err: 'imgfail', p: me }; } }
+      if (mimgs.length) { try { mids = imgsSave_('M', mimgs); } catch (ie) { return { ok: false, err: 'imgfail', p: me }; } }
       r[C.msgN] = num_(r[C.msgN]) + 1;
       r[C.msgLast] = Date.now();
-      sheet_('留言板', M_HEAD).appendRow([newMid, new Date(), r[C.nick], r[C.code], r[C.av], body, '', '', '', '']);
+      sheet_('留言板', M_HEAD).appendRow([newMid, new Date(), r[C.nick], r[C.code], r[C.av], body, '', '', '', '', mids.join(','), '']);
       bump_('msgs');
     } else if (a === 'like') {
       var lt = likeTarget_(String(q.id || ''));
@@ -1304,15 +1325,39 @@ function handle_(q) {
       if (!parentRow) return { ok: false, err: 'bad', p: me };
       var parent = parentSheet.getRange(parentRow, 1, 1, M_HEAD.length).getValues()[0];
       if (parent[9] === '隱藏' || parent[9] === '刪除') return { ok: false, err: 'bad', p: me };
-      var replyBody = body_(q.text, MSG_LEN), replyImg = String(q.img || ''), replyImgId = '';
-      if (replyImg && (replyImg.length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(replyImg))) return { ok: false, err: 'imgbad', p: me };
-      if (plain_(replyBody).length < 2 && !replyImg) return { ok: false, err: 'msgshort', p: me };
+      var replyBody = body_(q.text, MSG_LEN), rimgs = imgsIn_(q, IMG_MAX_N), replyImgId = '';
+      if (!rimgs) return { ok: false, err: 'imgbad', p: me };
+      if (plain_(replyBody).length < 2 && !rimgs.length) return { ok: false, err: 'msgshort', p: me };
       var replyWait = num_(r[C.msgLast]) + MSG_GAP - Date.now();
       if (replyWait > 0 && !me.admin) return { ok: false, err: 'msgcool', wait: Math.ceil(replyWait / 1000), p: me };
       if (num_(r[C.msgN]) >= MSG_DAY && !me.admin) return { ok: false, err: 'msgmax', p: me };
-      if (replyImg) { replyImgId = 'M' + Date.now().toString(36).toUpperCase() + 'R'; try { msgImgSave_(replyImgId, replyImg); } catch (rie) { return { ok: false, err: 'imgfail', p: me }; } }
-      sheet_('留言回覆', MR_HEAD).appendRow([String(parent[0]), new Date(), r[C.nick], r[C.code], r[C.av], replyBody, replyImgId]);
+      if (rimgs.length) { try { replyImgId = imgsSave_('M', rimgs).join(','); } catch (rie) { return { ok: false, err: 'imgfail', p: me }; } }
+      sheet_('留言回覆', MR_HEAD).appendRow([String(parent[0]), new Date(), r[C.nick], r[C.code], r[C.av], replyBody, replyImgId, '', '']);
       r[C.msgN] = num_(r[C.msgN]) + 1; r[C.msgLast] = Date.now(); notifyMsgReply_(rows, r, parent, plain_(replyBody) ? replyBody : '🖼️（圖片）', touched); bump_('msgs');
+    } else if (a === 'medit') {
+      /* v81 編輯自己的留言或回覆：改文字、留下哪些舊圖、加新圖（合計最多 4 張）；改前內容記到「編輯紀錄」 */
+      var fe = msgFind_(q.id);
+      if (!fe || fe.parent[9] === '隱藏') return { ok: false, err: 'bad', p: me };
+      if (fe.w !== String(r[C.code]).toUpperCase()) return { ok: false, err: 'admin', p: me };
+      var etxt = body_(q.text, MSG_LEN), eadd = imgsIn_(q, IMG_MAX_N), ekeep = keepList_(q.keep, fe.imgs), enew;
+      if (!eadd || ekeep.length + eadd.length > IMG_MAX_N) return { ok: false, err: 'imgbad', p: me };
+      if (plain_(etxt).length < 2 && !ekeep.length && !eadd.length) return { ok: false, err: 'msgshort', p: me };
+      try { enew = ekeep.concat(imgsSave_('M', eadd)); } catch (eie) { return { ok: false, err: 'imgfail', p: me }; }
+      fe.imgs.forEach(function (k) { if (enew.indexOf(k) < 0) msgImgTrash_(k); });
+      editLog_(fe.kind === 'm' ? '編輯留言' : '編輯回覆', q.id, r, fe.text, fe.imgs, plain_(etxt), enew);
+      fe.v[5] = etxt;
+      if (fe.kind === 'm') { fe.v[10] = enew.join(','); fe.v[11] = new Date(); fe.sh.getRange(fe.row, 1, 1, M_HEAD.length).setValues([fe.v]); }
+      else { fe.v[6] = enew.join(','); fe.v[7] = new Date(); fe.sh.getRange(fe.row, 1, 1, MR_HEAD.length).setValues([fe.v]); }
+      bump_('msgs');
+    } else if (a === 'mdel' && String(q.id || '').indexOf('_') > 0) {
+      /* v81 刪除回覆：本人或站長 */
+      var fdl = msgFind_(q.id);
+      if (!fdl || fdl.kind !== 'r') return { ok: false, err: 'bad', p: me };
+      if (fdl.w !== String(r[C.code]).toUpperCase() && !me.admin) return { ok: false, err: 'admin', p: me };
+      fdl.v[8] = '刪除'; fdl.sh.getRange(fdl.row, 1, 1, MR_HEAD.length).setValues([fdl.v]);
+      fdl.imgs.forEach(msgImgTrash_);
+      editLog_('刪除回覆', q.id, r, fdl.text, fdl.imgs, '', []);
+      bump_('msgs');
     } else if (a === 'reply' || a === 'hide' || a === 'mdel') {
       var ms = sheet_('留言板', M_HEAD), mrow = msgRow_(ms, q.id);
       if (!mrow) return { ok: false, err: 'bad', p: me };
@@ -1327,8 +1372,10 @@ function handle_(q) {
         mv[9] = q.h ? '隱藏' : '';
       } else {
         if (String(mv[3]).toUpperCase() !== me.code.toUpperCase() && !me.admin) return { ok: false, err: 'admin', p: me };
+        var dimgs = mainImgs_(mv);
         mv[9] = '刪除';
-        msgImgTrash_(String(mv[0]));
+        msgImgTrash_(String(mv[0])); dimgs.forEach(msgImgTrash_);
+        editLog_('刪除留言', String(mv[0]), r, plain_(mv[5]), dimgs, '', []);
       }
       ms.getRange(mrow, 1, 1, M_HEAD.length).setValues([mv]);
       bump_('msgs');
@@ -1778,9 +1825,13 @@ function inbox_(rows, fid) {
   for (var x = vals.length - 1; x >= 0 && out.length < 30; x--) {
     var v = vals[x], mine = String(v[1]) === fid;   // v80 自己傳出的也列出來（mine:1），看得到自己回了什麼
     if (String(v[3]) !== fid && !mine) continue;
+    if (v[8] === '收回' || (!mine && v[9])) continue;   // v81 收回的雙方都不列；收件人刪掉的只在收件人這邊不列
     var ofid = String(mine ? v[3] : v[1]), j = findFid_(rows, ofid), o = { t: fmt_(v[0]), fid: ofid, nick: j >= 0 ? plain_(rows[j][C.nick]) : plain_(mine ? v[4] : v[2]), av: j >= 0 ? plain_(rows[j][C.av]) : '', text: plain_(v[5]) };
     if (mine) o.mine = 1;
-    if (v[6]) o.img = String(v[6]);
+    o.id = String(v[1]) + '_' + new Date(v[0]).getTime();
+    var il = idList_(v[6]); if (il.length) o.imgs = il;
+    if (v[7]) o.ed = fmt_(v[7]);
+    if (sysNote_(v[5])) o.sys = 1;
     out.push(o);
   }
   return out;
@@ -1820,6 +1871,59 @@ function msgImgSave_(mid, b64) {
   for (var k = 0, n = 0; k < b64.length; k += MSG_IMG_CHUNK, n++) out.push([mid, n, 'i' + b64.slice(k, k + MSG_IMG_CHUNK)]);
   sh.getRange(sh.getLastRow() + 1, 1, out.length, 3).setValues(out);
 }
+/* v81 多張圖片、編輯、刪除 */
+var IMG_MAX_N = 4;
+var EL_HEAD = ['時間', '種類', '編號', '暱稱', '登島碼', '改前內容', '改前圖片', '改後內容', '改後圖片'];   // 「編輯紀錄」只有站長看得到
+function imgsIn_(q, max) {   // q.imgs（陣列）或舊的 q.img；格式不對或超過張數回 null
+  var a = Array.isArray(q.imgs) ? q.imgs : (q.img ? [q.img] : []);
+  a = a.map(function (x) { return String(x || ''); }).filter(Boolean);
+  if (a.length > max) return null;
+  for (var i = 0; i < a.length; i++) if (a[i].length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(a[i])) return null;
+  return a;
+}
+function imgsSave_(pre, arr) {
+  var t = Date.now().toString(36).toUpperCase();
+  return arr.map(function (b, i) { var id = pre + t + String.fromCharCode(65 + i) + Math.floor(Math.random() * 46656).toString(36).toUpperCase(); msgImgSave_(id, b); return id; });
+}
+function idList_(s) { return String(s || '').split(',').filter(function (x) { return /^[MW][0-9A-Z]{4,20}$/.test(x); }); }
+function keepList_(keep, cur) { var k = idList_(Array.isArray(keep) ? keep.join(',') : keep); return k.filter(function (x, i) { return cur.indexOf(x) >= 0 && k.indexOf(x) === i; }); }
+function editLog_(kind, id, r, oldText, oldImgs, newText, newImgs) {
+  sheet_('編輯紀錄', EL_HEAD).appendRow([new Date(), kind, String(id), r[C.nick], r[C.code], oldText, (oldImgs || []).join(','), newText, (newImgs || []).join(',')]);
+}
+function mainImgs_(mv, sh) {   // 主留言的圖片：v81 起記在「圖片」欄；舊留言的圖用留言編號存
+  var l = idList_(mv[10]);
+  if (!l.length && msgImgRows_(sh || sheet_('留言圖片', MI_HEAD), String(mv[0])).length) l = [String(mv[0])];
+  return l;
+}
+/* 找留言或回覆：id 是 M…（主留言）或 M…_毫秒（回覆）；已刪除的找不到 */
+function msgFind_(id) {
+  id = String(id || '');
+  if (!/^M[0-9A-Z]{4,20}(_\d{9,15})?$/.test(id)) return null;
+  var parts = id.split('_'), ms = sheet_('留言板', M_HEAD), mr = msgRow_(ms, parts[0]);
+  if (!mr) return null;
+  var mv = ms.getRange(mr, 1, 1, M_HEAD.length).getValues()[0];
+  if (mv[9] === '刪除') return null;
+  if (parts.length === 1) return { kind: 'm', sh: ms, row: mr, v: mv, w: String(mv[3]).toUpperCase(), text: plain_(mv[5]), imgs: mainImgs_(mv), parent: mv };
+  var rs = sheet_('留言回覆', MR_HEAD), rn = rs.getLastRow() - 1;
+  if (rn < 1) return null;
+  var vals = rs.getRange(2, 1, rn, MR_HEAD.length).getValues();
+  for (var x = 0; x < vals.length; x++) {
+    var v = vals[x];
+    if (String(v[0]) === parts[0] && String(new Date(v[1]).getTime()) === parts[1] && v[8] !== '刪除') return { kind: 'r', sh: rs, row: x + 2, v: v, w: String(v[3]).toUpperCase(), text: plain_(v[5]), imgs: idList_(v[6]), parent: mv };
+  }
+  return null;
+}
+/* 悄悄話編號：寄件海島編號_毫秒 */
+function noteRow_(id) {
+  var m = String(id || '').match(/^([0-9A-Z]{4,8})_(\d{9,15})$/);
+  if (!m) return null;
+  var sh = sheet_('悄悄話', N_HEAD), n = sh.getLastRow() - 1;
+  if (n < 1) return null;
+  var from = Math.max(0, n - 3000), vals = sh.getRange(2 + from, 1, n - from, N_HEAD.length).getValues();
+  for (var x = vals.length - 1; x >= 0; x--) { var v = vals[x]; if (String(v[1]) === m[1] && String(new Date(v[0]).getTime()) === m[2]) return { sh: sh, row: 2 + from + x, v: v }; }
+  return null;
+}
+function sysNote_(t) { return /^(🎁 送你|📮 回覆了你的留言：|🐲 想送你一隻神獸|🙏 收下了你送的神獸|↩️ 你送的神獸|↩️ 婉拒了你送的神獸)/.test(String(t || '')); }   // 系統代發的通知：不能編輯、不能收回
 function msgImgRows_(sh, mid) {
   var n = sh.getLastRow() - 1, rows = [];
   if (n > 0) sh.getRange(2, 1, n, 2).getValues().forEach(function (v, x) { if (String(v[0]) === mid) rows.push({ row: x + 2, part: num_(v[1]) }); });
@@ -1843,7 +1947,7 @@ function noteImg_(q) {
   var fid = String(pr[pi][C.fid] || ''), sh = sheet_('悄悄話', N_HEAD), n = sh.getLastRow() - 1, ok = false;
   if (n > 0 && fid) {
     var from = Math.max(0, n - 3000), vals = sh.getRange(2 + from, 1, n - from, N_HEAD.length).getValues();
-    for (var x = vals.length - 1; x >= 0; x--) if (String(vals[x][6]) === mid) { ok = String(vals[x][1]) === fid || String(vals[x][3]) === fid; break; }
+    for (var x = vals.length - 1; x >= 0; x--) if (idList_(vals[x][6]).indexOf(mid) >= 0) { ok = vals[x][8] !== '收回' && (String(vals[x][1]) === fid || String(vals[x][3]) === fid); break; }
   }
   if (!ok) return { ok: false, err: 'noimg' };
   return imgB64_(mid);
@@ -1872,17 +1976,17 @@ function msgsBuild_(admin, prefix) {
       if (!v[6] && st !== '隱藏' && String(v[3]) !== 'SYSTEM') pending++;   // 官方自動喜報不算待回覆
       var who = String(v[3]).toUpperCase();
       list.push({ id: String(v[0]), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]),
-        reply: plain_(v[6]), rt: fmt_(v[7]), re: fmt_(v[8]), hidden: st === '隱藏', w: who });
+        reply: plain_(v[6]), rt: fmt_(v[7]), re: fmt_(v[8]), hidden: st === '隱藏', w: who, imgs: idList_(v[10]), ed: fmt_(v[11]) });
     }
   }
   var replySheet = sheet_('留言回覆', MR_HEAD), replyCount = replySheet.getLastRow() - 1, byParent = {};
   if (replyCount > 0) replySheet.getRange(2, 1, replyCount, MR_HEAD.length).getValues().forEach(function (v) {
-    var id = String(v[0] || ''), who = String(v[3] || '').toUpperCase(); if (!id) return;
-    (byParent[id] || (byParent[id] = [])).push({ id: id + '_' + new Date(v[1]).getTime(), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]), img: String(v[6] || '') || undefined, w: who });
+    var id = String(v[0] || ''), who = String(v[3] || '').toUpperCase(); if (!id || v[8] === '刪除') return;
+    (byParent[id] || (byParent[id] = [])).push({ id: id + '_' + new Date(v[1]).getTime(), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]), imgs: idList_(v[6]), ed: fmt_(v[7]), w: who });
   });
   var likes = likesMap_();
   var imgs = msgImgMap_();
-  list.forEach(function (m) { m.replies = byParent[m.id] || []; if (imgs[m.id]) m.img = 1; m.lk = likes[m.id] || []; m.replies.forEach(function (rp) { rp.lk = likes[rp.id] || []; }); });
+  list.forEach(function (m) { m.replies = byParent[m.id] || []; if (!m.imgs.length && imgs[m.id]) m.imgs = [m.id]; m.lk = likes[m.id] || []; m.replies.forEach(function (rp) { rp.lk = likes[rp.id] || []; }); });
   var total = list.length, pages = Math.max(1, Math.ceil(total / MSG_PAGE)), all = {}, first = {};
   for (var p = 1; p <= Math.min(pages, MSG_CACHE_PAGES); p++) {
     first = { total: total, pending: admin ? pending : 0, pages: pages, list: list.slice((p - 1) * MSG_PAGE, p * MSG_PAGE) };
@@ -1903,8 +2007,8 @@ function msgs_(q) {
   }
   return { ok: true, total: pg.total, pending: pg.pending, admin: admin, page: page, pages: pg.pages,
     list: pg.list.map(function (m) {
-      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, hidden: m.hidden, mine: !!code && m.w === code, img: m.img || undefined, lk: likePub_(m.lk, code),
-        replies: (m.replies || []).map(function (rp) { return { id: rp.id, t: rp.t, nick: rp.nick, av: rp.av, text: rp.text, img: rp.img, mine: !!code && rp.w === code, lk: likePub_(rp.lk, code) }; }) };
+      return { id: m.id, t: m.t, nick: m.nick, av: m.av, text: m.text, reply: m.reply, rt: m.rt, re: m.re, hidden: m.hidden, mine: !!code && m.w === code, imgs: m.imgs && m.imgs.length ? m.imgs : undefined, ed: m.ed || undefined, lk: likePub_(m.lk, code),
+        replies: (m.replies || []).map(function (rp) { return { id: rp.id, t: rp.t, nick: rp.nick, av: rp.av, text: rp.text, imgs: rp.imgs && rp.imgs.length ? rp.imgs : undefined, ed: rp.ed || undefined, mine: !!code && rp.w === code, lk: likePub_(rp.lk, code) }; }) };
     }) };
 }
 

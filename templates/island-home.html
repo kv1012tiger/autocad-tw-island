@@ -1078,8 +1078,9 @@ html:not(.hud-full) .hud:not(.mini){box-shadow:0 8px 24px rgba(0,30,50,.4)}
 .rs-bag{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rs-bag span{white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;padding:6px 6px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);font-size:15px}.rs-bag b{color:var(--gold)}
 .yt{position:relative;display:block;width:100%;max-width:480px;aspect-ratio:16/9;margin:8px 0;padding:0;border:0;border-radius:12px;overflow:hidden;background:#000;cursor:pointer}.yt img{width:100%;height:100%;object-fit:cover;display:block}.yt span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:44px;border-radius:12px;background:#ff0033;color:#fff;font-size:22px;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 .yt-f{width:100%;max-width:480px;aspect-ratio:16/9;margin:8px 0;border-radius:12px;overflow:hidden;background:#000}.yt-f iframe{width:100%;height:100%;border:0;display:block}
+.mb-imgs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.mb-imgs .mb-img{margin:0}.mb-imgs .mb-img img{max-height:220px;width:100%;object-fit:cover}.mb-ed{color:var(--muted);font-size:12px;font-weight:400}
 .mb-img{display:block;margin:8px 0;padding:0;border:0;background:none;cursor:zoom-in;max-width:100%}.mb-img img{display:block;max-width:100%;max-height:360px;border-radius:12px;object-fit:contain;background:rgba(0,0,0,.2)}
-.mb-pv{position:relative;display:inline-block;margin:8px 0 2px}.mb-pv img{display:block;max-height:140px;max-width:220px;border-radius:10px}.mb-pv button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
+.mb-pv{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 2px}.mb-pv[hidden]{display:none}.mb-pvi{position:relative;display:inline-block}.mb-pvi em{display:grid;place-items:center;width:80px;height:80px;border-radius:10px;background:rgba(255,255,255,.08);font-style:normal}.mb-pv img{display:block;max-height:110px;max-width:150px;border-radius:10px}.mb-pv button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer}
 .mb-ld{display:inline-block;padding:18px 22px;border-radius:12px;background:rgba(0,0,0,.25);color:var(--muted);font-size:14px}
 .mb-lb{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}.mb-lb img{max-width:100%;max-height:100%;border-radius:8px}.mb-lbx{position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:301;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:999px;border:2px solid rgba(255,255,255,.85);background:rgba(15,23,42,.85);color:#fff;font-family:inherit;font-weight:900;font-size:16px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.5)}.mb-lbx:hover{background:#ef4444}
 .rs-bag span:only-child{grid-column:1/-1;white-space:normal;text-align:left}
@@ -2722,7 +2723,7 @@ function renderCastle(){
   footSimple('← 回地圖','⛵ 去報名碼頭 →');
 }
 /* ---------- 留言碼頭：大家留言，站長回覆（回覆後可再編輯）；網址自動變成連結 ---------- */
-var MB={page:1,list:[],edit:null,thread:null,seq:0};
+var MB={page:1,list:[],edit:null,thread:null,seq:0,pics:[],rpics:[],ue:null};   /* v81 pics/rpics 多張圖；ue＝正在編輯自己的留言或回覆 */
 function renderMsg(){
   if(MSGA.cur!=null){msgSeenSet(MSGA.cur);msgPaint(false)}
   pBody.innerHTML='<div class="ph" style="--c:#f9a8d4"><span class="ph-e">📮</span><div><div class="p-kicker">MESSAGE DOCK・留言碼頭</div><h3 id="pTitle">留言碼頭</h3><p>想問的、想分享的都可以留言，大家可以互相回覆</p></div></div>'+
@@ -2735,14 +2736,14 @@ function renderMsg(){
 function msgForm(){
   var box=$('mbNew'),w=COINS.get();if(!box)return;
   if(!w.code){box.innerHTML='<div class="mb-login"><p>取個暱稱，就能在碼頭留言給蘋果爸。</p><button class="btn btn-primary btn-sm" type="button" data-mjoin>🏝️ 取暱稱・登島</button></div>';return}
-  box.innerHTML='<div class="mb-me"><span class="mb-av">'+COINS.av(w)+'</span><b>'+esc(w.nick)+'</b><small>想說什麼？可以貼網址、YouTube 影片，或附一張圖</small></div>'+
+  box.innerHTML='<div class="mb-me"><span class="mb-av">'+COINS.av(w)+'</span><b>'+esc(w.nick)+'</b><small>想說什麼？可以貼網址、YouTube 影片，或附圖片（最多 4 張）</small></div>'+
     '<textarea class="mb-ta" id="mbText" maxlength="300" placeholder="寫下你的留言…（300 字內，可以貼網址）"></textarea>'+
-    '<input type="file" id="mbFile" accept="image/*" hidden><div class="mb-pv" id="mbPv" hidden></div>'+
+    '<input type="file" id="mbFile" accept="image/*" multiple hidden><div class="mb-pv" id="mbPv" hidden></div>'+
     '<div class="mb-row"><small id="mbCnt">0 / 300</small><span><button class="btn btn-ghost btn-sm" type="button" id="mbPic">📷 加圖片</button> <button class="btn btn-primary btn-sm" type="button" id="mbSend">📮 送出留言</button></span></div>'+
     '<p class="mb-hint">留言會公開顯示，請不要留電話、Email 等個人資料。每天最多 10 則，每則間隔 1 分鐘。</p>';
   var ta=$('mbText');ta.addEventListener('input',function(){$('mbCnt').textContent=ta.value.length+' / 300'});
   mbPvPaint();
-  $('mbFile').addEventListener('change',function(){var f=this.files&&this.files[0];this.value='';if(!f)return;if(!/^image\//.test(f.type)){toast('只能附圖片檔');return}toast('🖼️ 圖片處理中…');mbShrink(f).then(function(d){MB.pic=d;mbPvPaint()}).catch(function(){toast('⚠️ 這張圖片讀不出來，換一張試試')})});
+  $('mbFile').addEventListener('change',function(){var fs=[].slice.call(this.files||[]);this.value='';mbAddFiles(fs,MB.pics,0,mbPvPaint)});
 }
 /* 留言快取：第 1 頁存在這台裝置，打開碼頭先秀上次看到的，再背景更新；靠近留言碼頭時就先預抓 */
 var MSGC=null;try{MSGC=JSON.parse(localStorage.getItem('aikb-msgs')||'null')}catch(e){}
@@ -2765,11 +2766,11 @@ function msgRender(j,box){
 function loadMsgs(page,fresh){
   var my=++MB.seq,box=$('mbList');if(!box)return;
   var code=COINS.get().code||'',shown=false;
-  if(page===1&&!fresh&&MSGC&&MSGC.c===code&&MSGC.j&&!MB.edit){msgRender(MSGC.j,box);shown=true}
+  if(page===1&&!fresh&&MSGC&&MSGC.c===code&&MSGC.j&&!MB.edit&&!MB.ue){msgRender(MSGC.j,box);shown=true}
   COINS.call({a:'msgs',code:code,page:page}).then(function(j){
     if(page===1)msgCache(j,code);
     if(my!==MB.seq||!$('mbList'))return;
-    if((MB.edit||MB.thread)&&shown)return; /* 正在編輯回覆時不要把畫面換掉 */
+    if((MB.edit||MB.thread||MB.ue)&&shown)return; /* 正在編輯回覆時不要把畫面換掉 */
     msgRender(j,$('mbList'));
   }).catch(function(){if(my===MB.seq&&$('mbList')&&!shown)$('mbList').innerHTML='<p class="s-count">⚠️ 暫時連不上留言碼頭，請稍後再試。</p>'});
 }
@@ -2786,10 +2787,32 @@ function mbImgHTML(id){return id?'<button class="mb-img" type="button" data-mimg
 function mbImgLoad(root){[].forEach.call((root||pBody).querySelectorAll('[data-mimg]'),function(b){if(b.querySelector('img'))return;var id=b.dataset.mimg;mimgGet(id).then(function(d){b.innerHTML='<img src="'+d+'" alt="留言圖片">'}).catch(function(){b.innerHTML='<span class="mb-ld">⚠️ 圖片暫時讀不到</span>'})})}
 /* 選好的照片先在手機上縮小（最長邊 1280、JPEG），再送出 */
 function mbShrink(file){return new Promise(function(ok,no){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,1024/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);var q=.78,d=c.toDataURL('image/jpeg',q);while(d.length>380000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}if(d.length>380000){no();return}ok(d)};im.onerror=function(){URL.revokeObjectURL(u);no()};im.src=u})}
-function mbPvPaint(){var pv=$('mbPv');if(!pv)return;pv.hidden=!MB.pic;pv.innerHTML=MB.pic?'<img src="'+MB.pic+'" alt="要附上的圖片"><button type="button" data-mpvx aria-label="拿掉圖片">✕</button>':''}
-/* v74：回覆也能附一張圖（MB.rpic），只更新預覽、不重畫整則，打到一半的字不會不見 */
-function mbRpvPaint(){var pv=pBody.querySelector('[data-rpv]');if(!pv)return;pv.hidden=!MB.rpic;pv.innerHTML=MB.rpic?'<img src="'+MB.rpic+'" alt="要附上的圖片"><button type="button" data-rpvx aria-label="拿掉圖片">✕</button>':''}
-pBody.addEventListener('change',function(e){var f0=e.target;if(!f0.matches||!f0.matches('[data-rfile]'))return;var f=f0.files&&f0.files[0];f0.value='';if(!f)return;if(!/^image\//.test(f.type)){toast('只能附圖片檔');return}toast('🖼️ 圖片處理中…');mbShrink(f).then(function(d){MB.rpic=d;mbRpvPaint()}).catch(function(){toast('⚠️ 這張圖片讀不出來，換一張試試')})});
+/* v81 一次可以選多張，合計最多 4 張（arr 是要放進去的陣列，used 是已經佔掉的張數） */
+var MB_MAX=4;
+function mbAddFiles(fs,arr,used,done){
+  fs=fs.filter(function(f){return /^image\//.test(f.type)});if(!fs.length){toast('只能附圖片檔');return}
+  var room=MB_MAX-used-arr.length;if(room<=0){toast('最多 4 張圖片');return}
+  if(fs.length>room){toast('最多 4 張圖片，只加前 '+room+' 張');fs=fs.slice(0,room)}
+  toast('🖼️ 圖片處理中…');
+  fs.reduce(function(pr,f){return pr.then(function(){return mbShrink(f).then(function(d){if(arr.length+used<MB_MAX)arr.push(d)},function(){toast('⚠️ 有一張圖片讀不出來，已略過')})})},Promise.resolve()).then(done);
+}
+function mbPics(arr,x){return (arr||[]).map(function(d,i){return '<span class="mb-pvi"><img src="'+d+'" alt="要附上的圖片"><button type="button" '+x+'="'+i+'" aria-label="拿掉這張圖片">✕</button></span>'}).join('')}
+function mbB64(arr){return (arr||[]).map(function(d){return d.slice(d.indexOf(',')+1)})}
+function mbImgsHTML(ids){ids=ids||[];if(!ids.length)return '';var h=ids.map(mbImgHTML).join('');return ids.length>1?'<div class="mb-imgs">'+h+'</div>':h}
+function mbPendImgs(arr){return (arr||[]).map(function(d){return '<div class="mb-img"><img src="'+d+'" alt=""></div>'}).join('')}
+function mbPvPaint(){var pv=$('mbPv');if(!pv)return;pv.hidden=!MB.pics.length;pv.innerHTML=mbPics(MB.pics,'data-mpvx');var b=$('mbPic');if(b)b.textContent='📷 加圖片'+(MB.pics.length?'（'+MB.pics.length+'/4）':'')}
+/* v74：回覆也能附圖（v81 起 MB.rpics 多張），只更新預覽、不重畫整則，打到一半的字不會不見 */
+function mbRpvPaint(){var pv=pBody.querySelector('[data-rpv]');if(!pv)return;pv.hidden=!MB.rpics.length;pv.innerHTML=mbPics(MB.rpics,'data-rpvx')}
+pBody.addEventListener('change',function(e){var f0=e.target;if(!f0.matches)return;
+  if(f0.matches('[data-rfile]')){var fs=[].slice.call(f0.files||[]);f0.value='';mbAddFiles(fs,MB.rpics,0,mbRpvPaint);return}
+  if(f0.matches('[data-uefile]')&&MB.ue){var fs2=[].slice.call(f0.files||[]);f0.value='';mbUeKeep();mbAddFiles(fs2,MB.ue.add,MB.ue.keep.length,function(){redrawMsg(MB.ue.pid)})}
+});
+/* v81 編輯自己的留言或回覆：改字、拿掉舊圖、加新圖；重畫時保留打到一半的字 */
+function mbUeKeep(){var ta=pBody.querySelector('[data-uet]');if(ta&&MB.ue)MB.ue.text=ta.value}
+function mbUeHTML(){var u=MB.ue,n=u.keep.length+u.add.length;
+  return '<div class="mb-ue"><textarea class="mb-ta" data-uet maxlength="300" placeholder="修改內容（300 字內）">'+esc(u.text)+'</textarea>'+
+    '<div class="mb-pv"'+(n?'':' hidden')+'>'+u.keep.map(function(id,i){return '<span class="mb-pvi">'+(MIMG[id]?'<img src="'+MIMG[id]+'" alt="">':'<em>🖼️</em>')+'<button type="button" data-uekx="'+i+'" aria-label="拿掉這張圖片">✕</button></span>'}).join('')+mbPics(u.add,'data-ueax')+'</div>'+
+    '<input type="file" data-uefile accept="image/*" multiple hidden><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-uesave>💾 儲存修改</button><button class="btn btn-ghost btn-sm" type="button" data-uepic'+(n>=MB_MAX?' disabled':'')+'>📷 加圖片（'+n+'/4）</button><button class="btn btn-ghost btn-sm" type="button" data-uecancel>取消</button></div><p class="mb-hint">儲存後會顯示「已編輯」和時間。</p></div>'}
 /* v76 按讚：留言與回覆都能按 👍（自己的不能按），下面列出誰按讚；超過 3 人先收起，點一下展開 */
 function lkHTML(o,pid){
   var lk=o.lk||{n:0,who:[],me:false},n=lk.n||0,id=o.id;if(!id)return '';
@@ -2802,16 +2825,18 @@ function lkHTML(o,pid){
 /* 重畫一則留言但保留正在打的回覆字與附圖預覽 */
 function redrawKeep(id){var f=pBody.querySelector('.mb[data-mid="'+id+'"] [data-thread-text]'),v=f?f.value:null;redrawMsg(id);if(v!=null){var f2=pBody.querySelector('.mb[data-mid="'+id+'"] [data-thread-text]');if(f2)f2.value=v;mbRpvPaint()}}
 function msgHTML(m){
-  var ed=MB.edit===m.id;
-  return '<article class="mb'+(m.hidden?' hid':'')+'" data-mid="'+esc(m.id)+'"><div class="mb-h"><span class="mb-av">'+COINS.av(m)+'</span><b>'+esc(m.nick)+'</b><small>'+esc(m.t)+'</small>'+(m.hidden?'<em>已隱藏</em>':'')+'</div>'+
-    (m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgHTML(m.img?m.id:'')+ytHTML(m.text)+(m.hidden?'':lkHTML(m,m.id))+
-    (m.replies||[]).map(function(r){return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+'</small>'+(r.text?'<p>'+COINS.linkify(r.text)+'</p>':'')+mbImgHTML(r.img||'')+ytHTML(r.text)+(m.hidden?'':lkHTML(r,m.id))+'</div></div>'}).join('')+
+  var ed=MB.edit===m.id,ue=MB.ue&&MB.ue.id===m.id;
+  return '<article class="mb'+(m.hidden?' hid':'')+'" data-mid="'+esc(m.id)+'"><div class="mb-h"><span class="mb-av">'+COINS.av(m)+'</span><b>'+esc(m.nick)+'</b><small>'+esc(m.t)+(m.ed?'・<span class="mb-ed">✏️ 已編輯 '+esc(m.ed)+'</span>':'')+'</small>'+(m.hidden?'<em>已隱藏</em>':'')+'</div>'+
+    (ue?mbUeHTML():(m.text?'<div class="mb-t">'+COINS.linkify(m.text)+'</div>':'')+mbImgsHTML(m.imgs)+ytHTML(m.text)+(m.hidden?'':lkHTML(m,m.id)))+
+    (m.replies||[]).map(function(r){var rue=MB.ue&&MB.ue.id===r.id;return '<div class="qa-a mb-r"><span class="mb-av">'+COINS.av(r)+'</span><div><small>'+esc(r.nick)+'・'+esc(r.t)+(r.ed?'・<span class="mb-ed">✏️ 已編輯 '+esc(r.ed)+'</span>':'')+'</small>'+
+      (rue?mbUeHTML():(r.text?'<p>'+COINS.linkify(r.text)+'</p>':'')+mbImgsHTML(r.imgs)+ytHTML(r.text)+(m.hidden?'':lkHTML(r,m.id))+
+        (!m.hidden&&(r.mine||MB.admin)?'<div class="mb-k">'+(r.mine?'<button class="mb-b" type="button" data-medit="'+esc(r.id)+'" data-mp="'+esc(m.id)+'">✏️ 編輯</button>':'')+'<button class="mb-b" type="button" data-mdel="'+esc(r.id)+'">🗑️ 刪除</button></div>':''))+'</div></div>'}).join('')+
     (m.reply&&!ed?'<div class="qa-a mb-r"><span class="tav" aria-hidden="true"></span><div><small>🍎 蘋果爸回覆・'+esc(m.rt)+(m.re?'・已編輯 '+esc(m.re):'')+'</small><p>'+COINS.linkify(m.reply)+'</p>'+ytHTML(m.reply)+'</div></div>':'')+
     (ed?'<textarea class="mb-ta" data-rta maxlength="300" placeholder="回覆內容（清空後儲存＝刪除回覆）">'+esc(m.reply||'')+'</textarea><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-msave="'+esc(m.id)+'">💾 儲存回覆</button><button class="btn btn-ghost btn-sm" type="button" data-mcancel>取消</button></div>':
      (MB.admin||m.mine?'<div class="mb-k">'+(MB.admin?'<button class="mb-b" type="button" data-mrep="'+esc(m.id)+'">'+(m.reply?'✏️ 編輯回覆':'💬 回覆')+'</button><button class="mb-b" type="button" data-mhide="'+esc(m.id)+'" data-h="'+(m.hidden?0:1)+'">'+(m.hidden?'👁️ 取消隱藏':'🙈 隱藏')+'</button>':'')+
-       (m.mine?'<button class="mb-b" type="button" data-mdel="'+esc(m.id)+'">🗑️ 刪除</button>':'')+'</div>':''))+
+       (m.mine&&!m.hidden?'<button class="mb-b" type="button" data-medit="'+esc(m.id)+'" data-mp="'+esc(m.id)+'">✏️ 編輯</button>':'')+(m.mine||MB.admin?'<button class="mb-b" type="button" data-mdel="'+esc(m.id)+'">🗑️ 刪除</button>':'')+'</div>':''))+
     (!m.hidden?'<div class="mb-k"><button class="mb-b" type="button" data-thread="'+esc(m.id)+'">💬 回覆留言</button></div>':'')+
-    (MB.thread===m.id?'<textarea class="mb-ta" data-thread-text maxlength="300" placeholder="寫下你的公開回覆…（300 字內，可以貼網址、YouTube）"></textarea><input type="file" data-rfile accept="image/*" hidden><div class="mb-pv" data-rpv hidden></div><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-thread-send="'+esc(m.id)+'">📮 送出回覆</button><button class="btn btn-ghost btn-sm" type="button" data-rpic>📷 加圖片</button><button class="btn btn-ghost btn-sm" type="button" data-thread-cancel>取消</button></div><p class="mb-hint">公開回覆與留言合計每天最多 10 則，每則間隔 1 分鐘。</p>':'')+
+    (MB.thread===m.id?'<textarea class="mb-ta" data-thread-text maxlength="300" placeholder="寫下你的公開回覆…（300 字內，可以貼網址、YouTube）"></textarea><input type="file" data-rfile accept="image/*" multiple hidden><div class="mb-pv" data-rpv hidden></div><div class="mb-k"><button class="btn btn-primary btn-sm" type="button" data-thread-send="'+esc(m.id)+'">📮 送出回覆</button><button class="btn btn-ghost btn-sm" type="button" data-rpic>📷 加圖片</button><button class="btn btn-ghost btn-sm" type="button" data-thread-cancel>取消</button></div><p class="mb-hint">公開回覆與留言合計每天最多 10 則，每則間隔 1 分鐘。</p>':'')+
     '</article>';
 }
 function markPending(n){
@@ -2825,7 +2850,21 @@ pBody.addEventListener('click',function(e){
   if(d.yt){var yf=document.createElement('div');yf.className='yt-f';yf.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+d.yt+'?autoplay=1&playsinline=1&rel=0" title="YouTube 影片" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';t.replaceWith(yf);return}
   if(d.mimg){var im0=t.querySelector('img');if(!im0)return;var lb=document.createElement('div');lb.className='mb-lb';lb.setAttribute('role','dialog');lb.setAttribute('aria-label','放大的留言圖片');lb.innerHTML='<img src="'+im0.src+'" alt="留言圖片"><button class="mb-lbx" type="button" aria-label="關閉放大圖片">✕ 關閉</button>';function lbClose(){lb.remove();document.removeEventListener('keydown',lbKey)}function lbKey(e){if(e.key==='Escape')lbClose()}lb.addEventListener('click',lbClose);document.addEventListener('keydown',lbKey);document.body.appendChild(lb);lb.querySelector('.mb-lbx').focus();return}
   if(t.id==='mbPic'){$('mbFile').click();return}
-  if(d.mpvx!=null){MB.pic=null;mbPvPaint();return}
+  if(d.mpvx!=null){MB.pics.splice(+d.mpvx,1);mbPvPaint();return}
+  /* v81 編輯自己的留言／回覆 */
+  if(d.medit){mbUeKeep();var oldUe=MB.ue;var pm0=MB.list.filter(function(x){return x.id===d.mp})[0],tg0=pm0&&(d.medit===d.mp?pm0:(pm0.replies||[]).filter(function(x){return x.id===d.medit})[0]);if(!tg0)return;
+    MB.ue={id:d.medit,pid:d.mp,text:tg0.text||'',keep:(tg0.imgs||[]).slice(),add:[]};if(oldUe&&oldUe.pid!==d.mp)redrawMsg(oldUe.pid);redrawMsg(d.mp);var ut=pBody.querySelector('[data-uet]');if(ut)ut.focus();return}
+  if(d.uecancel!=null){var up=MB.ue&&MB.ue.pid;MB.ue=null;if(up)redrawMsg(up);return}
+  if(d.uekx!=null&&MB.ue){mbUeKeep();MB.ue.keep.splice(+d.uekx,1);redrawMsg(MB.ue.pid);return}
+  if(d.ueax!=null&&MB.ue){mbUeKeep();MB.ue.add.splice(+d.ueax,1);redrawMsg(MB.ue.pid);return}
+  if(d.uepic!=null){var uf=pBody.querySelector('[data-uefile]');if(uf)uf.click();return}
+  if(d.uesave!=null&&MB.ue){mbUeKeep();var u=MB.ue,uv=u.text.trim();
+    if(uv.length<2&&!u.keep.length&&!u.add.length){toast('至少要 2 個字，或留一張圖');return}
+    t.disabled=true;t.textContent='儲存中…';
+    COINS.api({a:'medit',id:u.id,text:uv,keep:u.keep,imgs:mbB64(u.add)},true).then(function(j){
+      if(!j.ok){t.disabled=false;t.textContent='💾 儲存修改';toast('⚠️ 沒有儲存：'+COINS.errText(j));return}
+      MB.ue=null;toast('✏️ 已儲存修改');loadMsgs(MB.page,1);
+    }).catch(function(){t.disabled=false;t.textContent='💾 儲存修改';toast('⚠️ 暫時連不上，修改沒有儲存')});return}
   if(d.lkw){MB.lkOpen=MB.lkOpen||{};MB.lkOpen[d.lkw]=!MB.lkOpen[d.lkw];redrawKeep(d.lp);return}
   if(d.like){
     if(!COINS.get().code){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
@@ -2839,30 +2878,30 @@ pBody.addEventListener('click',function(e){
     return;
   }
   if(d.rpic!=null){var rf=pBody.querySelector('[data-rfile]');if(rf)rf.click();return}
-  if(d.rpvx!=null){MB.rpic=null;mbRpvPaint();return}
+  if(d.rpvx!=null){MB.rpics.splice(+d.rpvx,1);mbRpvPaint();return}
   if(d.mjoin!=null){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}
   if(t.id==='mbSend'){
-    var ta=$('mbText'),v=ta.value.trim(),pic=MB.pic;if(v.length<2&&!pic){toast('留言至少要 2 個字，或附一張圖');ta.focus();return}
+    var ta=$('mbText'),v=ta.value.trim(),pics=MB.pics.slice();if(v.length<2&&!pics.length){toast('留言至少要 2 個字，或附一張圖');ta.focus();return}
     /* 先在畫面上送出：輸入框馬上清空、留言先放到最上面（送出中…），後台確認後再換成正式的；失敗就把字放回去 */
     var mw=COINS.get(),pe=document.createElement('article');
-    pe.className='mb mb-pend';pe.innerHTML='<div class="mb-h"><span class="mb-av">'+COINS.av(mw)+'</span><b>'+esc(mw.nick)+'</b><small>⏳ 送出中…</small></div>'+(v?'<div class="mb-t">'+COINS.linkify(v)+'</div>':'')+(pic?'<div class="mb-img"><img src="'+pic+'" alt=""></div>':'')+ytHTML(v);
+    pe.className='mb mb-pend';pe.innerHTML='<div class="mb-h"><span class="mb-av">'+COINS.av(mw)+'</span><b>'+esc(mw.nick)+'</b><small>⏳ 送出中…</small></div>'+(v?'<div class="mb-t">'+COINS.linkify(v)+'</div>':'')+mbPendImgs(pics)+ytHTML(v);
     var lb=$('mbList'),cp=lb&&lb.querySelector('.s-count');if(lb){var em=lb.querySelector('.t-empty');if(em)em.remove();if(cp)cp.after(pe);else lb.prepend(pe)}
-    ta.value='';$('mbCnt').textContent='0 / 300';t.disabled=true;MB.pic=null;mbPvPaint();toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');
-    function back(msg){pe.remove();t.disabled=false;var ta2=$('mbText');if(ta2&&!ta2.value){ta2.value=v;$('mbCnt').textContent=v.length+' / 300'}if(pic&&!MB.pic){MB.pic=pic;mbPvPaint()}toast(msg)}
-    var mq={a:'msg',text:v};if(pic)mq.img=pic.slice(pic.indexOf(',')+1);
+    ta.value='';$('mbCnt').textContent='0 / 300';t.disabled=true;MB.pics=[];mbPvPaint();toast('📮 留言送出了，蘋果爸看到會回覆你！');playSfx('candy');
+    function back(msg){pe.remove();t.disabled=false;var ta2=$('mbText');if(ta2&&!ta2.value){ta2.value=v;$('mbCnt').textContent=v.length+' / 300'}if(pics.length&&!MB.pics.length){MB.pics=pics;mbPvPaint()}toast(msg)}
+    var mq={a:'msg',text:v};if(pics.length)mq.imgs=mbB64(pics);
     COINS.api(mq,true).then(function(j){
       if(!j.ok){back('⚠️ 留言沒有送出：'+COINS.errText(j));return}
       t.disabled=false;if(MSGA.cur!=null){MSGA.cur+=1;msgSeenSet(MSGA.cur)}loadMsgs(MB.page=1,1);
     }).catch(function(){back('⚠️ 暫時連不上，留言沒有送出，文字已放回去')});
     return;
   }
-  if(d.thread){if(!COINS.get().code){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}var old=MB.thread;if(old!==d.thread)MB.rpic=null;MB.thread=d.thread;if(old&&old!==MB.thread)redrawMsg(old);redrawMsg(MB.thread);var rt=pBody.querySelector('[data-thread-text]');if(rt)rt.focus();return}
-  if(d.threadCancel!=null){var oldThread=MB.thread;MB.thread=null;MB.rpic=null;redrawMsg(oldThread);return}
-  if(d.threadSend){var parentId=d.threadSend,field=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]'),value=field?field.value.trim():'',rpic=MB.rpic;if(value.length<2&&!rpic){toast('回覆至少要 2 個字，或附一張圖');if(field)field.focus();return}MB.thread=null;MB.rpic=null;redrawMsg(parentId);var rw=COINS.get(),art=pBody.querySelector('.mb[data-mid="'+parentId+'"]'),rp=document.createElement('div');
-    rp.className='qa-a mb-r mb-pend';rp.innerHTML='<span class="mb-av">'+COINS.av(rw)+'</span><div><small>'+esc(rw.nick)+'・⏳ 送出中…</small>'+(value?'<p>'+COINS.linkify(value)+'</p>':'')+(rpic?'<div class="mb-img"><img src="'+rpic+'" alt=""></div>':'')+'</div>';
+  if(d.thread){if(!COINS.get().code){COINS.need(function(){msgForm();loadMsgs(MB.page,1)});return}var old=MB.thread;if(old!==d.thread)MB.rpics=[];MB.thread=d.thread;if(old&&old!==MB.thread)redrawMsg(old);redrawMsg(MB.thread);var rt=pBody.querySelector('[data-thread-text]');if(rt)rt.focus();return}
+  if(d.threadCancel!=null){var oldThread=MB.thread;MB.thread=null;MB.rpics=[];redrawMsg(oldThread);return}
+  if(d.threadSend){var parentId=d.threadSend,field=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]'),value=field?field.value.trim():'',rpics=MB.rpics.slice();if(value.length<2&&!rpics.length){toast('回覆至少要 2 個字，或附一張圖');if(field)field.focus();return}MB.thread=null;MB.rpics=[];redrawMsg(parentId);var rw=COINS.get(),art=pBody.querySelector('.mb[data-mid="'+parentId+'"]'),rp=document.createElement('div');
+    rp.className='qa-a mb-r mb-pend';rp.innerHTML='<span class="mb-av">'+COINS.av(rw)+'</span><div><small>'+esc(rw.nick)+'・⏳ 送出中…</small>'+(value?'<p>'+COINS.linkify(value)+'</p>':'')+mbPendImgs(rpics)+'</div>';
     if(art){var kk=art.querySelectorAll('.mb-k');if(kk.length)art.insertBefore(rp,kk[0]);else art.appendChild(rp)}toast('💬 回覆已送出');
-    function rback(msg){rp.remove();MB.thread=parentId;MB.rpic=rpic||null;redrawMsg(parentId);var f2=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]');if(f2)f2.value=value;mbRpvPaint();toast(msg)}
-    var rq={a:'msgreply',id:parentId,text:value};if(rpic)rq.img=rpic.slice(rpic.indexOf(',')+1);
+    function rback(msg){rp.remove();MB.thread=parentId;MB.rpics=rpics;redrawMsg(parentId);var f2=pBody.querySelector('[data-mid="'+parentId+'"] [data-thread-text]');if(f2)f2.value=value;mbRpvPaint();toast(msg)}
+    var rq={a:'msgreply',id:parentId,text:value};if(rpics.length)rq.imgs=mbB64(rpics);
     COINS.api(rq,true).then(function(j){if(!j.ok){rback('⚠️ 回覆沒有送出：'+COINS.errText(j));return}rp.classList.remove('mb-pend');var sm=rp.querySelector('small');if(sm)sm.textContent=rw.nick+'・'+msgNow();loadMsgs(MB.page,1)}).catch(function(){rback('⚠️ 暫時連不上，回覆沒有送出，文字已放回去')});return}
   if(d.mpg){MB.thread=null;loadMsgs(+d.mpg);var b=$('mbList');if(b)b.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});return}
   if(d.mrep){MB.edit=d.mrep;redrawMsg(d.mrep);var r=pBody.querySelector('[data-rta]');if(r)r.focus();return}
@@ -2871,7 +2910,7 @@ pBody.addEventListener('click',function(e){
   var mid=d.msave||d.mhide||d.mdel,q={a:act,id:mid};
   if(act==='reply'){q.text=(pBody.querySelector('[data-rta]')||{}).value||'';if(!q.text.trim()&&!confirm('回覆是空的，要刪除這則回覆嗎？'))return}
   if(act==='hide')q.h=+d.h;
-  if(act==='mdel'&&!confirm('要刪除這則留言嗎？'))return;
+  if(act==='mdel'&&!confirm(mid.indexOf('_')>0?'要刪除這則回覆嗎？':'要刪除這則留言嗎？'))return;
   if(act==='reply'&&q.text.trim()){
     var om=MB.list.filter(function(x){return x.id===mid})[0];
     if(om){var bak={reply:om.reply,rt:om.rt,re:om.re},hadReply=!!om.reply,txt=q.text;
@@ -2885,7 +2924,7 @@ pBody.addEventListener('click',function(e){
   t.disabled=true;
   COINS.api(q,act==='reply').then(function(j){
     if(!j.ok){t.disabled=false;toast('⚠️ '+COINS.errText(j));return}
-    MB.edit=null;toast(act==='reply'?'💬 回覆已儲存':act==='hide'?(q.h?'🙈 已隱藏這則留言':'👁️ 已取消隱藏'):'🗑️ 已刪除留言');loadMsgs(MB.page,1);
+    MB.edit=null;toast(act==='reply'?'💬 回覆已儲存':act==='hide'?(q.h?'🙈 已隱藏這則留言':'👁️ 已取消隱藏'):(mid.indexOf('_')>0?'🗑️ 已刪除回覆':'🗑️ 已刪除留言'));loadMsgs(MB.page,1);
   }).catch(function(){t.disabled=false;toast('⚠️ 暫時連不上，請稍後再試')});
 });
 function msgNow(){var d=new Date(),z=function(n){return (n<10?'0':'')+n};return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+z(d.getHours())+':'+z(d.getMinutes())}

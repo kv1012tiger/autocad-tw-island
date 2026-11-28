@@ -262,7 +262,7 @@
     '.cw-fr .d{font-size:13px;color:#b9d8e4;margin:3px 0 6px}.cw-fr .k{display:flex;gap:6px;flex-wrap:wrap}' +
     '.cw-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px}.cw-pager small{margin:0;font-size:13px}' +
     '.cw-pwrow{background:rgba(255,209,102,.14);border:1.5px dashed #ffd166;border-radius:12px;padding:8px 12px;word-break:break-all}.cw-pw{font:700 1.05em ui-monospace,Consolas,monospace;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:6px;user-select:all;-webkit-user-select:all}.cw-pwc{margin-left:6px;padding:4px 12px;border-radius:999px;border:0;background:#ffd166;color:#3a1a08;font:700 13.5px "Noto Sans TC",sans-serif;cursor:pointer}' +
-    '.cw-note{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.5}.cw-note small{display:inline;margin:0;font-size:12px}.cw-note.me{background:rgba(94,234,212,.13);border-left:3px solid #5eead4}.cw-note img{display:block;max-width:100%;max-height:320px;margin-top:6px;border-radius:8px}.cw-pimg{display:flex;align-items:center;gap:8px;margin:6px 0}.cw-pimg img{max-height:60px;border-radius:6px}' +
+    '.cw-note{margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.5}.cw-note small{display:inline;margin:0;font-size:12px}.cw-note.me{background:rgba(94,234,212,.13);border-left:3px solid #5eead4}.cw-note img{display:block;max-width:100%;max-height:320px;margin-top:6px;border-radius:8px}.cw-pimg{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:6px 0}.cw-pimg img{max-height:60px;border-radius:6px}.cw-pi{position:relative;display:inline-block}.cw-pi em{display:grid;place-items:center;width:60px;height:60px;border-radius:6px;background:rgba(255,255,255,.08);font-style:normal}.cw-pi button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-weight:900;cursor:pointer;padding:0}.cw-ed{opacity:.75;font-size:12px}' +
     '.cw-dot{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ff5e62;color:#fff;font:800 12px/18px sans-serif;text-align:center}' +
     '.cw-ta{width:100%;box-sizing:border-box;min-height:70px;margin:6px 0 2px;padding:8px 10px;border-radius:12px;border:1.5px solid #ffd166;background:#06344a;color:#fff;font:15px/1.5 "Noto Sans TC",sans-serif;resize:vertical}' +
     '.cw-q{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.1);text-align:left}.cw-q:first-of-type{border-top:0}' +
@@ -595,7 +595,7 @@
     modal('<div class="cw-ic">🎒</div><h3>' + av(P) + ' ' + esc(P.nick) + ' 的背包</h3><div data-box></div>' +
       '<div class="cw-row cw-fl"><button class="cw-b p" type="button" data-x>✕ 關閉</button></div>',
       function (ov, close) {
-        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {}, inPg = 0, rOpen = -1, PIMG = {};
+        var box = ov.querySelector('[data-box]'), FR = frLoad(), INBOX = INBOX_MEM, inboxFail = false, open = {}, inPg = 0, rOpen = -1, PIMG = {}, NED = null;   /* v81 PIMG={key,arr} 多張圖；NED＝正在編輯的悄悄話 */
         ov.querySelector('[data-x]').addEventListener('click', close);
         function questHTML() {
           var qs = P.qs || [];
@@ -624,7 +624,7 @@
           if (P.bin && P.bin.length) h += '<div class="cw-sec"><h4>🐲 待接收的神獸<span class="cw-dot">' + P.bin.length + '</span></h4>' + binHTML() + '</div>';   /* v78 */
           h += '<div class="cw-sec"><h4>👥 好友' + (FR ? '（' + FR.length + '）' : '') + '</h4>' + friendsHTML() + '</div>';
           h += '<div class="cw-sec"><h4>✉️ 悄悄話' + (P.unread ? '<span class="cw-dot">' + P.unread + '</span>' : '') + '</h4>' + inboxHTML() + '</div>';
-          var keep = ov.querySelector('[data-fidin]'), kv = keep ? keep.value : '', rk = ov.querySelector('[data-rt]'), rv = rk ? rk.value : '', nk = ov.querySelector('[data-nt]'), nkf = nk ? nk.dataset.nt : '', nv = nk ? nk.value : '';
+          nedKeep(); var keep = ov.querySelector('[data-fidin]'), kv = keep ? keep.value : '', rk = ov.querySelector('[data-rt]'), rv = rk ? rk.value : '', nk = ov.querySelector('[data-nt]'), nkf = nk ? nk.dataset.nt : '', nv = nk ? nk.value : '';
           box.innerHTML = h;
           if (kv) ov.querySelector('[data-fidin]').value = kv;
           var rk2 = ov.querySelector('[data-rt]'); if (rk2 && rv) rk2.value = rv;   // 重畫時保留正在打的回覆
@@ -663,10 +663,30 @@
           return '<div class="k" style="margin-top:6px">' + ks.map(function (k) { return '<button class="cw-mini p" type="button" data-bgift="' + k + '" data-f="' + esc(fid) + '">' + BNAME[k][0] + ' 送' + BNAME[k][1] + '（收藏 ' + bb[k] + '）</button>'; }).join('') + '</div><small>🐲 神獸收藏可以送給好友：對方會收到通知，自己選住進小島或收藏起來（7 天內沒回應會退回）。互送就是交換。</small>';
         }
         /* v80 悄悄話附圖：選好的圖先縮到 1024px JPEG，送出時一起帶上 */
-        function pimgHTML(key) {
-          if (PIMG.key === key && PIMG.d) return '<div class="cw-pimg"><img src="' + PIMG.d + '" alt=""><button class="cw-mini" type="button" data-pimgx>✕ 拿掉圖片</button></div>';
-          return '<div class="cw-pimg"><button class="cw-mini" type="button" data-pimg="' + esc(key) + '">🖼️ 加圖片</button></div>';
+        function pimgHTML(key) {   /* v81 最多 4 張 */
+          var arr = PIMG.key === key ? PIMG.arr : [];
+          return '<div class="cw-pimg">' + arr.map(function (d, i) { return '<span class="cw-pi"><img src="' + d + '" alt=""><button type="button" data-pimgx="' + i + '" aria-label="拿掉這張圖片">✕</button></span>'; }).join('') +
+            (arr.length < 4 ? '<button class="cw-mini" type="button" data-pimg="' + esc(key) + '">🖼️ 加圖片' + (arr.length ? '（' + arr.length + '/4）' : '') + '</button>' : '') + '</div>';
         }
+        function nedHTML() {   /* v81 編輯自己傳出的悄悄話 */
+          var n = NED.keep.length + NED.add.length;
+          return '<textarea class="cw-ta" maxlength="300" data-net>' + esc(NED.text) + '</textarea><div class="cw-pimg">' +
+            NED.keep.map(function (id, i) { return '<span class="cw-pi">' + (NIMG[id] ? '<img src="data:image/jpeg;base64,' + NIMG[id] + '" alt="">' : '<em>🖼️</em>') + '<button type="button" data-nekx="' + i + '" aria-label="拿掉這張圖片">✕</button></span>'; }).join('') +
+            NED.add.map(function (d, i) { return '<span class="cw-pi"><img src="' + d + '" alt=""><button type="button" data-neax="' + i + '" aria-label="拿掉這張圖片">✕</button></span>'; }).join('') +
+            (n < 4 ? '<button class="cw-mini" type="button" data-nepic>🖼️ 加圖片（' + n + '/4）</button>' : '') + '</div>' +
+            '<div class="k"><button class="cw-mini p" type="button" data-nesave>💾 儲存修改</button><button class="cw-mini" type="button" data-necancel>取消</button></div><small>儲存後對方會看到「已編輯」和時間。</small>';
+        }
+        function nedKeep() { var ta = ov.querySelector('[data-net]'); if (ta && NED) NED.text = ta.value; }
+        function pickImgs(arr, used, done) {   /* 選多張圖，縮好放進 arr（合計最多 4 張） */
+          var fin = document.createElement('input'); fin.type = 'file'; fin.accept = 'image/*'; fin.multiple = true;
+          fin.onchange = function () {
+            var fs = [].slice.call(fin.files || []).filter(function (f) { return /^image\//.test(f.type); }), room = 4 - used - arr.length;
+            if (!fs.length) return; if (fs.length > room) { toast('最多 4 張圖片，只加前 ' + room + ' 張'); fs = fs.slice(0, room); }
+            fs.reduce(function (pr, f) { return pr.then(function () { return noteShrink(f).then(function (du) { if (arr.length + used < 4) arr.push(du); }, function () { toast('⚠️ 有一張圖片太大或讀不出來，已略過'); }); }); }, Promise.resolve()).then(done);
+          };
+          fin.click();
+        }
+        function b64s(arr) { return (arr || []).map(function (d) { return d.slice(d.indexOf(',') + 1); }); }
         function inboxHTML() {
           if (!INBOX) return inboxFail ? '<button class="cw-mini" type="button" data-inbox>打開收件匣</button>' : '<small>載入中…</small>';
           if (!INBOX.length) return '<small>還沒有悄悄話。</small>';
@@ -674,11 +694,16 @@
           return INBOX.slice(inPg * IN_PER, inPg * IN_PER + IN_PER).map(function (n, i) {
             var ix = inPg * IN_PER + i, isFr = !n.mine && n.fid && (P.fl || []).indexOf(String(n.fid)) >= 0, dock = !n.mine && String(n.text || '').indexOf('📮 回覆了你的留言：') === 0;
             /* v77 每則悄悄話可以直接回覆（對方要是好友；就是寄一則悄悄話給他） */
-            var btns = (dock ? '<button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + (isFr ? '<button class="cw-mini" type="button" data-rp="' + ix + '">↩️ 回覆</button>' : '');
+            var btns = (dock ? '<button class="cw-mini" type="button" data-msgdock>📮 前往留言碼頭</button>' : '') + (isFr ? '<button class="cw-mini" type="button" data-rp="' + ix + '">↩️ 回覆</button>' : '') +
+              /* v81 自己傳的可以編輯、收回；收到的可以從自己的收件匣刪掉 */
+              (n.id && n.mine && !n.sys ? '<button class="cw-mini" type="button" data-ned="' + ix + '">✏️ 編輯</button><button class="cw-mini" type="button" data-ndel="' + ix + '">🗑️ 收回</button>' : '') +
+              (n.id && !n.mine ? '<button class="cw-mini" type="button" data-ndel="' + ix + '">🗑️ 刪除</button>' : '');
             /* v80 自己傳出的悄悄話也列出來（↗️ 我 → 對方），換個底色；圖片按了才載入，只有寄件人、收件人看得到 */
             var head = n.mine ? '↗️ <b>我</b> → ' + av(n) + ' <b>' + esc(n.nick) + '</b>' : av(n) + ' <b>' + esc(n.nick) + '</b>';
-            var pic = n.img ? (NIMG[n.img] ? '<img src="data:image/jpeg;base64,' + NIMG[n.img] + '" alt="悄悄話圖片">' : '<div class="k" style="margin-top:6px"><button class="cw-mini" type="button" data-nimg="' + esc(n.img) + '">🖼️ 看圖片</button></div>') : '';
-            return '<div class="cw-note' + (n.mine ? ' me' : '') + '">' + head + ' <small>' + esc(n.t) + '</small><br>' + linkify(n.text) + pic + (btns ? '<div class="k" style="margin-top:6px">' + btns + '</div>' : '') +
+            var ims = n.imgs || [], got = ims.filter(function (k) { return NIMG[k]; }).length;
+            var pic = ims.length ? (got === ims.length ? ims.map(function (k) { return '<img src="data:image/jpeg;base64,' + NIMG[k] + '" alt="悄悄話圖片">'; }).join('') : '<div class="k" style="margin-top:6px"><button class="cw-mini" type="button" data-nimg="' + esc(ims.join(',')) + '">🖼️ 看圖片' + (ims.length > 1 ? '（' + ims.length + ' 張）' : '') + '</button></div>') : '';
+            if (NED && NED.id === n.id) return '<div class="cw-note me">' + head + ' <small>' + esc(n.t) + '</small>' + nedHTML() + '</div>';
+            return '<div class="cw-note' + (n.mine ? ' me' : '') + '">' + head + ' <small>' + esc(n.t) + (n.ed ? '・<span class="cw-ed">✏️ 已編輯 ' + esc(n.ed) + '</span>' : '') + '</small><br>' + linkify(n.text) + pic + (btns ? '<div class="k" style="margin-top:6px">' + btns + '</div>' : '') +
               (rOpen === ix && isFr ? '<textarea class="cw-ta" maxlength="298" placeholder="回覆 ' + esc(n.nick) + '（300 字內，可以貼網址）" data-rt="' + ix + '"></textarea>' + pimgHTML('r:' + ix) + '<button class="cw-mini p" type="button" data-rsend="' + ix + '">送出回覆</button>' : '') + '</div>';
           }).join('') + (pages > 1 ? '<div class="cw-pager"><button class="cw-mini" type="button" data-inpg="-1"' + (inPg ? '' : ' disabled') + '>‹ 上一頁</button><small>' + (inPg + 1) + ' / ' + pages + '</small><button class="cw-mini" type="button" data-inpg="1"' + (inPg < pages - 1 ? '' : ' disabled') + '>下一頁 ›</button></div>' : '');
         }
@@ -753,41 +778,62 @@
               FR = j.friends || FR; frSave(FR); paint();
             }).catch(function () { undo('⚠️ 暫時連不上金幣小島，這次送禮沒有送出，請再試一次'); });
           } else if (d.pimg) {
-            var fin = document.createElement('input'); fin.type = 'file'; fin.accept = 'image/*';
-            fin.onchange = function () {
-              var f = fin.files && fin.files[0]; if (!f) return;
-              noteShrink(f).then(function (du) { PIMG = { key: d.pimg, d: du }; paint(); }, function () { toast('⚠️ 這張圖片太大或讀不出來，換一張試試'); });
-            };
-            fin.click();
-          } else if (d.pimgx != null) { PIMG = {}; paint(); }
+            if (PIMG.key !== d.pimg) PIMG = { key: d.pimg, arr: [] };
+            pickImgs(PIMG.arr, 0, paint);
+          } else if (d.pimgx != null) { if (PIMG.arr) PIMG.arr.splice(+d.pimgx, 1); paint(); }
           else if (d.nimg) {
             busy(t);
-            api({ a: 'nimg', id: d.nimg }).then(function (j) {
-              if (!j.ok || !j.b64) { toast('⚠️ 圖片讀不到了'); paint(); return; }
-              NIMG[d.nimg] = j.b64; paint();
+            var nids = d.nimg.split(',');
+            Promise.all(nids.map(function (k) { return NIMG[k] ? { ok: true, b64: NIMG[k] } : api({ a: 'nimg', id: k }); })).then(function (js) {
+              var miss = 0; js.forEach(function (j, i) { if (j && j.ok && j.b64) NIMG[nids[i]] = j.b64; else miss++; });
+              if (miss) toast('⚠️ 有 ' + miss + ' 張圖片讀不到了'); paint();
+            }).catch(function () { netFail(); paint(); });
+          } else if (d.ned != null) {
+            var en = INBOX && INBOX[+d.ned]; if (!en) return;
+            NED = { id: en.id, text: en.text || '', keep: (en.imgs || []).slice(), add: [] }; rOpen = -1; paint();
+            var nt0 = ov.querySelector('[data-net]'); if (nt0) nt0.focus();
+          } else if (d.necancel != null) { NED = null; paint(); }
+          else if (d.nekx != null && NED) { nedKeep(); NED.keep.splice(+d.nekx, 1); paint(); }
+          else if (d.neax != null && NED) { nedKeep(); NED.add.splice(+d.neax, 1); paint(); }
+          else if (d.nepic != null && NED) { nedKeep(); pickImgs(NED.add, NED.keep.length, paint); }
+          else if (d.nesave != null && NED) {
+            nedKeep(); var ne = NED, ntx = ne.text.trim();
+            if (!ntx && !ne.keep.length && !ne.add.length) { toast('內容是空的，要收回請按「🗑️ 收回」'); return; }
+            busy(t);
+            api({ a: 'nedit', id: ne.id, text: ntx, keep: ne.keep, imgs: b64s(ne.add) }, true).then(function (j) {
+              if (!j.ok) return fail(j);
+              NED = null; if (j.inbox) INBOX = INBOX_MEM = j.inbox; paint(); toast('✏️ 已儲存修改');
+            }).catch(function () { netFail(); paint(); });
+          } else if (d.ndel != null) {
+            var dn = INBOX && INBOX[+d.ndel]; if (!dn) return;
+            if (!confirm(dn.mine ? '要收回這則悄悄話嗎？收回後你和對方都看不到。' : '要刪除這則悄悄話嗎？只會從你的收件匣拿掉，對方那邊還在。')) return;
+            busy(t);
+            api({ a: 'ndel', id: dn.id }, true).then(function (j) {
+              if (!j.ok) return fail(j);
+              if (j.inbox) INBOX = INBOX_MEM = j.inbox; paint(); toast(dn.mine ? '🗑️ 已收回' : '🗑️ 已刪除');
             }).catch(function () { netFail(); paint(); });
           } else if (d.send) {
-            var tx = ov.querySelector('[data-nt="' + d.send + '"]'), msg = tx ? tx.value.trim() : '', simg = PIMG.key === 'f:' + d.send ? PIMG.d : '';
-            if (!msg && !simg) { if (tx) tx.focus(); return; }
+            var tx = ov.querySelector('[data-nt="' + d.send + '"]'), msg = tx ? tx.value.trim() : '', simgs = PIMG.key === 'f:' + d.send ? PIMG.arr : [];
+            if (!msg && !simgs.length) { if (tx) tx.focus(); return; }
             busy(t);
-            api({ a: 'note', fid: d.send, text: msg, img: simg ? simg.split(',')[1] : '' }, true).then(function (j) {
+            api({ a: 'note', fid: d.send, text: msg, imgs: b64s(simgs) }, true).then(function (j) {
               if (!j.ok) return fail(j);
               open[d.send] = ''; PIMG = {}; paint(); toast('✉️ 悄悄話送出了'); loadInbox();
             }).catch(function () { netFail(); paint(); });
           } else if (d.inbox != null) { busy(t); inboxFail = false; loadInbox(); }
           else if (d.rp != null) { var ri = +d.rp; rOpen = rOpen === ri ? -1 : ri; paint(); var rta = ov.querySelector('[data-rt]'); if (rta) rta.focus(); }
           else if (d.rsend != null) {
-            var rn = INBOX && INBOX[+d.rsend], rta2 = ov.querySelector('[data-rt]'), rmsg = rta2 ? rta2.value.trim() : '', rimg = PIMG.key === 'r:' + d.rsend ? PIMG.d : '';
+            var rn = INBOX && INBOX[+d.rsend], rta2 = ov.querySelector('[data-rt]'), rmsg = rta2 ? rta2.value.trim() : '', rimgs = PIMG.key === 'r:' + d.rsend ? PIMG.arr : [];
             if (!rn) return;
-            if (!rmsg && !rimg) { if (rta2) rta2.focus(); return; }
+            if (!rmsg && !rimgs.length) { if (rta2) rta2.focus(); return; }
             busy(t);
-            api({ a: 'note', fid: rn.fid, text: '↩️ ' + rmsg, img: rimg ? rimg.split(',')[1] : '' }, true).then(function (j) {
+            api({ a: 'note', fid: rn.fid, text: '↩️ ' + rmsg, imgs: b64s(rimgs) }, true).then(function (j) {
               if (!j.ok) return fail(j);
               rOpen = -1; PIMG = {}; paint(); toast('↩️ 已回覆 ' + rn.nick); loadInbox();
             }).catch(function () { netFail(); paint(); });
           }
         });
-        INBOX_LIVE = function () { if (!ov.parentNode) { INBOX_LIVE = null; return; } if (rOpen < 0) loadInbox(); };   // 背包開著收到新悄悄話就刷新（正在打回覆時不打斷）
+        INBOX_LIVE = function () { if (!ov.parentNode) { INBOX_LIVE = null; return; } if (rOpen < 0 && !NED) loadInbox(); };   // 背包開著收到新悄悄話就刷新（正在打回覆時不打斷）
         paint();
         var frScrolled = false;
         function frScroll() { if (focus !== 'friends' || frScrolled || !FR) return; var s = [].filter.call(ov.querySelectorAll('.cw-sec'), function (x) { var h = x.querySelector('h4'); return h && h.textContent.indexOf('好友') >= 0; })[0]; if (s) { s.scrollIntoView(); frScrolled = true; } }
