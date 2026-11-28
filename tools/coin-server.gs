@@ -177,7 +177,7 @@ var LV_MULT = [1, 1.6, 3, 4.5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
 /* v82 擴地 Lv1～4：陸地變大、開放新設施（Lv1 就是原本的島） */
 var LAND = [null, {}, { wood: 40, stone: 30, iron: 15 }, { wood: 90, stone: 70, iron: 40, dia: 1 }, { wood: 180, stone: 140, iron: 80, dia: 3 }];
 var LAND_SHIP = [0, 0, 1, 2, 3], TEMPLE_SHIP = [0, 0, 0, 0, 4];   // v85 擴地 Lv2～4、神殿 Lv4 要先擁有的船（商店島買）
-var LAND_MS = [0, 0, 30, 120, 360].map(function (m) { return m * 60000; }), LAND_MAX = 4;
+var LAND_MS = [0, 0, 12, 24, 36].map(function (h) { return h * 3600000; }), LAND_MAX = 4;   // v87 第一次 12 小時，之後每次多 12 小時
 /* v82 生產設施：自動產出物資、存在設施裡，要自己來收（存滿就停）。r = 每小時產量、cap = 最多存幾個；倉庫每一級讓存放上限 +DEPOT_PCT% */
 var FAC_R = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5], FAC_CAP = [0, 8, 12, 16, 20, 24, 28, 32, 40];
 var FAC = {
@@ -205,7 +205,7 @@ var GARDEN = { flower: { name: '花圃', cost: { fruit: 5, wood: 3 }, pts: 3 }, 
 /* v82 五行神殿 Lv1～4：升級要先收集到幾種神獸，開放新的神獸玩法 */
 var TEMPLE = [null, {}, { stone: 50, iron: 30 }, { stone: 100, iron: 60, dia: 2 }, { stone: 180, iron: 120, dia: 5 }];
 var TEMPLE_NEED = [0, 0, 1, 3, 5], TEMPLE_MAX = 4;
-var TEMPLE_MS = [0, 0, 20, 60, 180].map(function (m) { return m * 60000; });
+var TEMPLE_MS = [0, 0, 12, 24, 36].map(function (h) { return h * 3600000; });   // v87
 var TEMPLE_OPEN = [null, '📖 神獸圖鑑', '🧬 神獸技能', '🏯 五行塔', '🔥 神獸覺醒'];
 /* v83 神獸技能（五行神殿 Lv2 起）：島上有那種神獸就發揮；效果看 IV 與等級（8%～20%），覺醒後加倍 */
 var SKILL = { water: { name: '水靈潤田', d: '種菜時間縮短' }, fire: { name: '火鳳旺灶', d: '料理時間縮短、鍛鐵爐產量增加' },
@@ -263,6 +263,10 @@ function monList_(o) {
 /* v84 神獸分靈守護島：論壇教學島各有 1 個守護位子。答對該島題庫的試煉（8 題、6 題以上）就能放上神獸分靈，守護 3 小時。
    題庫 QBANK 放在 Apps Script 另一個私人檔案（qbank.gs，不進公開 repo），網頁拿不到答案；守護狀態存在 ScriptProperties「guards」。 */
 var RUSH_DIA = 1, RETRY_DIA = 2, SAND_DIA = 3;   // v85 鑽石用途
+var RUSH_MAX = 15, RUSH_BIG_MIN = 3;   // v87 立即完成：剩下每 1 小時 💎1（不足 1 小時算 1），最多 15；擴地、神殿最少 3
+function rushCost_(k, left) { var c = Math.min(RUSH_MAX, Math.max(1, Math.ceil(left / 3600000))); return (k === 'land' || k === 'temple') ? Math.max(RUSH_BIG_MIN, c) : c; }
+/* v87 擴地、神殿升級前，小屋要到這塊地的上限、噴水池和瞭望塔也要到上限 */
+function bigReady_(o) { return o.h >= HOUSE_CAP[o.xl] && num_(o.dl.fountain) >= DECO_CAP[o.xl] && num_(o.dl.tower) >= DECO_CAP[o.xl]; }
 var GUARD_MS = 3 * 3600000, GUARD_DROP_MS = 30 * 60000, GUARD_DROPS = 6, GUARD_CD = 3600000, GUARD_PASS = 6, GT_DAY = 3, GUARD_READ_MAX = 20, GQ_N = 8, GQ_TTL = 30 * 60000;
 var SAND_DAY = 3, SAND_ISLES = 2, SAND_LV = 5, SAND_GACHA_P = 0.03, SAND_TOWER_P = 0.15, SAND_CX = 3;
 var SPLIT = [null, null, { lv: 5, pass: 7, cost: { bfruit: 5 } }, { lv: 10, aw: 1, pass: 8, cost: { bfruit: 10, dia: 3 } }];
@@ -2036,7 +2040,7 @@ function islePub_(r, mine, viewer) {
     up: UPC, upPts: FT_PTS, upMult: LV_MULT, treeMax: TREE_MAX, treeCost: Array.apply(null, Array(TREE_MAX)).map(function (x, n) { return o.starterTree && n===0 ? {} : treeCost_(n); }), treeGrow: TREE_GROW, treeEvery: TREE_EVERY, treeCap: TREE_CAP, veg: VEG, animals: ANIMALS, fruitFood: FRUIT_FOOD,
     guard: { ms: GUARD_MS, drop: GUARD_DROP_MS, drops: GUARD_DROPS, pass: GUARD_PASS, n: GQ_N, day: GT_DAY, cd: GUARD_CD, readMax: GUARD_READ_MAX, sandDay: SAND_DAY, sandIsles: SAND_ISLES, sandLv: SAND_LV, split: SPLIT, boards: Object.keys(qbank_()).filter(function (k) { return (qbank_()[k] || []).length >= GQ_N; }) },
     fishDay: FISH_DAY, fishFood: FISH_FOOD, dish: DISH, jobs: JOBS, jobDay: JOB_DAY, skill: SKILL, cxRow: CX_ROW, cxCol: CX_COL, cxAll: CX_ALL, awCost: AW_COST, twFloors: TW_FLOORS, beastLvMax: BEAST_LV_MAX,
-    land: LAND, landMs: LAND_MS, landShip: LAND_SHIP, templeShip: TEMPLE_SHIP, shipNames: SHIPS.map(function (x) { return x.name; }), houseCap: HOUSE_CAP, decoCap: DECO_CAP, rushDia: RUSH_DIA, retryDia: RETRY_DIA, sandDia: SAND_DIA, temple: TEMPLE, templeNeed: TEMPLE_NEED, templeMs: TEMPLE_MS, templeOpen: TEMPLE_OPEN, garden: GARDEN, facMs: FAC_MS, depotPct: DEPOT_PCT,
+    land: LAND, landMs: LAND_MS, landShip: LAND_SHIP, templeShip: TEMPLE_SHIP, shipNames: SHIPS.map(function (x) { return x.name; }), houseCap: HOUSE_CAP, decoCap: DECO_CAP, rushDia: RUSH_DIA, rushMax: RUSH_MAX, rushBigMin: RUSH_BIG_MIN, retryDia: RETRY_DIA, sandDia: SAND_DIA, temple: TEMPLE, templeNeed: TEMPLE_NEED, templeMs: TEMPLE_MS, templeOpen: TEMPLE_OPEN, garden: GARDEN, facMs: FAC_MS, depotPct: DEPOT_PCT,
     fac: (function () { var m = {}; Object.keys(FAC).forEach(function (k) { var x = FAC[k], c = [null]; for (var l = 1; l <= x.max; l++) c.push(facCost_(k, l)); m[k] = { name: x.name, res: x.res || '', xl: x.xl, max: x.max, cost: c, r: x.r || null, cap: x.cap || null }; }); return m; })() }; }
   else out.watered = wd.indexOf(out.fid) >= 0;
   return out;
@@ -2067,11 +2071,15 @@ function isleAct_(a, q, r, me) {
       }
     } else if (kind === 'land') {   // v82 擴地
       if (o.bb.land) return { err: 'building' };
+      if (o.bb.temple) return { err: 'bigbusy' };   // v87 擴地、神殿一次只能做一項
+      if (o.xl < LAND_MAX && !bigReady_(o)) return { err: 'needmax' };
       if (o.xl >= LAND_MAX) return { err: 'maxed' };
       tgt = o.xl + 1; cost = LAND[tgt]; bms = LAND_MS[tgt];
       if (LAND_SHIP[tgt] && o.ship.own.indexOf(LAND_SHIP[tgt]) < 0) return { err: 'needship', need: LAND_SHIP[tgt] }; label = '擴地 Lv' + tgt + '（施工 ' + Math.round(bms / 60000) + ' 分鐘）';
     } else if (kind === 'temple') {   // v82 五行神殿升級
       if (o.bb.temple) return { err: 'building' };
+      if (o.bb.land) return { err: 'bigbusy' };
+      if (o.tl < TEMPLE_MAX && !bigReady_(o)) return { err: 'needmax' };
       if (o.tl >= TEMPLE_MAX) return { err: 'maxed' };
       tgt = o.tl + 1;
       if (beastKinds_(o) < TEMPLE_NEED[tgt]) return { err: 'needbeast', need: TEMPLE_NEED[tgt] };
@@ -2215,10 +2223,11 @@ function isleAct_(a, q, r, me) {
     var rk2 = String(q.k || '');
     if (rk2 === 'house') { if (!o.hb || num_(o.hb.e) <= now) return { err: 'bad' }; }
     else if (!o.bb[rk2] || num_(o.bb[rk2].e) <= now) return { err: 'bad' };
-    if (num_(r[C.dia]) < RUSH_DIA) return { err: 'few', miss: { dia: RUSH_DIA - num_(r[C.dia]) } };
-    r[C.dia] = num_(r[C.dia]) - RUSH_DIA;
+    var rc = rushCost_(rk2, (rk2 === 'house' ? num_(o.hb.e) : num_(o.bb[rk2].e)) - now);
+    if (num_(r[C.dia]) < rc) return { err: 'few', miss: { dia: rc - num_(r[C.dia]) } };
+    r[C.dia] = num_(r[C.dia]) - rc;
     if (rk2 === 'house') o.hb.e = now; else o.bb[rk2].e = now;
-    out.log = ['加速', rk2 + ' 💎' + RUSH_DIA];
+    out.log = ['加速', rk2 + ' 💎' + rc];
   } else if (a === 'diaretry') {   // v85 用 💎 2 再挑戰一次（五行塔輸了、守護試煉次數用完）
     var dk2 = String(q.k || '');
     if (num_(r[C.dia]) < RETRY_DIA) return { err: 'few', miss: { dia: RETRY_DIA - num_(r[C.dia]) } };

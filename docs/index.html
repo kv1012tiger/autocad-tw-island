@@ -1717,7 +1717,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=dcbdcd20"></script>
+<script src="assets/js/coins.js?v=1362df8f"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -3936,7 +3936,7 @@ function wipHTML(d){
   });
   return '<div class="mi-wip"><h4>🚧 施工中・完工倒數</h4>'+rows.map(function(r){
     var pct=Math.max(0,Math.min(100,(1-bLeft(d,r[0])/r[3])*100));
-    return '<div class="wr"><span class="wn">'+r[1]+' '+esc(r[2])+'</span><b class="mi-hbt" data-k="'+r[0]+'">'+bText(d,r[0])+'</b>'+(d.mine?'<button class="btn btn-ghost btn-sm rush" type="button" data-rush="'+r[0]+'">💎'+((R.rushDia)||1)+' 立即完成</button>':'')+'<div class="wbar"><i class="mi-wb" data-k="'+r[0]+'" data-t="'+r[3]+'" style="width:'+pct.toFixed(1)+'%"></i></div></div>';
+    return '<div class="wr"><span class="wn">'+r[1]+' '+esc(r[2])+'</span><b class="mi-hbt" data-k="'+r[0]+'">'+bText(d,r[0])+'</b>'+(d.mine?'<button class="btn btn-ghost btn-sm rush" type="button" data-rush="'+r[0]+'">💎'+rushCost(d,r[0])+' 立即完成</button>':'')+'<div class="wbar"><i class="mi-wb" data-k="'+r[0]+'" data-t="'+r[3]+'" style="width:'+pct.toFixed(1)+'%"></i></div></div>';
   }).join('')+'</div>';
 }
 /* 停泊的船：參觀別人的島（或看自己的島）會看到岸邊停著他買過的船和船名 */
@@ -3979,6 +3979,11 @@ var GD_POS=[[30,62],[64,60],[8,48],[92,58],[36,94],[70,88],[22,30],[60,30]];
 function facView(d,k){var f=d.fac&&d.fac[k];if(!f||f.n==null)return null;var el=Date.now()-MI.at,n=f.n,per=f.per||3600000,nx=f.nx||0;
   if(n<f.cap&&nx>0&&el>=nx)n=Math.min(f.cap,n+1+Math.floor((el-nx)/per));
   return {n:n,cap:f.cap,nx:n>=f.cap?0:el<nx?nx-el:per-((el-nx)%per)}}
+/* v87 立即完成的鑽石：剩下每 1 小時 💎1，最多 15；擴地、神殿最少 3（跟後台同一套算法） */
+function rushCost(d,k){var R=d.rules||{},c=Math.min(R.rushMax||15,Math.max(1,Math.ceil(bLeft(d,k)/3600000)));return (k==='land'||k==='temple')?Math.max(R.rushBigMin||3,c):c}
+function bigLock(d){var R=d.rules||{},xl=d.xl||1,HC=(R.houseCap||[])[xl]||10,DC=(R.decoCap||[])[xl]||8,dl=d.dl||{},miss=[];
+  if(d.h<HC)miss.push('小屋 Lv'+HC);if((dl.fountain||0)<DC)miss.push('噴水池 Lv'+DC);if((dl.tower||0)<DC)miss.push('瞭望塔 Lv'+DC);
+  return miss.length?'🔒 要先把 '+miss.join('、')+' 升滿':''}
 function decoLv(d,k){return (d.dl&&d.dl[k])||(d.deco.indexOf(k)>=0?1:0)}
 function buildCost(k){var d=MI.data,R=d&&d.rules;if(!R)return null;if(k==='house')return R.house[d.h+1];if(k==='field')return R.field[d.fields];
   if(k==='tree')return (R.treeCost||[])[(d.trees||[]).length]||null;
@@ -4329,13 +4334,13 @@ function paintMine(){
     if(d.bb&&d.bb.land!=null)B.push({e:'🚧',n:'擴地 Lv'+(xl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="land">'+bText(d,'land')+'</b> 才會完工',done:1});
     else if(xl<RL.length-1){var op=Object.keys(RF).filter(function(k){return RF[k].xl===xl+1}).map(function(k){return FACI[k][0]+' '+RF[k].name});
       var sn=(R.landShip||[])[xl+1],shipOk=!sn||(d.ships||[]).some(function(x){return x.k===sn});
-      B.push({lock:shipOk?'':'🔒 要先在 🏪 商店島買到 ⛵ '+((R.shipNames||[])[sn]||'船'),k:'land',e:'🏝️',n:'擴地 Lv'+xl+' → Lv'+(xl+1),t:'陸地變大・小屋最高 Lv'+(R.houseCap||[])[xl+1]+'、噴水池／瞭望塔最高 Lv'+(R.decoCap||[])[xl+1]+'・'+(op.length?'開放 '+op.join('、'):'更大的空地（📐 CAD 繪圖工作室之後開放）')+'・島主分 +20・施工要 '+leftText(R.landMs[xl+1]),cost:RL[xl+1],bt:'⬆️ 擴地'})}
+      B.push({lock:(d.bb&&d.bb.temple!=null)?'🔒 五行神殿施工中，擴地和神殿一次只能做一項':bigLock(d)||(shipOk?'':'🔒 要先在 🏪 商店島買到 ⛵ '+((R.shipNames||[])[sn]||'船')),k:'land',e:'🏝️',n:'擴地 Lv'+xl+' → Lv'+(xl+1),t:'陸地變大・小屋最高 Lv'+(R.houseCap||[])[xl+1]+'、噴水池／瞭望塔最高 Lv'+(R.decoCap||[])[xl+1]+'・'+(op.length?'開放 '+op.join('、'):'更大的空地（📐 CAD 繪圖工作室之後開放）')+'・島主分 +20・施工要 '+leftText(R.landMs[xl+1]),cost:RL[xl+1],bt:'⬆️ 擴地'})}
     else B.push({e:'🏝️',n:'擴地 Lv'+xl,t:'已經擴到最大了',done:1});
   }
   if(RT.length){
     if(d.bb&&d.bb.temple!=null)B.push({e:'🚧',n:'五行神殿 Lv'+(tl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="temple">'+bText(d,'temple')+'</b> 才會完工',done:1});
     else if(tl<RT.length-1){var nd=R.templeNeed[tl+1];
-      B.push({k:'temple',e:'⛩️',n:'五行神殿 Lv'+tl+' → Lv'+(tl+1),t:'之後開放 '+R.templeOpen[tl+1]+'・需要 '+nd+' 種神獸（你有 '+(d.bk||0)+' 種）・島主分 +15・施工要 '+leftText(R.templeMs[tl+1]),cost:RT[tl+1],bt:'⬆️ 升級',lock:(d.bk||0)<nd?'🔒 還要再收集 '+(nd-(d.bk||0))+' 種神獸（到 🐲 試煉島或 🎁 扭蛋島）':(R.templeShip||[])[tl+1]&&!(d.ships||[]).some(function(x){return x.k===R.templeShip[tl+1]})?'🔒 要先在 🏪 商店島買到 ⛵ '+(R.shipNames||[])[R.templeShip[tl+1]]:''})}
+      B.push({k:'temple',e:'⛩️',n:'五行神殿 Lv'+tl+' → Lv'+(tl+1),t:'之後開放 '+R.templeOpen[tl+1]+'・需要 '+nd+' 種神獸（你有 '+(d.bk||0)+' 種）・島主分 +15・施工要 '+leftText(R.templeMs[tl+1]),cost:RT[tl+1],bt:'⬆️ 升級',lock:(d.bb&&d.bb.land!=null)?'🔒 擴地施工中，擴地和神殿一次只能做一項':bigLock(d)||((d.bk||0)<nd?'🔒 還要再收集 '+(nd-(d.bk||0))+' 種神獸（到 🐲 試煉島或 🎁 扭蛋島）':(R.templeShip||[])[tl+1]&&!(d.ships||[]).some(function(x){return x.k===R.templeShip[tl+1]})?'🔒 要先在 🏪 商店島買到 ⛵ '+(R.shipNames||[])[R.templeShip[tl+1]]:'')})}
     else B.push({e:'⛩️',n:'五行神殿 Lv'+tl,t:'已經升到最高級',done:1});
   }
   Object.keys(RF).forEach(function(k){var x=RF[k],f=(d.fac||{})[k],lv=f?f.lv:0,I=FACI[k]||['🏭',x.name,''];
@@ -4654,7 +4659,7 @@ pBody.addEventListener('click',function(e){
   var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx],[data-collect],[data-info]');if(!t||V.t!=='mine'||t.disabled)return;
   if(t.dataset.info){miInfo(t,t.dataset.info);return}
   if(t.dataset.micat){MI.cat=t.dataset.micat;try{localStorage.setItem('aikb-micat',MI.cat)}catch(x){}var bx=$('miBox');bx.querySelectorAll('.mi-cat').forEach(function(b){b.classList.toggle('on',b===t);if(b===t)b.classList.remove('dot')});bx.querySelectorAll('.p-sec[data-cat]').forEach(function(s2){s2.hidden=s2.getAttribute('data-cat')!==MI.cat});return}
-  if(t.dataset.rush){var rk=t.dataset.rush;if(!confirm('花 💎 '+((MI.data&&MI.data.rules&&MI.data.rules.rushDia)||1)+' 讓這項施工立刻完成？'))return;mineAct({a:'rush',k:rk},t,function(){fxAt(t,['💎','🔨','✨','🎉']);playSfx('chest');toast('💎 施工完成！')});return}
+  if(t.dataset.rush){var rk=t.dataset.rush;var rcost=MI.data?rushCost(MI.data,rk):1;if(!confirm('花 💎 '+rcost+' 讓這項施工立刻完成？（剩下每 1 小時 💎1）'))return;mineAct({a:'rush',k:rk},t,function(){fxAt(t,['💎','🔨','✨','🎉']);playSfx('chest');toast('💎 施工完成！')});return}
   if(t.dataset.gbuysand!=null){if(!confirm('花 💎 '+((MI.data&&MI.data.rules&&MI.data.rules.sandDia)||3)+' 換 1 把五行結界砂？'))return;mineAct({a:'buysand'},t,function(){fxAt(t,['✨','🔮']);playSfx('chest');toast('✨ 換到 1 把五行結界砂')});return}
   var d=t.dataset,patId=null;
   if(d.dfx){decoFx(t,d.dfx,+d.lv||1);return}
