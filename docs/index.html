@@ -1494,6 +1494,8 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
   <div class="wrap">
     <div id="favSec" hidden><div class="sec-h"><span class="eyebrow">My Favorites</span><h2>⭐ 我的收藏</h2><p>點一下，船就開過去。</p></div>
     <div class="isle-list" id="favList"></div></div>
+    <div class="sec-h sec-h2"><span class="eyebrow">Special Islands</span><h2>🎮 特別島</h2><p>神獸試煉島、扭蛋島、我的小島都在這裡，點一下，船就開過去。</p></div>
+    <div class="isle-list" id="spList"></div>
     <div class="sec-h sec-h2"><span class="eyebrow">Forum Islands</span><h2>📖 論壇教學島</h2><p>蘋果爸在論壇寫的 AutoCAD 教學文章。上島走進小屋讀文章，👑 是六座主島。</p></div>
     <div class="isle-list" id="forumList"></div>
     <div class="sec-h sec-h2"><span class="eyebrow">Q&amp;A Islands</span><h2>💬 AI 問答島</h2><p>AI 實體課學員的提問，蘋果爸親自回答。翻開問答卡拿金幣，拿到金幣的島會亮起 🪙。</p></div>
@@ -1646,7 +1648,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
       </ul></section>
       <section class="hp" data-p="5" hidden><ul>
         <li>🎮 <b>指令快打島</b>（60 秒點指令）和 <b>指令跑酷島</b>（看提示跑向正確指令）各有一個 AutoCAD 指令遊戲和全站排行榜。</li>
-        <li>🔮 占卜島可以搜尋全部文章與問答，還能每天各抽一張六種運勢的塔羅牌（附 78 張牌義說明）；🏰 城堡和 ⛵ 報名碼頭有課程介紹與報名方式。</li>
+        <li>🔮 占卜島可以搜尋全部文章與問答，還能抽六種運勢的塔羅牌（想再抽不限次數）（附 78 張牌義說明）；🏰 城堡和 ⛵ 報名碼頭有課程介紹與報名方式。</li>
         <li>🎯 想再看這份說明，按上方的 📖 就能隨時打開。</li>
       </ul></section>
     </div>
@@ -1668,7 +1670,7 @@ html.mz-on .toast,html.mz-on #fx,html.mz-on .pfly{z-index:99995}   /* 放大時�
 <div class="toast" id="toast" role="status"></div>
 
 <script src="assets/js/pets.js?v=76f5fb78"></script>
-<script src="assets/js/coins.js?v=5691cae6"></script>
+<script src="assets/js/coins.js?v=29ac6400"></script>
 <script src="assets/bet/bgm.js?v=2026112301"></script>
 <script>
 (function(){
@@ -2572,6 +2574,14 @@ FORUM.forEach(function(s,i){
   b.addEventListener('click',function(){closeLog();openSpot(s.si)});
   s.li=b;forumList.appendChild(b);
 });
+/* v80 清單裡的「特別島」：地圖很大，手機不好找，直接列出來 */
+(function(){var box=$('spList');['trial','gacha','mine','pets','shop','msg','slot','rps'].forEach(function(k){
+  var s=SP.filter(function(x){return x.k===k})[0];if(!s)return;
+  var b=document.createElement('button');b.type='button';b.className='card il';b.style.setProperty('--c',s.c);
+  b.innerHTML='<span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span>';
+  b.addEventListener('click',function(){closeLog();visit(s.si)});
+  box.appendChild(b);
+})})();
 /* 清單最上面的「我的收藏」 */
 function favListPaint(){
   var list=SP.filter(isFav),box=$('favList');
@@ -4566,17 +4576,17 @@ function tdState(){
   return st;
 }
 /* 登島帳號：合併本機既有當日牌與後端，帳號切換或跨日後不套用舊回應。 */
-function tdSync(candidateTopic,candidate){
+function tdSync(candidateTopic,candidate,again){
   var code=COINS.get().code,st=tdState(),u=st.u,day=st.d;
   if(!code)return Promise.resolve(st);
   var req={a:'tarotsync',code:code,d:day};TD_KEYS.forEach(function(k){req[k]=st[k]||null});
-  if(candidateTopic)req[candidateTopic]=candidate;
+  if(candidateTopic)req[candidateTopic]=candidate;if(again)req.redraw=candidateTopic;   // v80 再抽一次：後台用新抽的蓋掉
   return COINS.call(req,true).then(function(j){
     if(!j||!j.ok||!j.tarot||j.tarot.d!==day)throw new Error('sync');
     if(tdUser()!==u||tdDay()!==day)throw new Error('changed');
     var cur=tdState();TD_KEYS.forEach(function(k){
       var r=j.tarot[k];if(!r)return;
-      cur[k]=r;if(!cur.h.some(function(x){return x.d===day&&x.t===k}))cur.h.push({d:day,t:k,id:r.id,rv:r.rev?1:0});
+      cur[k]=r;if((again&&k===candidateTopic)||!cur.h.some(function(x){return x.d===day&&x.t===k}))cur.h.push({d:day,t:k,id:r.id,rv:r.rev?1:0});
     });if(cur.h.length>40)cur.h=cur.h.slice(-40);
     try{localStorage.setItem(TD_KEY,JSON.stringify(cur))}catch(e){throw new Error('storage')}
     return cur;
@@ -4584,7 +4594,8 @@ function tdSync(candidateTopic,candidate){
 }
 function tdHash(str){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0;i<str.length;i++){var ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (h1^h2)>>>0}
 function tdRng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
-function tdPick(topic){
+function tdPick(topic,again){
+  if(again)return {id:Math.floor(Math.random()*78),rev:Math.random()<.35};   /* v80 再抽一次：不限次數，隨機重抽 */
   var base=tdUser()+'|'+tdDay(),rl=tdRng(tdHash(base+'|love')),love={id:Math.floor(rl()*78),rev:rl()<.35};
   if(topic==='love')return love;
   var rc=tdRng(tdHash(base+'|'+topic)),id=Math.floor(rc()*78),n=0;
@@ -4605,7 +4616,7 @@ function tdCard(c,o){
 function tdChips(s){return '<div class="tr-kw">'+s.split('・').map(function(k){return '<span>'+esc(k)+'</span>'}).join('')+'</div>'}
 function trSlot(topic){
   var T=TD_TOPIC[topic],r=tdState()[topic];
-  if(r){var c=TD.cards[r.id];return '<div class="tr-slot done" data-trslot="'+topic+'"><h4>'+T.ico+' '+T.name+'</h4>'+tdCard(c,{rev:r.rev,size:'m'})+'<small><b>'+esc(c.z)+'</b>・'+(r.rev?'逆位':'正位')+'</small><button class="btn btn-ghost btn-sm" type="button" data-trshow="'+topic+'">看解釋</button></div>'}
+  if(r){var c=TD.cards[r.id];return '<div class="tr-slot done" data-trslot="'+topic+'"><h4>'+T.ico+' '+T.name+'</h4>'+tdCard(c,{rev:r.rev,size:'m'})+'<small><b>'+esc(c.z)+'</b>・'+(r.rev?'逆位':'正位')+'</small><button class="btn btn-ghost btn-sm" type="button" data-trshow="'+topic+'">看解釋</button><button class="btn btn-ghost btn-sm" type="button" data-tragain="'+topic+'">🔄 再抽一次</button></div>'}
   return '<div class="tr-slot" data-trslot="'+topic+'"><h4>'+T.ico+' '+T.name+'</h4><button class="tr-ball" type="button" data-trdraw="'+topic+'" aria-label="抽今天的'+T.name+'"><span>🔮</span></button><small>點水晶球，抽今天的<br>'+T.name+'</small></div>';
 }
 function trResult(topic){
@@ -4619,11 +4630,11 @@ function renderTarot(flipTopic){
   var b=$('oBody');if(!b||V.t!=='search'||V.i!==1||!TD)return;
   var st=tdState(),both=TD_KEYS.every(function(k){return !!st[k]}),sync=trSyncStatus();
   if(!TR_SHOW||!st[TR_SHOW])TR_SHOW=TD_KEYS.find(function(k){return !!st[k]})||'';
-  b.innerHTML=(sync==='pending'?'<p class="s-count">🔄 正在同步今日牌，已抽的牌可以先查看。</p>':sync==='error'?'<p class="s-count">⚠️ 暫時無法同步，已抽的牌仍可查看；請確認網路後重試。</p><button class="btn btn-ghost btn-sm" type="button" data-trretry>重新同步</button>':'')+'<p class="tr-intro">靜下心，想著你在意的事，再點水晶球。<b>六種運勢每天各可抽一張</b>，抽到的牌今天不會改變。</p>'+
+  b.innerHTML=(sync==='pending'?'<p class="s-count">🔄 正在同步今日牌，已抽的牌可以先查看。</p>':sync==='error'?'<p class="s-count">⚠️ 暫時無法同步，已抽的牌仍可查看；請確認網路後重試。</p><button class="btn btn-ghost btn-sm" type="button" data-trretry>重新同步</button>':'')+'<p class="tr-intro">靜下心，想著你在意的事，再點水晶球。<b>六種運勢各抽一張</b>，想換一張就按「🔄 再抽一次」，不限次數。</p>'+
     '<div class="tr-nav"><button type="button" class="btn btn-ghost btn-sm" data-trmove="-1" aria-label="前兩個運勢">←</button><span>左右滑動，查看六種運勢</span><button type="button" class="btn btn-ghost btn-sm" data-trmove="1" aria-label="後兩個運勢">→</button></div><div class="tr-grid">'+TD_KEYS.map(trSlot).join('')+'</div><div id="trRes">'+(TR_SHOW?trResult(TR_SHOW):'')+'</div>'+
-    '<p class="tr-note">'+(both?'今天的六張都抽完囉，明天 0 點可以再抽。':'')+'塔羅僅供娛樂與自我反思，重要的決定請以事實與專業意見為準。</p>';
+    '<p class="tr-note">'+(both?'六張都抽好了，想換一張就按「🔄 再抽一次」，不限次數。':'')+'塔羅僅供娛樂與自我反思，重要的決定請以事實與專業意見為準。</p>';
   var grid=b.querySelector('.tr-grid');grid.scrollLeft=TR_SCROLL;grid.addEventListener('scroll',function(){TR_SCROLL=grid.scrollLeft});
-  if(sync!=='ready')b.querySelectorAll('[data-trdraw]').forEach(function(btn){btn.disabled=true});
+  if(sync!=='ready')b.querySelectorAll('[data-trdraw],[data-tragain]').forEach(function(btn){btn.disabled=true});
   tdPaint();
   if(flipTopic){
     var el=b.querySelector('[data-trslot="'+flipTopic+'"] .tc');
@@ -4631,15 +4642,15 @@ function renderTarot(flipTopic){
     setTimeout(function(){var x=$('trRes');if(x)x.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'})},reduce?0:900);
   }
 }
-function trDraw(topic,btn){
+function trDraw(topic,btn,again){
   if(trSyncStatus()!=='ready')return;
-  if(tdState()[topic]){TR_SHOW=topic;renderTarot();return}
+  if(!again&&tdState()[topic]){TR_SHOW=topic;renderTarot();return}
   var slot=btn.closest('.tr-slot');btn.disabled=true;if(slot)slot.classList.add('shuffling');playSfx('chest');
   setTimeout(function(){
-    var st=tdState();if(st[topic]){renderTarot();return}
-    var r=tdPick(topic);
+    var st=tdState();if(!again&&st[topic]){renderTarot();return}
+    var r=tdPick(topic,again);
     if(!COINS.get().code){st[topic]=r;st.h.push({d:st.d,t:topic,id:r.id,rv:r.rev?1:0});if(st.h.length>40)st.h=st.h.slice(-40);try{localStorage.setItem(TD_KEY,JSON.stringify(st))}catch(e){} TR_SHOW=topic;renderTarot(topic);return}
-    tdSync(topic,r).then(function(){TR_SHOW=topic;if(V.t==='search'&&V.i===1)renderTarot(topic)})
+    tdSync(topic,r,again).then(function(){TR_SHOW=topic;if(V.t==='search'&&V.i===1)renderTarot(topic)})
       .catch(function(){if(V.t==='search'&&V.i===1){renderTarot();toast('⚠️ 同步失敗，請檢查網路再抽一次')}});
   },reduce?80:1100);
 }
@@ -4719,6 +4730,7 @@ pBody.addEventListener('click',function(e){
   if(d.trretry!=null){paintOTab();return}
   if(d.trmove){var g=pBody.querySelector('.tr-grid');if(g)g.scrollBy({left:Number(d.trmove)*g.clientWidth,behavior:reduce?'auto':'smooth'});return}
   if(d.trdraw){trDraw(d.trdraw,t);return}
+  if(d.tragain){trDraw(d.tragain,t,true);return}
   if(d.trshow){TR_SHOW=d.trshow;renderTarot();var x=$('trRes');if(x)x.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});return}
   if(d.trdict!=null){TR_C=+d.trdict;oTab(2);return}
   if(d.trcopy!=null){tdCopy();return}

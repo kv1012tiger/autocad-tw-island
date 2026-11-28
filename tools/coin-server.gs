@@ -55,7 +55,7 @@ var MR_HEAD = ['留言編號', '時間', '暱稱', '登島碼', '頭像', '內�
 var MI_HEAD = ['留言編號', '片', '內容'];
 var LK_HEAD = ['目標編號', '登島碼', '暱稱', '時間'];   // v76 按讚：一列一個讚（收回就清空那一列）；目標＝留言編號，或回覆的「留言編號_回覆時間毫秒」   // v59 留言圖片：JPEG base64 切成多片存在這個工作表（不用雲端硬碟授權）
 var R_HEAD = ['代號', '物資島', '日期', '今日總量', '已採集', '鑽石藏在第幾份', '已撿到鑽石'];
-var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容'];
+var N_HEAD = ['時間', '寄件海島編號', '寄件暱稱', '收件海島編號', '收件暱稱', '內容', '圖片'];   // v80 加「圖片」：悄悄話圖片編號（W 開頭，只有寄件人、收件人讀得到）
 var DAILY = 3;      // 第 1 天 3 枚、第 2 天 4 枚
 var DAILY_MAX = 5;  // 第 3 天起每天固定 5 枚
 var CAP = { online: 3, read: 6, qa: 9 };
@@ -348,7 +348,7 @@ var LOCK_WAIT = 15000;
 var LIKE_DAY = 100, LIKE_GAP = 2000;   // v76：按讚每天最多 100 次、兩次至少隔 2 秒（不算在留言額度）   // v75：等寫入鎖最多 15 秒
 var MSG_LEN = 300, MSG_DAY = 10, MSG_GAP = 60 * 1000, MSG_PAGE = 20;
 var MSG_IMG_MAX = 400000, MSG_IMG_CHUNK = 45000;   // v59 圖片 base64 上限（前台先縮到 1024px JPEG）；每格最多 45000 字（試算表一格上限 50000）
-var NOTE_LEN = 100, NOTE_DAY = 20;
+var NOTE_LEN = 300, NOTE_DAY = 20;   // v80 100 → 300 字，網址比較放得下
 
 /* ---------- 漂流寶物（隨機出現在各座島的金幣、鑽石）與每日任務 ---------- */
 var DROP_SLOT = 15 * 60 * 1000;   // 每 15 分鐘換一批
@@ -579,6 +579,7 @@ function handle_(q) {
   if (a === 'visall') return { ok: true, vs: visStats_() };
   if (a === 'msgs') return msgs_(q);
   if (a === 'mimg') return msgImg_(q);   // v59 讀留言圖片：只讀、不排隊等鎖
+  if (a === 'nimg') return noteImg_(q);  // v80 讀悄悄話圖片：要登島，而且只有寄件人、收件人讀得到
   if (a === 'anns') return anns_();
   if (a === 'voyage') return voyage_();
   if (a === 'drops') return dropsPub_();
@@ -1112,7 +1113,7 @@ function handle_(q) {
         var key= tk[ti], incoming=q[key];
         if (incoming != null) {
           if (typeof incoming!=='object' || !Number.isInteger(incoming.id) || incoming.id<0 || incoming.id>=78 || typeof incoming.rev!=='boolean') return {ok:false,err:'bad',p:me};
-          if (!ts[key]) ts[key]={id:incoming.id,rev:incoming.rev};
+          if (!ts[key] || String(q.redraw || '')===key) ts[key]={id:incoming.id,rev:incoming.rev};   // v80 再抽一次：指定的那張用新抽的蓋掉
         }
       }
       ot.tarot=ts; r[C.isle]=JSON.stringify(ot); res.tarot=ts;
@@ -1257,14 +1258,16 @@ function handle_(q) {
       sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], gfid, rows[jg][C.nick], '🎁 送你 5 個' + RES[gk].item]);
       res.friends = friendsOf_(rows, r);
     } else if (a === 'note') {
-      var jn = findFid_(rows, q.fid), txt = body_(q.text, NOTE_LEN);
-      if (jn < 0 || !txt) return { ok: false, err: 'bad', p: me };
+      var jn = findFid_(rows, q.fid), txt = body_(q.text, NOTE_LEN), nimg = String(q.img || ''), nimgId = '';
+      if (nimg && (nimg.length > MSG_IMG_MAX || !/^[A-Za-z0-9+\/]+=*$/.test(nimg))) return { ok: false, err: 'imgbad', p: me };
+      if (jn < 0 || (!txt && !nimg)) return { ok: false, err: 'bad', p: me };
       if (list_(r[C.friends]).indexOf(String(rows[jn][C.fid])) < 0) return { ok: false, err: 'notfriend', p: me };
       if (num_(r[C.noteN]) >= NOTE_DAY) return { ok: false, err: 'notemax', p: me };
       r[C.noteN] = num_(r[C.noteN]) + 1;
       rows[jn][C.unread] = num_(rows[jn][C.unread]) + 1;
       touched[jn] = 1;
-      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], rows[jn][C.fid], rows[jn][C.nick], txt]);
+      if (nimg) { nimgId = 'W' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 46656).toString(36).toUpperCase(); try { msgImgSave_(nimgId, nimg); } catch (nie) { return { ok: false, err: 'imgfail', p: me }; } }
+      sheet_('悄悄話', N_HEAD).appendRow([new Date(), r[C.fid], r[C.nick], rows[jn][C.fid], rows[jn][C.nick], txt, nimgId]);
     } else if (a === 'inbox') {
       res.inbox = inbox_(rows, String(r[C.fid]));
       r[C.unread] = 0;
@@ -1773,10 +1776,12 @@ function inbox_(rows, fid) {
   if (n < 1) return out;
   var from = Math.max(0, n - 1500), vals = sh.getRange(2 + from, 1, n - from, N_HEAD.length).getValues();
   for (var x = vals.length - 1; x >= 0 && out.length < 30; x--) {
-    var v = vals[x];
-    if (String(v[3]) !== fid) continue;
-    var j = findFid_(rows, v[1]);
-    out.push({ t: fmt_(v[0]), fid: String(v[1]), nick: j >= 0 ? plain_(rows[j][C.nick]) : plain_(v[2]), av: j >= 0 ? plain_(rows[j][C.av]) : '', text: plain_(v[5]) });
+    var v = vals[x], mine = String(v[1]) === fid;   // v80 自己傳出的也列出來（mine:1），看得到自己回了什麼
+    if (String(v[3]) !== fid && !mine) continue;
+    var ofid = String(mine ? v[3] : v[1]), j = findFid_(rows, ofid), o = { t: fmt_(v[0]), fid: ofid, nick: j >= 0 ? plain_(rows[j][C.nick]) : plain_(mine ? v[4] : v[2]), av: j >= 0 ? plain_(rows[j][C.av]) : '', text: plain_(v[5]) };
+    if (mine) o.mine = 1;
+    if (v[6]) o.img = String(v[6]);
+    out.push(o);
   }
   return out;
 }
@@ -1828,6 +1833,22 @@ function msgImgMap_() {
 function msgImg_(q) {
   var mid = String(q.id || '');
   if (!/^M[0-9A-Z]{4,20}$/.test(mid)) return { ok: false, err: 'bad' };
+  return imgB64_(mid);
+}
+function noteImg_(q) {
+  var mid = String(q.id || '');
+  if (!/^W[0-9A-Z]{4,20}$/.test(mid)) return { ok: false, err: 'bad' };
+  var pr = rows_(players_()), pi = find_(pr, q.code);
+  if (pi < 0) return { ok: false, err: 'nocode' };
+  var fid = String(pr[pi][C.fid] || ''), sh = sheet_('悄悄話', N_HEAD), n = sh.getLastRow() - 1, ok = false;
+  if (n > 0 && fid) {
+    var from = Math.max(0, n - 3000), vals = sh.getRange(2 + from, 1, n - from, N_HEAD.length).getValues();
+    for (var x = vals.length - 1; x >= 0; x--) if (String(vals[x][6]) === mid) { ok = String(vals[x][1]) === fid || String(vals[x][3]) === fid; break; }
+  }
+  if (!ok) return { ok: false, err: 'noimg' };
+  return imgB64_(mid);
+}
+function imgB64_(mid) {
   var sh = sheet_('留言圖片', MI_HEAD), rows = msgImgRows_(sh, mid);
   if (!rows.length) return { ok: false, err: 'noimg' };
   rows.sort(function (a, b) { return a.part - b.part; });
