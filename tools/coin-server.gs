@@ -2450,7 +2450,7 @@ function msgsBuild_(admin, prefix) {
       if (!v[6] && st !== '隱藏' && String(v[3]) !== 'SYSTEM') pending++;   // 官方自動喜報不算待回覆
       var who = String(v[3]).toUpperCase();
       list.push({ id: String(v[0]), t: fmt_(v[1]), nick: plain_(v[2]), av: avOf[who] || plain_(v[4]), text: plain_(v[5]),
-        reply: plain_(v[6]), rt: fmt_(v[7]), re: fmt_(v[8]), hidden: st === '隱藏', w: who, imgs: idList_(v[10]), ed: fmt_(v[11]) });
+        reply: plain_(v[6]), rt: fmt_(v[7]), re: fmt_(v[8]), hidden: st === '隱藏', w: who, imgs: idList_(v[10]), ed: String(v[3]) === 'SYSTEM' ? '' : fmt_(v[11]) });   // v86 官方公告（SYSTEM）不顯示「已編輯」
     }
   }
   var replySheet = sheet_('留言回覆', MR_HEAD), replyCount = replySheet.getLastRow() - 1, byParent = {};
