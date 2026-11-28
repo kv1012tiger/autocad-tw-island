@@ -1123,6 +1123,25 @@ button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .mi-sea{position:relative;margin:12px 0 6px;padding-bottom:112px;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 100%,#1f8fbf,#0b4f78 75%)}
 .mi-scene{position:relative;height:540px;margin:0}
 @media (max-width:560px){.mi-scene{height:680px}}   /* 手機版島加長：直向空間多，東西不擠 */
+/* v82 擴地：島越擴越高（手機、電腦都一樣往下長），原本的東西相對位置不變 */
+.mi-scene.xl2{height:700px}.mi-scene.xl3{height:860px}.mi-scene.xl4{height:1060px}
+@media (max-width:560px){.mi-scene.xl2{height:880px}.mi-scene.xl3{height:1080px}.mi-scene.xl4{height:1340px}}
+.mi-fac{font-size:42px;cursor:pointer}.mi-fac.full .mi-fr b{background:#16a34a}.mi-fac .mi-lv{font-size:10px}
+.mi-gd{font-size:26px;pointer-events:none}
+.mi-bd .mi-lock{margin-top:4px;font-size:12px;font-weight:800;color:#92400e}
+/* v83 釣魚、料理、工作室、神獸區、紀念碑、異色／覺醒 */
+.fz-bar{position:relative;height:26px;margin:8px 0;border-radius:13px;background:linear-gradient(90deg,#bae6fd,#38bdf8);overflow:hidden}
+.fz-bar .fz-hit{position:absolute;left:38%;width:24%;top:0;bottom:0;background:rgba(34,197,94,.55);border-left:2px solid #15803d;border-right:2px solid #15803d}
+.fz-bar .fz-m{position:absolute;top:2px;left:0;width:22px;height:22px;margin-left:-11px;font-size:18px;line-height:22px;text-align:center;animation:fzMove 1.5s ease-in-out infinite alternate}
+@keyframes fzMove{from{left:4%}to{left:96%}}
+.cx-g{display:grid;grid-template-columns:auto repeat(5,1fr);gap:4px;align-items:center;font-size:12px;text-align:center}
+.cx-g .cx{padding:6px 0;border-radius:8px;background:#e5e7eb;font-size:20px;filter:grayscale(1);opacity:.45}.cx-g .cx.on{background:#fef3c7;filter:none;opacity:1}
+.cx-g .cx.sh.on{background:linear-gradient(135deg,#fde68a,#f9a8d4,#a5b4fc)}.cx-g b{font-size:11px}
+.mi-chk{display:grid;gap:4px;font-size:13px}.mi-chk span.ok{color:#15803d;font-weight:800}
+.mi-mon{font-size:34px;pointer-events:none}
+.mi-pet.shn .sv,.mi-pet.shn u{filter:hue-rotate(150deg) saturate(1.5) drop-shadow(0 0 6px #f0abfc)}
+.mi-pet.aw .sv{filter:drop-shadow(0 0 6px #fde047) drop-shadow(0 0 14px #f59e0b)}
+.tw-st{font-size:13px;margin:4px 0}.tw-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 /* 五行神殿：島的右上角，擁有哪一種神獸就點亮那顆光球；沒有神獸時整座是灰暗的石頭，五種到齊整座發金光 */
 .mi-temple{position:absolute;left:75%;top:7%;width:150px;margin-left:-75px;text-align:center;line-height:1;pointer-events:none;z-index:1}
 .mi-temple svg{display:block;width:150px;height:auto;overflow:visible;filter:drop-shadow(0 6px 5px rgba(0,0,0,.35))}
@@ -2383,10 +2402,10 @@ $('logBtn').addEventListener('click',openLog);
 $('logClose').addEventListener('click',closeLog);
 var gb=$('guideBox'),gbT;
 /* 進場第一則泡泡：新增神獸試煉島（點了直接去試煉島）；收起後恢復原本的金幣提示 */
-var GB_ANN='🐲 新島開放：神獸試煉島！過關拿碎片，湊齊頭、身、腳召喚五行神獸 ⛩️ 點亮你小島的五行神殿 👉',gbAnn=false;
+var GB_ANN='🆕 新玩法上線！我的小島可以擴地，蓋伐木場、採石場、鍛鐵爐、倉庫、釣魚碼頭、料理小屋、CAD 繪圖工作室；五行神殿升級開放神獸圖鑑、技能、五行塔、覺醒 👉 點我到留言碼頭看細節',gbAnn=false;
 function gbClose(){gb.hidden=true;if(gbAnn){gbAnn=false;refresh()}}
 function showGuide(ann){gbAnn=!!ann;if(gbAnn)$('guideTxt').textContent=GB_ANN;gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(gbClose,gbAnn?12000:9000)}
-gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#trial'});
+gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#msg'});
 
 /* ---------- 島上場景：每間小屋是一個子版區 ---------- */
 var scene=$('scene'),land=$('land'),SCN=null;
@@ -3421,7 +3440,7 @@ window.AIKB_GACHA={
 };
 /* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
 function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
-(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now())}catch(x){}return}location.hash='gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
+(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now());localStorage.setItem('aikb-bn-new83','1')}catch(x){}return}location.hash=e.target.closest('[data-bnann]')?'msg':'gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
   var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null;GA.err=false}
   if(GA.left==null&&code)GA.left=gaLeftCached();
@@ -3446,9 +3465,39 @@ window.AIKB_TRIAL={
 function renderTrial(){
   pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳召喚五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="trF" src="assets/bet/trial.html?v='+TRIAL_V+'" title="神獸試煉島" scrolling="no"></iframe>'+
+    '<div class="p-sec" id="twBox"><h4>🏯 五行塔</h4><p class="mi-note">載入中…</p></div>'+
     '<div class="p-sec"><h4>📖 規則</h4><p>⚔️ 指令快問快答 8 題：答對 5 題起有機會掉神獸碎片（5 題 30%、7 題 60%、全對 100%，每天最多 5 片），還送 🍑 神獸果（5 題 1 顆、全對 2 顆，每天最多 5 顆）。擁有的神獸種類愈多，題目愈難（5 種難度，同一種重複不算）。<br>🔮 同一隻神獸的頭、身、腳各一片就能召喚，成功率 40%，失敗一次 +20%，最多失敗 3 次必成功。<br>⭐ 每隻神獸有個體值 IV（0～31），IV 和等級決定 HP；同一種只有 IV 最高的住小島，其他放收藏，可以換上小島、送好友或換資源（IV 愈高換愈多）。<br>🍑 神獸果只有神獸能吃，親密度 +5，每隻每天 2 顆；也可以從扭蛋島（5%）、拉霸（每轉 8%，每天最多 3 顆）拿到。</p></div>';
   $('pStep').textContent='🐲 神獸試煉島';footSimple('← 回地圖','');pNext.hidden=true;
+  twLoad();
 }
+/* v83 五行塔：每週一重置 30 層、每 5 層魔王；神殿 Lv3 才能挑戰（沒到的人點了會提示去升級神殿） */
+var TW={d:null,busy:false};
+function twPaint(){
+  var b=$('twBox');if(!b||V.t!=='trial')return;var d=TW.d,w=COINS.get();
+  var head='<h4>🏯 五行塔</h4><p class="mi-note">帶一隻神獸往上爬，每層守著一隻屬性隨機的守衛神獸，每 5 層一個魔王。勝率看你的神獸戰力（IV、等級、覺醒）和五行相剋：💧水剋🔥火、🔥火剋⚙️金、⚙️金剋🌿木、🌿木剋⛰️土、⛰️土剋💧水。每過一層拿 🪙，打倒魔王再送 🍑 ×2；輸了當天就不能再爬，隔天從那層繼續；每週一重置。</p>';
+  if(!w.code){b.innerHTML=head+'<button class="btn btn-primary btn-sm" type="button" data-twlogin>⚓ 登島後挑戰</button>';return}
+  if(!d){b.innerHTML=head+'<p class="mi-note">載入中…</p>';return}
+  if((d.tl||1)<3){b.innerHTML=head+'<p class="mi-note">🔒 你的五行神殿是 Lv'+(d.tl||1)+'，要升到 <b>Lv3</b> 才能挑戰五行塔。</p><button class="btn btn-primary btn-sm need" type="button" data-twlock>🏯 挑戰五行塔</button>';return}
+  var T=d.tw||{},g=T.next,bp=d.pets.filter(function(p){return PV_BEAST[p.k]});
+  var o=head+'<p class="tw-st">本週已爬到第 <b>'+(T.fl||0)+'</b> / '+((d.rules&&d.rules.twFloors)||30)+' 層・最高紀錄 '+(T.top||0)+' 層'+(T.lost?'・<b style="color:#b91c1c">今天輸了，明天再來</b>':'')+'</p>';
+  if(g)o+='<p class="tw-st">下一層：第 '+g.fl+' 層'+(g.boss?' 👹 魔王':'')+'・守衛 '+ELN[g.el][0]+' '+ELN[g.el][1]+'屬性・戰力 '+g.pw+'</p>';else o+='<p class="tw-st">🎉 這週已經爬到塔頂了！</p>';
+  if(!bp.length)o+='<p class="mi-note">你的小島上還沒有神獸，先到上面試煉，或到 🎁 扭蛋島抽一隻。</p>';
+  else if(g&&!T.lost)o+='<div class="tw-b">'+bp.map(function(p){var c=(d.twChance||{})[p.id]||{};return '<button class="btn btn-primary btn-sm" type="button" data-tw="'+esc(p.id)+'">⚔️ '+(ANI[p.k]||['🐲'])[0]+' '+(p.aw?'覺醒':'')+esc(p.n)+'（戰力 '+(c.pw||'?')+'・勝率 '+(c.p||'?')+'%）</button>'}).join('')+'</div>';
+  b.innerHTML=o;
+}
+function twLoad(){TW.d=null;twPaint();if(!COINS.get().code)return;COINS.api({a:'island'}).then(function(j){if(j&&j.ok&&j.island){TW.d=j.island;if(!MI.fid)miCachePut(j.island)}twPaint()}).catch(function(){var b=$('twBox');if(b)b.innerHTML='<h4>🏯 五行塔</h4><p class="mi-note">⚠️ 暫時連不上，請稍後再試</p>'})}
+pBody.addEventListener('click',function(e){
+  if(V.t!=='trial')return;var t=e.target.closest('[data-tw],[data-twlock],[data-twlogin]');if(!t)return;
+  if(t.dataset.twlogin!=null){COINS.need(function(){twLoad()});return}
+  if(t.dataset.twlock!=null){toast('⛩️ 五行神殿要升到 Lv3 才能挑戰五行塔，先到 🏝️ 我的小島升級神殿');return}
+  if(TW.busy)return;TW.busy=true;t.disabled=true;
+  COINS.api({a:'tower',id:t.dataset.tw}).then(function(j){TW.busy=false;
+    if(!j||!j.ok){toast('⚠️ '+COINS.errText(j));twLoad();return}
+    var r=j.tw;if(j.island)TW.d=j.island;
+    if(r.win){fxAt(t,['⚔️','🎉','🪙','✨']);playSfx('chest');toast('🏯 第 '+r.g.fl+' 層過關！🪙 +'+((j.got||{}).n||0)+((j.got||{}).bfruit?'・打倒魔王 🍑 ×'+j.got.bfruit:''))}
+    else{fxAt(t,['💥','😵']);toast('💥 第 '+r.g.fl+' 層落敗（勝率 '+r.p+'%），明天再來挑戰')}
+    twPaint()}).catch(function(){TW.busy=false;toast('⚠️ 暫時連不上，請稍後再試');twLoad()});
+});
 function betDraw(k){var f=$('betF');if(!f||V.t!==k)return;try{if(f.contentWindow&&f.contentWindow.betSync)f.contentWindow.betSync()}catch(e){}}
 window.AIKB_BET={
   state:function(k){var w=COINS.get(),s=BET[k];return {login:!!w.code,coins:w.bal||0,dia:w.dia||0,left:s.left,streak:k==='rps'?(s.rs||0):null,pending:!!s.pending,pendingChoice:s.pending?s.pending.choice:'',sfx:SFX_ON}},
@@ -3748,6 +3797,9 @@ function wipHTML(d){
   Object.keys(d.bb||{}).forEach(function(k){
     if(k==='field')rows.push([k,'🟫','菜田 第 '+(d.fields+1)+' 塊',FM[d.fields]||60000]);
     else if(k==='tree')rows.push([k,'🌳','果樹 第 '+((d.trees||[]).length+1)+' 棵',DM.tree||120000]);
+    else if(k==='land'){var lt=(d.bt&&d.bt[k])||2;rows.push([k,'🏝️','擴地 Lv'+lt,(R.landMs||[])[lt]||60000])}
+    else if(k==='temple'){var tt0=(d.bt&&d.bt[k])||2;rows.push([k,'⛩️','五行神殿 Lv'+tt0,(R.templeMs||[])[tt0]||60000])}
+    else if(FACI[k]){var ft=(d.bt&&d.bt[k])||1;rows.push([k,FACI[k][0],FACI[k][1]+' Lv'+ft,(R.facMs||[])[ft]||60000])}
     else if(DECOI[k]){var tg=(d.bt&&d.bt[k])||1,mu=R.upMult||[1,1.6,3];rows.push([k,DECOI[k][0],DECOI[k][1]+' Lv'+tg,Math.round((DM[k]||300000)*mu[tg-1])])}
   });
   return '<div class="mi-wip"><h4>🚧 施工中・完工倒數</h4>'+rows.map(function(r){
@@ -3768,7 +3820,9 @@ function bmin(ms){return Math.max(1,Math.round(ms/60000))}
 /* 施工倒數（小屋、菜田、裝飾）：每秒更新數字；任何一項時間到就重新讀一次小島（後台會把它蓋好） */
 function hbTick(){
   if(V.t!=='mine'){clearInterval(MI.hbT);return}
-  var d=MI.data;if(!d||!bAny(d))return;
+  var d=MI.data;
+  if(d&&d.mine&&!MI.hbLoad&&((d.ck&&d.ck.left-(Date.now()-MI.at)<=0)||(d.job&&d.job.left>0&&d.job.left-(Date.now()-MI.at)<=0))){MI.hbLoad=1;loadMine(true);setTimeout(function(){MI.hbLoad=0},4000);return}   /* v83 料理煮好、案子畫完：重新讀一次 */
+  if(!d||!bAny(d))return;
   var done=false;
   document.querySelectorAll('.mi-hbt').forEach(function(e){var k=e.getAttribute('data-k')||'house';e.textContent=bText(d,k);if(bLeft(d,k)<=0)done=true});
   document.querySelectorAll('.mi-wb').forEach(function(e){var k=e.getAttribute('data-k'),t=+e.getAttribute('data-t')||1;e.style.width=Math.max(0,Math.min(100,(1-bLeft(d,k)/t)*100)).toFixed(1)+'%'});
@@ -3779,10 +3833,28 @@ function costHTML(cost){var w=COINS.get(),b=w.bag||{};return Object.keys(cost).m
 var COSTN={fruit:'水果',iron:'鐵礦',wood:'木材',stone:'石頭',dia:'鑽石'};
 function missOf(cost){var w=COINS.get(),b=w.bag||{},m={};Object.keys(cost).forEach(function(k){var have=k==='dia'?(w.dia||0):(b[k]||0);if(have<cost[k])m[k]=cost[k]-have});return m}
 function missText(m){return Object.keys(m).map(function(k){return COSTI[k]+' '+COSTN[k]+' ×'+m[k]}).join('、')}
+/* v82 生產設施、花園裝飾 */
+var FACI={lumber:['🪚','伐木場','🪵','wood'],quarry:['⛏️','採石場','🪨','stone'],forge:['⚒️','鍛鐵爐','🔩','iron'],depot:['📦','倉庫','','']};
+var FAC_POS={lumber:[20,72],quarry:[72,74],forge:[46,88],depot:[74,40],fish:[12,92],kitchen:[34,44],studio:[64,46]};
+FACI.fish=['🎣','釣魚碼頭','',''];FACI.kitchen=['🍳','料理小屋','',''];FACI.studio=['📐','CAD 繪圖工作室','',''];
+var DISHI={pie:'🥧',salad:'🥗',soup:'🍲',grill:'🍤',feast:'🍱'},NEEDI={fruit:['🍎','水果'],carrot:['🥕','胡蘿蔔'],cabbage:['🥬','高麗菜'],pumpkin:['🎃','南瓜'],fish:['🐟','魚'],bfruit:['🍑','神獸果']};
+var ELN={water:['💧','水'],fire:['🔥','火'],wood:['🌿','木'],metal:['⚙️','金'],earth:['⛰️','土']},BEAST_OF={water:'dragon',fire:'phoenix',wood:'qilin',metal:'tiger',earth:'tortoise'};
+var TEMPLE_ABOUT=[null,'📖 神獸圖鑑','🧬 神獸技能','🏯 五行塔（在 🐲 神獸試煉島）','🔥 神獸覺醒'];
+function foodPlus(fd){var R=MI.data&&MI.data.rules||{};return fd==='fruit'?10:fd==='fish'?(R.fishFood||45):/^d_/.test(fd)?((R.dish||{})[fd.slice(2)]||{}).food||50:VEGI[fd][5]}
+function foodEm(fd){return fd==='fruit'?'🍎':fd==='fish'?'🐟':/^d_/.test(fd)?DISHI[fd.slice(2)]||'🍽️':VEGI[fd][0]}
+var GDI={flower:'🌷',sunflower:'🌻',lantern:'🏮',bench:'🪑',flag:'🚩',mailbox:'📮',parasol:'⛱️',statue:'🗿'};
+var GD_POS=[[30,62],[64,60],[8,48],[92,58],[36,94],[70,88],[22,30],[60,30]];
+function facView(d,k){var f=d.fac&&d.fac[k];if(!f||f.n==null)return null;var el=Date.now()-MI.at,n=f.n,per=f.per||3600000,nx=f.nx||0;
+  if(n<f.cap&&nx>0&&el>=nx)n=Math.min(f.cap,n+1+Math.floor((el-nx)/per));
+  return {n:n,cap:f.cap,nx:n>=f.cap?0:el<nx?nx-el:per-((el-nx)%per)}}
 function decoLv(d,k){return (d.dl&&d.dl[k])||(d.deco.indexOf(k)>=0?1:0)}
 function buildCost(k){var d=MI.data,R=d&&d.rules;if(!R)return null;if(k==='house')return R.house[d.h+1];if(k==='field')return R.field[d.fields];
   if(k==='tree')return (R.treeCost||[])[(d.trees||[]).length]||null;
   if(R.up&&R.up[k])return R.up[k][decoLv(d,k)+1]||null;
+  if(k==='land')return (R.land||[])[(d.xl||1)+1]||null;
+  if(k==='temple')return (R.temple||[])[(d.tl||1)+1]||null;
+  if(/^g_/.test(k))return R.garden&&R.garden[k.slice(2)]?R.garden[k.slice(2)].cost:null;
+  if(R.fac&&R.fac[k])return R.fac[k].cost[(((d.fac||{})[k]||{}).lv||0)+1]||null;
   return R.deco[k]?R.deco[k].cost:null}
 function costOK(cost){var w=COINS.get(),b=w.bag||{};for(var k in cost){var have=k==='dia'?(w.dia||0):(b[k]||0);if(have<cost[k])return false}return true}
 function renderMine(fid){
@@ -3858,10 +3930,10 @@ function templeHTML(d){
   o+='</g>';
   TEMPLE_EL.forEach(function(e,i){var x=19+i*28,on=have[e[0]];
     o+='<path d="M'+(x-5)+' 116h10v8h-10z" fill="'+(gold?'#c9a24a':'#7b8189')+'"/><circle class="orb'+(on?' on':'')+'" style="--oc:'+e[1]+'" cx="'+x+'" cy="111" r="6"/>'});
-  return '<div class="mi-temple'+(n?'':' dim')+(gold?' full':'')+'" title="五行神殿：取得神獸就會點亮對應的光球">'+o+'</svg><em>⛩️ 五行神殿 '+n+' / 5</em></div>';
+  return '<div class="mi-temple'+(n?'':' dim')+(gold?' full':'')+'" title="五行神殿：取得神獸就會點亮對應的光球">'+o+'</svg><em>⛩️ 五行神殿'+((d.tl||1)>1?' Lv'+d.tl:'')+' '+n+' / 5</em></div>';
 }
 function sceneHTML(d){
-  var t=3,o='<div class="mi-sea"><div class="mi-scene"><div class="mi-land t3"></div>';   /* 陸地一律是整片大陸地（不再依等級由小變大） */
+  var t=3,o='<div class="mi-sea"><div class="mi-scene xl'+(d.xl||1)+'"><div class="mi-land t3"></div>';   /* 陸地一律是整片大陸地（不再依等級由小變大） */
   if(t>=1)o+='<span class="mi-sc" style="left:20%;top:80%;font-size:20px">🌼</span><span class="mi-sc" style="left:70%;top:82%;font-size:18px">🌿</span>';
   if(t>=2)o+='<span class="mi-sc" style="left:40%;top:76%;font-size:22px">🌸</span><span class="mi-sc" style="left:79%;top:66%;font-size:26px">🪨</span>';
   if(t>=3)o+='<span class="mi-sc" style="left:88%;top:46%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
@@ -3870,15 +3942,20 @@ function sceneHTML(d){
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
   var dp={tower:[52,8],fountain:[14,54]},dl=d.dl||{};   /* 瞭望塔在小屋右上、噴水池在小屋正下方，都緊靠小屋 */
   d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(8,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" data-dfx="'+k+'" data-lv="'+lv+'" role="button" aria-label="'+DECOI[k][1]+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,lv-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
+  Object.keys(d.fac||{}).forEach(function(k){var I=FACI[k],f=d.fac[k];if(!I||!f)return;var pp=FAC_POS[k],v=I[2]&&d.mine?facView(d,k):null;   /* v82 生產設施：有產出就點一下收 */
+    o+='<span class="mi-deco mi-fac'+(v&&v.n>=v.cap?' full':'')+'"'+(v&&v.n?' data-collect="'+k+'" role="button" aria-label="收'+I[1]+'的'+COSTN[I[3]]+'"':'')+' style="left:'+pp[0]+'%;top:'+pp[1]+'%">'+I[0]+(v&&v.n?'<i class="mi-fr">'+I[2]+'<b>'+v.n+'</b></i>':'')+'<em class="mi-lv l'+Math.min(8,f.lv)+'">'+I[1]+' Lv'+f.lv+'</em></span>'});
+  var mn0=(d.mon||[]).filter(function(m){return m[2]}).length;   /* v83 榮譽紀念碑：成就越多越大 */
+  if(mn0)o+='<span class="mi-deco mi-mon" style="left:8%;top:28%;font-size:'+(28+mn0*4)+'px">🏆'+(mn0>=5?'<i class="mi-spk" style="left:-6px;top:0">✨</i>':'')+(mn0>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+Math.min(8,mn0)+'">紀念碑 '+mn0+'</em></span>';
+  (d.gd||[]).forEach(function(g,i){var pp=GD_POS[i%GD_POS.length];o+='<span class="mi-deco mi-gd" style="left:'+pp[0]+'%;top:'+pp[1]+'%">'+(GDI[g]||'🌸')+'</span>'});
   (d.trees||[]).forEach(function(t,i){
     var v=treeView(t,d),pp=TREE_POS[i%TREE_POS.length];
     o+='<span class="mi-deco mi-fruit" data-ti="'+i+'"'+(v.ripe>0&&d.mine?' data-pick="'+i+'" role="button" aria-label="摘取第 '+(i+1)+' 棵果樹"':'')+' style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(v.st===0?26:v.st===1?36:46)+'px">'+(v.st===0?'🌱':'🌳')+(v.ripe>0?'<i class="mi-fr">🍎<b>'+v.ripe+'</b></i>':'')+'</span>';
   });
   (d.wild||[]).forEach(function(w){var stage=w.stage==null?2:w.stage,ready=stage===2&&(w.count||0)<2;o+='<span class="mi-wild" data-wk="'+esc(w.id)+'"'+(d.mine&&ready?' data-chop="'+esc(w.id)+'" role="button" aria-label="採收木材"':'')+' style="left:'+w.x+'%;top:'+w.y+'%;font-size:'+(stage===0?22:stage===1?30:39)+'px">'+(stage===0?'🌱':stage===1?'🌿':'🌲')+'</span>'});
-  Object.keys(d.bb||{}).forEach(function(k){var pp=k==='tree'?TREE_POS[(d.trees||[]).length%TREE_POS.length]:dp[k];if(pp)o+='<span class="mi-deco bld" style="left:'+pp[0]+'%;top:'+pp[1]+'%">🚧</span>'});
+  Object.keys(d.bb||{}).forEach(function(k){var pp=k==='tree'?TREE_POS[(d.trees||[]).length%TREE_POS.length]:dp[k]||(FAC_POS[k]&&!(d.fac||{})[k]?FAC_POS[k]:null);if(pp)o+='<span class="mi-deco bld" style="left:'+pp[0]+'%;top:'+pp[1]+'%">🚧</span>'});
   o+=d.pets.map(function(p,i){if(p.home)return '';var a=ANI[p.k]||['🐾',''],st=petStageP(p),bx=PV_BEAST[p.k],w=Math.round(PV_SIZE[st]*(bx?BEAST_SCALE:1)),h=Math.round(w*64/84);
-    return '<span class="mi-pet'+(st===3?' lgd':'')+(bx?' el-'+bx:'')+'" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" data-mpet="'+esc(p.id||'')+'" data-k="'+esc(p.k)+'" data-st="'+st+'" role="button" aria-label="'+esc(p.n)+'" style="'+(st?'margin:'+(-h/2)+'px 0 0 '+(-w/2)+'px':'font-size:'+(32+Math.min(4,p.lv-1)*4)+'px')+'">'+
-      '<i class="'+(st?'sv':'')+'">'+(st?petArt(p.k,st):'<u>'+a[0]+'</u>')+'</i>'+(st?'<span class="psh"></span>':'')+'<em'+(bx?' class="bst"':'')+'>'+(bx?'✨':'')+esc(p.n)+'</em><span class="zz">💤</span></span>'}).join('');
+    return '<span class="mi-pet'+(st===3?' lgd':'')+(bx?' el-'+bx:'')+(p.sh?' shn':'')+(p.aw?' aw':'')+'" data-pid="'+esc((MI.fid||'me')+':'+(p.id||('i'+i)))+'" data-mpet="'+esc(p.id||'')+'" data-k="'+esc(p.k)+'" data-st="'+st+'" role="button" aria-label="'+esc(p.n)+'" style="'+(st?'margin:'+(-h/2)+'px 0 0 '+(-w/2)+'px':'font-size:'+(32+Math.min(4,p.lv-1)*4)+'px')+'">'+
+      '<i class="'+(st?'sv':'')+'">'+(st?petArt(p.k,st):'<u>'+a[0]+'</u>')+'</i>'+(st?'<span class="psh"></span>':'')+'<em'+(bx?' class="bst"':'')+'>'+(bx?'✨':'')+(p.aw?'覺醒':'')+esc(p.n)+'</em><span class="zz">💤</span></span>'}).join('');
   if(!d.h&&!d.fields&&!d.deco.length&&!(d.trees||[]).length&&!d.pets.length)o+='<p class="mi-empty">'+(d.mine?'這座島還是一片空地，先用 🪵 木材和 🪨 石頭蓋一間小屋吧！':'這座島還是一片空地')+'</p>';
   var sh=(d.ships||[]).filter(function(x){return x.k===d.shipCur})[0];
   return o+'</div><div class="mi-dock" aria-hidden="true"></div><div class="mi-ship">'+shipSVG(d.shipCur||0)+'<em>'+esc(sh?sh.n:'小船')+'</em></div><button class="mi-zoom" type="button" data-mzoom aria-label="放大看小島">🔍 放大</button></div>';
@@ -3933,7 +4010,7 @@ function miZoom(){
   function up(e){var had=ptrs[e.pointerId];delete ptrs[e.pointerId];var left=Object.keys(ptrs).length;if(left<2)pinch=null;
     if(left===1){var id=Object.keys(ptrs)[0];drag={x:ptrs[id].x,y:ptrs[id].y,sx:st.x,sy:st.y}}
     if(!left&&had&&!moved&&MZ){   /* 點到寵物、果樹、菜田、木材或泡泡按鈕：轉給真正的小島 */
-      var hit=document.elementFromPoint(e.clientX,e.clientY),tg=hit&&MZ.cl.contains(hit)&&hit.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop]');
+      var hit=document.elementFromPoint(e.clientX,e.clientY),tg=hit&&MZ.cl.contains(hit)&&hit.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-collect]');
       if(tg&&MZ.cl.contains(tg)){var real=mzAt(MZ.src,mzPath(MZ.cl,tg));if(real){lastTap=0;real.click();drag=null;return}}
       if(PW.sel&&!(hit&&hit.closest('.pbub'))){petBubClose()}}
     if(!left&&had&&!moved){var now=Date.now();if(now-lastTap<320){lastTap=0;zoomAt(st.s>1.2?1:2.5,e.clientX,e.clientY)}else lastTap=now}
@@ -4040,6 +4117,8 @@ function pwTick(t){
 function petBubHTML(p){
   var d=MI.data,w=COINS.get(),fruit=(w.bag||{}).fruit||0,st=petStageP(p),nx=[2,3,5].filter(function(l){return l>p.lv&&petStage(l)>st})[0],fa=p.fa||0;
   var F=VEG_KEYS.map(function(k){return [k,VEGI[k][0],VEGI[k][1],d.veg[k]||0]}).concat([['fruit','🍎','水果',fruit]]);
+  if(d.fish)F.push(['fish','🐟','魚',d.fish]);   /* v83 魚、料理 */
+  Object.keys(d.dish||{}).forEach(function(k){if(d.dish[k]>0&&(!(d.rules&&d.rules.dish&&d.rules.dish[k].beast)||PV_BEAST[p.k]))F.push(['d_'+k,DISHI[k],(d.rules&&d.rules.dish?d.rules.dish[k].name:k),d.dish[k]])});
   return '<button class="pbx" type="button" data-pbx aria-label="關閉">×</button><b>'+(ANI[p.k]||['🐾'])[0]+' '+esc(p.n)+'</b> <span style="color:#8a6a2a">Lv'+p.lv+'・'+PV_STN[st]+'</span>'+
     '<div class="prow"><span>飽足度 '+p.full+(p.full<50?' 😟 餓了':'')+'</span><span>'+(p.patted?'✋ 今天摸過了':'✋ 點牠摸摸')+'</span></div><div class="pbar"><i style="width:'+p.full+'%"></i></div>'+
     '<div class="prow"><span>親密度 '+p.aff+'（'+(p.aff%10)+' / 10）</span><span>餵食加親密 '+Math.min(2,fa)+' / 2</span></div><div class="pbar af"><i style="width:'+(p.aff%10)*10+'%"></i></div>'+
@@ -4111,8 +4190,68 @@ function paintMine(){
     if(lv>=MX){B.push({e:DECOI[k][0],n:x.name+' Lv'+MX,t:'已經升到最高級・島主分 +'+PT[MX],done:1});return}
     B.push({k:k,e:DECOI[k][0],n:lv?x.name+' Lv'+lv+' → Lv'+tg:x.name,t:(lv?'升級':'裝飾')+'・島主分 +'+PT[tg]+(lv?'（現在 +'+PT[lv]+'）':'')+'・施工要 '+bmin(Math.round(DMS[k]*MU[tg-1]))+' 分鐘',cost:UP?UP[tg]:x.cost,bt:lv?'⬆️ 升級':'🔨 建造'});
   });
+  /* v82 擴地、五行神殿、生產設施 */
+  var xl=d.xl||1,RL=R.land||[],RF=R.fac||{},RT=R.temple||[],tl=d.tl||1;
+  if(RL.length){
+    if(d.bb&&d.bb.land!=null)B.push({e:'🚧',n:'擴地 Lv'+(xl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="land">'+bText(d,'land')+'</b> 才會完工',done:1});
+    else if(xl<RL.length-1){var op=Object.keys(RF).filter(function(k){return RF[k].xl===xl+1}).map(function(k){return FACI[k][0]+' '+RF[k].name});
+      B.push({k:'land',e:'🏝️',n:'擴地 Lv'+xl+' → Lv'+(xl+1),t:'陸地變大・'+(op.length?'開放 '+op.join('、'):'更大的空地（📐 CAD 繪圖工作室之後開放）')+'・島主分 +20・施工要 '+leftText(R.landMs[xl+1]),cost:RL[xl+1],bt:'⬆️ 擴地'})}
+    else B.push({e:'🏝️',n:'擴地 Lv'+xl,t:'已經擴到最大了',done:1});
+  }
+  if(RT.length){
+    if(d.bb&&d.bb.temple!=null)B.push({e:'🚧',n:'五行神殿 Lv'+(tl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="temple">'+bText(d,'temple')+'</b> 才會完工',done:1});
+    else if(tl<RT.length-1){var nd=R.templeNeed[tl+1];
+      B.push({k:'temple',e:'⛩️',n:'五行神殿 Lv'+tl+' → Lv'+(tl+1),t:'之後開放 '+R.templeOpen[tl+1]+'・需要 '+nd+' 種神獸（你有 '+(d.bk||0)+' 種）・島主分 +15・施工要 '+leftText(R.templeMs[tl+1]),cost:RT[tl+1],bt:'⬆️ 升級',lock:(d.bk||0)<nd?'🔒 還要再收集 '+(nd-(d.bk||0))+' 種神獸（到 🐲 試煉島或 🎁 扭蛋島）':''})}
+    else B.push({e:'⛩️',n:'五行神殿 Lv'+tl,t:'已經升到最高級',done:1});
+  }
+  Object.keys(RF).forEach(function(k){var x=RF[k],f=(d.fac||{})[k],lv=f?f.lv:0,I=FACI[k]||['🏭',x.name,''];
+    if(d.bb&&d.bb[k]!=null){B.push({e:'🚧',n:x.name+' Lv'+((d.bt&&d.bt[k])||lv+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="'+k+'">'+bText(d,k)+'</b> 才會完工',done:1});return}
+    if(lv>=x.max){B.push({e:I[0],n:x.name+' Lv'+lv,t:'已經升到最高級',done:1});return}
+    var tg=lv+1,desc=x.res?'每小時產 '+I[2]+' '+x.r[tg]+' 個・最多存 '+x.cap[tg]+' 個':k==='fish'?'每天可以釣 '+((R.fishDay||[])[tg]||0)+' 次':k==='kitchen'?'解鎖料理：'+Object.keys(R.dish||{}).filter(function(q){return R.dish[q].lv===tg}).map(function(q){return DISHI[q]+' '+R.dish[q].name}).join('、'):k==='studio'?'可以接「'+((R.jobs||[])[tg]||{}).name+'」案子（🪙'+((R.jobs||[])[tg]||{}).coin+(((R.jobs||[])[tg]||{}).dia?' 💎'+R.jobs[tg].dia:'')+'）':'生產設施的存放上限 +'+(R.depotPct*tg)+'%';
+    B.push({k:k,e:I[0],n:lv?x.name+' Lv'+lv+' → Lv'+tg:x.name,t:desc+'・施工要 '+leftText(R.facMs[tg]),cost:x.cost[tg],bt:lv?'⬆️ 升級':'🔨 建造',lock:xl<x.xl?'🔒 擴地 Lv'+x.xl+' 後開放':''});
+  });
   o+='<div class="p-sec"><h4>🏗️ 建造</h4><div class="mi-build">'+B.map(function(b){
-    return '<div class="mi-bd'+(b.done?' done':'')+'"><span class="mi-be">'+b.e+'</span><div><b>'+b.n+'</b><small>'+b.t+'</small>'+(b.cost?'<div class="mi-cost">'+costHTML(b.cost)+'</div>'+(costOK(b.cost)?'':'<div class="mi-miss">還缺：'+missText(missOf(b.cost))+'</div>')+'<button class="btn btn-primary btn-sm'+(costOK(b.cost)?'':' need')+'" type="button" data-build="'+b.k+'">'+(b.bt||'🔨 建造')+'</button>':'')+'</div></div>'}).join('')+'</div></div>';
+    return '<div class="mi-bd'+(b.done?' done':'')+'"><span class="mi-be">'+b.e+'</span><div><b>'+b.n+'</b><small>'+b.t+'</small>'+(b.cost&&b.lock?'<div class="mi-cost">'+costHTML(b.cost)+'</div><div class="mi-lock">'+b.lock+'</div>':b.cost?'<div class="mi-cost">'+costHTML(b.cost)+'</div>'+(costOK(b.cost)?'':'<div class="mi-miss">還缺：'+missText(missOf(b.cost))+'</div>')+'<button class="btn btn-primary btn-sm'+(costOK(b.cost)?'':' need')+'" type="button" data-build="'+b.k+'">'+(b.bt||'🔨 建造')+'</button>':'')+'</div></div>'}).join('')+'</div></div>';
+  /* v82 生產設施：存量、下一個多久、收 */
+  var PF=Object.keys(d.fac||{}).filter(function(k){return FACI[k]&&FACI[k][2]&&d.fac[k].n!=null});
+  if(PF.length)o+='<div class="p-sec"><h4>🏭 生產設施</h4><div class="mi-orch">'+PF.map(function(k){var v=facView(d,k),I=FACI[k];
+    return '<div class="mi-tr"><span>'+I[0]+'</span><div><b>'+I[1]+' Lv'+d.fac[k].lv+'・'+I[2]+' '+v.n+' / '+v.cap+'</b><small>'+(v.n>=v.cap?'存滿了，快來收（滿了就不再生產）':'下一個約 '+leftText(v.nx))+'</small>'+(v.n?'<button class="btn btn-primary btn-sm" type="button" data-collect="'+k+'">🧺 收 '+I[2]+' ×'+v.n+'</button>':'')+'</div></div>'}).join('')+
+    '</div><p class="mi-note">點島上的設施也可以直接收。'+(d.fac.depot?'📦 倉庫 Lv'+d.fac.depot.lv+'：存放上限 +'+(R.depotPct*d.fac.depot.lv)+'%':'蓋 📦 倉庫可以提高存放上限')+'</p></div>';
+  /* v83 釣魚碼頭 */
+  var F2=d.fac||{};
+  if(F2.fish){var fl=F2.fish.lv,fmax=(R.fishDay||[])[fl]||0,fleft=Math.max(0,fmax-(d.fs||0));
+    o+='<div class="p-sec"><h4>🎣 釣魚碼頭 Lv'+fl+'</h4><p class="mi-note">今天還可以釣 <b>'+fleft+'</b> / '+fmax+' 次・🐟 魚 '+(d.fish||0)+' 條（可以餵寵物、做料理）。魚標游到 <b style="color:#15803d">綠色區</b> 時按「拉竿」，就有收穫：🐟 魚、物資、🪙 金幣，運氣好還有 🍑 神獸果或 💎 鑽石。</p>'+
+      (fleft?'<div class="fz-bar"><i class="fz-hit"></i><span class="fz-m" id="fzM">🐟</span></div><button class="btn btn-primary btn-sm" type="button" data-fish>🎣 拉竿</button>':'<button class="btn btn-ghost btn-sm" type="button" disabled>今天釣完了，明天再來</button>')+'</div>'}
+  /* v83 料理小屋 */
+  if(F2.kitchen){var kl=F2.kitchen.lv,RD=R.dish||{},ck=d.ck,ckl=ck?Math.max(0,ck.left-(Date.now()-MI.at)):0;
+    o+='<div class="p-sec"><h4>🍳 料理小屋 Lv'+kl+'</h4>'+(ck?'<p class="mi-note">正在煮 '+DISHI[ck.d]+' '+esc(RD[ck.d].name)+'・'+(ckl>0?'還要 '+leftText(ckl):'快好了')+'</p><div class="bar"><i style="width:'+Math.max(0,Math.min(100,(1-ckl/ck.total)*100)).toFixed(0)+'%"></i></div>':'')+
+      '<div class="mi-build">'+Object.keys(RD).map(function(k){var x=RD[k],lock=kl<x.lv,need=Object.keys(x.need).map(function(n){return (NEEDI[n]||['',''])[0]+' '+x.need[n]}).join(' ');
+        return '<div class="mi-bd'+(lock?' done':'')+'"><span class="mi-be">'+DISHI[k]+'</span><div><b>'+x.name+'（有 '+((d.dish||{})[k]||0)+' 份）</b><small>飽足度 +'+x.food+(x.aff?'・親密度 +'+x.aff:'')+(x.beast?'・只有神獸能吃':'')+'・煮 '+x.min+' 分鐘</small><div class="mi-cost">'+need+'</div>'+(lock?'<div class="mi-lock">🔒 料理小屋 Lv'+x.lv+' 解鎖</div>':'<button class="btn btn-primary btn-sm" type="button" data-cook="'+k+'"'+(ck?' disabled':'')+'>🍳 開始煮</button>')+'</div></div>'}).join('')+
+      '</div><p class="mi-note">一次煮一道，煮好自動放進料理庫存。點小島上的寵物，就能在泡泡裡餵料理。</p></div>'}
+  /* v83 CAD 繪圖工作室 */
+  if(F2.studio){var sl=F2.studio.lv,JB=R.jobs||[],jb=d.job,jl=jb?Math.max(0,jb.left-(Date.now()-MI.at)):0,jday=R.jobDay||3;
+    o+='<div class="p-sec"><h4>📐 CAD 繪圖工作室 Lv'+sl+'</h4><p class="mi-note">接設計案，畫好就能交稿拿 🪙 金幣（大案子還有 💎）。今天已接 '+(d.jd||0)+' / '+jday+' 件。</p>'+
+      (jb?'<div class="mi-fd"><b>✏️ 正在畫：'+esc(JB[jb.j].name)+'</b>'+(jl>0?'<div class="bar"><i style="width:'+Math.max(0,Math.min(100,(1-jl/jb.total)*100)).toFixed(0)+'%"></i></div><small>還要 '+leftText(jl)+'</small>':'<button class="btn btn-primary btn-sm" type="button" data-jobdone>📤 交稿拿 🪙'+JB[jb.j].coin+(JB[jb.j].dia?' 💎'+JB[jb.j].dia:'')+'</button>')+'</div>':
+      '<div class="mi-build">'+JB.slice(1).map(function(x,i){var j=i+1,lock=sl<j;return '<div class="mi-bd'+(lock?' done':'')+'"><span class="mi-be">📐</span><div><b>'+x.name+'</b><small>畫 '+leftText(x.min*60000)+'・🪙 '+x.coin+(x.dia?' 💎 '+x.dia:'')+'</small>'+(lock?'<div class="mi-lock">🔒 工作室 Lv'+j+' 解鎖</div>':'<button class="btn btn-primary btn-sm" type="button" data-job="'+j+'"'+((d.jd||0)>=jday?' disabled':'')+'>✏️ 接案</button>')+'</div></div>'}).join('')+'</div>')+'</div>'}
+  /* v83 五行神殿與神獸：技能、圖鑑、覺醒、紀念碑 */
+  var tl2=d.tl||1,bpets=d.pets.filter(function(p){return PV_BEAST[p.k]}),SK=R.skill||{};
+  o+='<div class="p-sec" id="miBeast"><h4>⛩️ 五行神殿 Lv'+tl2+'・神獸玩法</h4><div class="mi-chk">'+[1,2,3,4].map(function(l){return '<span class="'+(tl2>=l?'ok':'')+'">'+(tl2>=l?'✅':'🔒')+' 神殿 Lv'+l+'：'+TEMPLE_ABOUT[l]+'</span>'}).join('')+'</div><p class="mi-note">神殿在上面「🏗️ 建造」升級，要先收集到足夠種類的神獸。</p>';
+  o+='<h4>🧬 神獸技能</h4>'+(tl2<2?'<p class="mi-note">🔒 五行神殿升到 Lv2，島上的神獸就會發揮技能。</p>':'<div class="mi-chk">'+Object.keys(SK).map(function(el){var x=(d.skills||[]).filter(function(q){return q.el===el})[0];return '<span class="'+(x?'ok':'')+'">'+ELN[el][0]+' '+(ANI[BEAST_OF[el]]||['',''])[1]+'・'+SK[el].name+'：'+SK[el].d+(x?' <b>+'+x.pct+'%</b>':'（島上還沒有這種神獸）')+'</span>'}).join('')+'</div><p class="mi-note">效果看 IV 和等級（8%～20%），覺醒後加倍。</p>');
+  var CX=d.cx||{},CXC=d.cxc||{},BK=['dragon','phoenix','qilin','tiger','tortoise'],VV=[['n','普通'],['iv','高 IV'],['aw','覺醒'],['sh','✨異色']];
+  o+='<h4>📖 神獸圖鑑（'+Object.keys(CX).length+' / 20）</h4><div class="cx-g"><span></span>'+BK.map(function(k){return '<b>'+(ANI[k]||['',k])[1]+'</b>'}).join('')+VV.map(function(v){return '<b>'+v[1]+'</b>'+BK.map(function(k){var on=CX[k+'.'+v[0]];return '<span class="cx'+(on?' on':'')+(v[0]==='sh'?' sh':'')+'">'+(on||v[0]!=='sh'?(ANI[k]||['🐲'])[0]:'❔')+'</span>'}).join('')}).join('')+'</div>';
+  var cxBtn=[];['n','iv','aw'].forEach(function(v,i){if(BK.every(function(k){return CX[k+'.'+v]}))cxBtn.push(['r.'+v,'「'+VV[i][1]+'」一排',' 💎'+((R.cxRow||{}).dia||3)])});
+  BK.forEach(function(k){if(['n','iv','aw'].every(function(v){return CX[k+'.'+v]}))cxBtn.push(['c.'+k,(ANI[k]||['',k])[1]+'一列',' 🍑'+((R.cxCol||{}).bfruit||5)])});
+  if(BK.every(function(k){return ['n','iv','aw'].every(function(v){return CX[k+'.'+v]})}))cxBtn.push(['all','全部 15 格（神獸大師）',' 💎'+((R.cxAll||{}).dia||10)]);
+  o+='<p class="mi-note">拿到過就點亮，之後送人也不會熄。集滿一排（同一版本 5 種）送 💎'+((R.cxRow||{}).dia||3)+'、一列（同一種 3 個版本）送 🍑'+((R.cxCol||{}).bfruit||5)+'、全滿 15 格送 💎'+((R.cxAll||{}).dia||10)+'；異色是隱藏格（召喚時 1% 機率）。</p>'+(cxBtn.length?'<div class="tw-b">'+cxBtn.map(function(b){return CXC[b[0]]?'<button class="btn btn-ghost btn-sm" type="button" disabled>✅ '+b[1]+' 已領</button>':'<button class="btn btn-primary btn-sm" type="button" data-cx="'+b[0]+'">🎁 領 '+b[1]+b[2]+'</button>'}).join('')+'</div>':'');
+  var AC=R.awCost||{bfruit:10,shard:2,dia:5},LVM=R.beastLvMax||10;
+  o+='<h4>🔥 神獸覺醒</h4>'+(tl2<4?'<p class="mi-note">🔒 五行神殿升到 Lv4 才能覺醒。覺醒要神獸 Lv'+LVM+'，花 🍑 神獸果 ×'+AC.bfruit+'、同種碎片頭身腳各 ×'+AC.shard+'、💎 ×'+AC.dia+'。</p>':
+    (bpets.length?'<div class="mi-build">'+bpets.map(function(p){var a=ANI[p.k]||['🐲',''];return '<div class="mi-bd'+(p.aw?' done':'')+'"><span class="mi-be">'+a[0]+'</span><div><b>'+(p.aw?'覺醒':'')+esc(p.n)+' Lv'+p.lv+'</b><small>'+(p.aw?'已經覺醒・技能加倍、五行塔戰力 ×1.3':'要 Lv'+LVM+'・🍑 ×'+AC.bfruit+'（有 '+(d.bfr||0)+'）・碎片頭身腳各 ×'+AC.shard+'・💎 ×'+AC.dia)+'</small>'+(p.aw?'':'<button class="btn btn-primary btn-sm" type="button" data-awaken="'+esc(p.id)+'"'+(p.lv<LVM?' disabled':'')+'>🔥 覺醒</button>')+'</div></div>'}).join('')+'</div>':'<p class="mi-note">島上還沒有神獸。</p>'));
+  var MON=d.mon||[],mn=MON.filter(function(m){return m[2]}).length;
+  o+='<h4>🏆 榮譽紀念碑（'+mn+' / '+MON.length+'）</h4><div class="mi-chk">'+MON.map(function(m){return '<span class="'+(m[2]?'ok':'')+'">'+(m[2]?'✅':'⬜')+' '+m[0]+' '+m[1]+'</span>'}).join('')+'</div><p class="mi-note">完成越多成就，島上的紀念碑越高、越華麗，別人參觀也看得到。</p></div>';
+  /* v82 花園裝飾：每樣買一次、馬上擺好 */
+  var RG=R.garden||{},GK=Object.keys(RG),gd=d.gd||[];
+  if(GK.length)o+='<div class="p-sec"><h4>🌸 花園裝飾（'+gd.length+' / '+GK.length+'）</h4><p class="mi-note">每樣買一次、馬上擺在島上，不能升級；擺越多，島主分越高。</p><div class="mi-build">'+GK.map(function(g){var x=RG[g],has=gd.indexOf(g)>=0;
+    return '<div class="mi-bd'+(has?' done':'')+'"><span class="mi-be">'+(GDI[g]||'🌸')+'</span><div><b>'+x.name+'</b><small>島主分 +'+x.pts+(has?'・已經擺好了':'')+'</small>'+(has?'':'<div class="mi-cost">'+costHTML(x.cost)+'</div>'+(costOK(x.cost)?'':'<div class="mi-miss">還缺：'+missText(missOf(x.cost))+'</div>')+'<button class="btn btn-primary btn-sm'+(costOK(x.cost)?'':' need')+'" type="button" data-build="g_'+g+'">🛒 擺上去</button>')+'</div></div>'}).join('')+'</div></div>';
   /* 菜園 */
   o+='<div class="p-sec"><h4>🥕 菜園</h4>';
   if(!d.fields)o+='<p class="mi-note">還沒有菜田，到上面「建造」蓋第一塊田（🪵 5・🪨 5）。</p>';
@@ -4201,7 +4340,8 @@ function fastAct(q,btn,local,fx,post){
 /* 點建造：材料與施工倒數馬上更新（網頁先算、先顯示），後台在背景確認；失敗就還原成後台的狀態 */
 function buildFast(kind,t){
   var dd=MI.data,R=dd&&dd.rules,cost=buildCost(kind);
-  if(!dd||!R||!cost||MI.busy){mineAct({a:'build',k:kind},t,function(){fxAt(t,['🔨','✨','🎉','⭐']);playSfx('chest');toast('🔨 開始施工！')});return}
+  if(/^g_/.test(kind)){mineAct({a:'build',k:kind},t,function(){fxAt(t,[GDI[kind.slice(2)]||'🌸','✨','🎉']);playSfx('chest');toast('🌸 擺好了！島主分增加')});return}
+  if(!dd||!R||!cost||MI.busy||kind==='land'||kind==='temple'||(R.fac&&R.fac[kind])){mineAct({a:'build',k:kind},t,function(){fxAt(t,['🔨','✨','🎉','⭐']);playSfx('chest');toast('🔨 開始施工！')});return}
   var w=COINS.get(),ms,off=Date.now()-MI.at;
   if(kind==='house'){ms=R.houseMs[dd.h+1]}
   else if(kind==='field'){ms=(R.fieldMs||[60000,120000,240000])[dd.fields]}
@@ -4371,7 +4511,7 @@ function fitIslandItems(){
   }
 }
 pBody.addEventListener('click',function(e){
-  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx]');if(!t||V.t!=='mine')return;
+  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx],[data-collect]');if(!t||V.t!=='mine'||t.disabled)return;
   var d=t.dataset,patId=null;
   if(d.dfx){decoFx(t,d.dfx,+d.lv||1);return}
   if(d.pbx!=null){petBubClose();return}
@@ -4395,10 +4535,20 @@ pBody.addEventListener('click',function(e){
   if(d.pick!=null){var pi=+d.pick,pd=MI.data,pt=pd&&pd.trees[pi],tot2=pt?treeView(pt,pd).ripe:0;
     if(!tot2){toast('🍎 果子還沒長出來，再等一下');return}
     fastAct({a:'pick',i:pi},t,function(dd,w){var EVN=(dd.rules&&dd.rules.treeEvery)||1200000,el=Date.now()-MI.at;dd.trees[pi]={st:2,ripe:0,nx:EVN+el};if(w.bag)w.bag.fruit=(w.bag.fruit||0)+tot2},function(){fxAt(t,['🍎','🍎','✨','🧺']);playSfx('candy');toast('🧺 摘到 🍎 水果 ×'+tot2)});return}
+  if(d.fish!=null){var fm=$('fzM'),bar=fm&&fm.parentNode;if(!fm)return;var fb=bar.getBoundingClientRect(),fr=fm.getBoundingClientRect(),pos=(fr.left+fr.width/2-fb.left)/fb.width,hit=pos>=.38&&pos<=.62?1:0;fm.style.animationPlayState='paused';
+    var FG={fish:['🐟','魚'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],bfruit:['🍑','神獸果'],dia:['💎','鑽石']};
+    mineAct({a:'fish',hit:hit},t,function(j){var g=j.got||{};if(g.k==='miss'){toast('💨 太早或太晚了，魚跑掉了…');return}var gi=FG[g.k]||['🎁',''];fxAt(t,[gi[0],gi[0],'✨','🎣']);playSfx('candy');toast('🎣 釣到 '+gi[0]+' '+gi[1]+' ×'+g.n+'！')});return}
+  if(d.cook){var cn=d.cook;mineAct({a:'cook',d:cn},t,function(){fxAt(t,[DISHI[cn],'🔥','✨']);playSfx('chest');toast('🍳 開始煮 '+DISHI[cn]+'，煮好會自動放進料理庫存')});return}
+  if(d.job){var jn=+d.job;mineAct({a:'job',j:jn},t,function(){fxAt(t,['📐','✏️','✨']);playSfx('chest');toast('✏️ 接下案子，開始畫圖！')});return}
+  if(d.jobdone!=null){mineAct({a:'jobdone'},t,function(j){var g=j.got||{};fxAt(t,['🪙','🪙','📤','✨']);playSfx('candy');toast('📤 交稿完成！拿到 🪙 '+(g.n||0)+(g.dia?' 💎 '+g.dia:''))});return}
+  if(d.cx){mineAct({a:'cxclaim',c:d.cx},t,function(j){var g=j.got||{};fxAt(t,[g.k==='dia'?'💎':'🍑','🎉','✨']);playSfx('chest');toast('📖 圖鑑獎勵：'+(g.k==='dia'?'💎 鑽石':'🍑 神獸果')+' ×'+g.n)});return}
+  if(d.awaken){if(!confirm('確定要讓這隻神獸覺醒嗎？會用掉神獸果、碎片和鑽石。'))return;mineAct({a:'awaken',id:d.awaken},t,function(){fxAt(t,['🔥','✨','👑','🎉']);playSfx('chest');toast('🔥 覺醒成功！技能加倍、五行塔戰力提升')});return}
+  if(d.collect){var ck=d.collect,cv=MI.data&&facView(MI.data,ck),ci=FACI[ck];if(!cv||!cv.n||!ci){toast('⏳ 還沒有產出，再等一下');return}
+    fastAct({a:'collect',k:ck},t,function(dd,w){var f=dd.fac&&dd.fac[ck],el=Date.now()-MI.at;if(f){f.nx=(cv.n>=cv.cap?f.per:cv.nx)+el;f.n=0}if(w.bag)w.bag[ci[3]]=(w.bag[ci[3]]||0)+cv.n},function(){fxAt(t,[ci[2],ci[2],'✨','🧺']);playSfx('candy');toast('🧺 '+ci[1]+'：收到 '+ci[2]+' '+COSTN[ci[3]]+' ×'+cv.n)});return}
   if(d.chop!=null){var id=d.chop;fastAct({a:'chopwood',id:id},t,function(dd,w){(dd.wild||[]).forEach(function(x){if(String(x.id)===id){x.stage=0;x.count=(x.count||0)+1}});if(w.bag)w.bag.wood=(w.bag.wood||0)+3;w.tres=(w.tres||0)+3},function(){fxAt(t,['🪵','🪵','✨']);playSfx('candy');toast('🪓 採收木材 ×3')});return}
   if(d.harvest!=null){var hi=+d.harvest,hc=MI.data&&MI.data.f[hi],hv=hc&&VEGI[hc.v];if(!hv){mineAct({a:'harvest',i:hi},t,function(j){var v=VEGI[j.got.k];fxAt(t,[v[0],v[0],'✨','🧺']);playSfx('candy');toast('🧺 收成 '+v[0]+' '+v[1]+' ×'+j.got.n)});return}
     fastAct({a:'harvest',i:hi},t,function(dd){dd.veg[hc.v]=(dd.veg[hc.v]||0)+hv[4];dd.f[hi]=null},function(){fxAt(t,[hv[0],hv[0],'✨','🧺']);playSfx('candy');toast('🧺 收成 '+hv[0]+' '+hv[1]+' ×'+hv[4])});return}
-  if(d.feed){var fd=d.feed,fid=d.id,fem=fd==='fruit'?'🍎':VEGI[fd][0];if(t.closest('.pbub'))petFoodFly(t,fid,fem);fastAct({a:'feed',id:fid,food:fd},t,function(dd,w){var pp=dd.pets.filter(function(x){return x.id===fid})[0],plus=fd==='fruit'?10:VEGI[fd][5];MI.fedAff=false;if(pp){pp.full=Math.min(100,pp.full+plus);if((pp.fa||0)<2){pp.fa=(pp.fa||0)+1;pp.aff=(pp.aff||0)+1;pp.lv=1+Math.floor(pp.aff/10);MI.fedAff=true}}if(fd==='fruit'){if(w.bag)w.bag.fruit=Math.max(0,(w.bag.fruit||0)-1)}else dd.veg[fd]=Math.max(0,(dd.veg[fd]||0)-1)},function(){fxAt(t,['😋','💕',fd==='fruit'?'🍎':VEGI[fd][0]]);playSfx('candy');toast('😋 吃得好開心！'+(MI.fedAff?'親密度 +1 💕':''))});return}
+  if(d.feed){var fd=d.feed,fid=d.id,fem=foodEm(fd);if(t.closest('.pbub'))petFoodFly(t,fid,fem);fastAct({a:'feed',id:fid,food:fd},t,function(dd,w){var pp=dd.pets.filter(function(x){return x.id===fid})[0],plus=foodPlus(fd);MI.fedAff=false;if(pp){pp.full=Math.min(100,pp.full+plus);if((pp.fa||0)<2){pp.fa=(pp.fa||0)+1;pp.aff=(pp.aff||0)+1;pp.lv=1+Math.floor(pp.aff/10);MI.fedAff=true}}if(fd==='fruit'){if(w.bag)w.bag.fruit=Math.max(0,(w.bag.fruit||0)-1)}else if(fd==='fish')dd.fish=Math.max(0,(dd.fish||0)-1);else if(/^d_/.test(fd)){dd.dish[fd.slice(2)]=Math.max(0,(dd.dish[fd.slice(2)]||0)-1)}else dd.veg[fd]=Math.max(0,(dd.veg[fd]||0)-1)},function(){fxAt(t,['😋','💕',fem]);playSfx('candy');toast('😋 吃得好開心！'+(MI.fedAff?'親密度 +1 💕':''))});return}
   if(d.phome){var hid=d.phome,hv=+d.v;if(hv&&PW.selId===hid)petBubClose();
     fastAct({a:'pethome',id:hid,home:hv},t,function(dd){dd.pets.forEach(function(x){if(x.id===hid)x.home=hv})},function(){var hp=MI.data.pets.filter(function(x){return x.id===hid})[0];toast(hv?'🏠 '+(hp?hp.n:'')+' 回家休息了':'🏝️ '+(hp?hp.n:'')+' 出來玩囉！')});return}
   if(d.pat||patId){var pid=d.pat||patId,pp0=MI.data&&MI.data.pets.filter(function(x){return x.id===pid})[0],pk=pp0&&(ANI[pp0.k]||[])[1];
@@ -4876,7 +5026,8 @@ function msgNote(ma){
   if(ma>seen&&MSGA.toasted!==ma){MSGA.toasted=ma;toast('📮 留言碼頭有新留言，到地圖上點紅色「新留言」去看看')}
 }
 /* 喜報跑馬燈：船長在扭蛋島抽到、或在試煉島召喚出神獸（後台給最近 24 小時、最多 10 則；src 標明來源，舊資料沒有就寫「得到」） */
-var BN={list:[],sig:''},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
+var BN_NEW_UNTIL=Date.UTC(2026,11,12),BN_NEW='🆕 新玩法上線：小島擴地、生產設施、釣魚、料理、CAD 工作室，神殿升級開放圖鑑、技能、五行塔、覺醒！👉 點我到留言碼頭看細節';
+var BN={list:[],sig:null},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
 function bnAgo(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前'}
 function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> '+(x.src==='trial'?'在試煉島召喚成功':x.src==='gacha'?'在扭蛋島抽到':'得到')+' '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
 function bnSet(list){
@@ -4885,9 +5036,11 @@ function bnSet(list){
   if(sig===BN.sig)return;BN.sig=sig;BN.list=list;
   var el=$('bnTick'),tx=$('bnText');if(!el)return;
   var closedT=0;try{closedT=+localStorage.getItem('aikb-bn-closed')||0}catch(e){}
-  if(!list.length||list[0].t<=closedT){el.hidden=true;return}   /* 船長按了 ✕：同一批喜報不再顯示，有更新的才出現 */
-  tx.innerHTML=list.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
-  tx.style.setProperty('--d',Math.max(10,Math.min(60,list.length*9))+'s');
+  var ann=Date.now()<BN_NEW_UNTIL;try{if(localStorage.getItem('aikb-bn-new83'))ann=false}catch(e){}   /* v83 新玩法公告：兩週內固定排在跑馬燈第一則，按 ✕ 就不再出現 */
+  if(!ann&&(!list.length||list[0].t<=closedT)){el.hidden=true;return}   /* 船長按了 ✕：同一批喜報不再顯示，有更新的才出現 */
+  var shown=list.length&&list[0].t>closedT?list:[];
+  tx.innerHTML=(ann?'<i data-bnann>'+BN_NEW+'</i>':'')+shown.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
+  tx.style.setProperty('--d',Math.max(10,Math.min(60,(shown.length+(ann?2:0))*9))+'s');
   el.hidden=false;bnPos();
   /* 有新的喜報（不是自己抽的）就跳一次提示 */
   var top=list[0],seen=0;try{seen=+localStorage.getItem('aikb-bn-seen')||0}catch(e){}
