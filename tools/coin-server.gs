@@ -109,7 +109,7 @@ function islScale_(il, base, lv) {
   return Math.max(1, n);
 }
 var ISL_LEGACY = { fruit: 'r0', iron: 'r1', wood: 'r2', stone: 'r3' }; // 舊版網頁送的是種類名稱
-var HOUSE_MS = [0, 1, 5, 15, 30, 45, 60, 90, 120, 150, 180].map(function(m){return m*60000}); // Lv1～10 施工分鐘
+var HOUSE_MS = [0, 1, 5, 15, 30, 45, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360].map(function(m){return m*60000}); // Lv1～10 施工分鐘
 var FIELD_MS = [60 * 1000, 2 * 60 * 1000, 4 * 60 * 1000];      // 菜田第 1／2／3 塊：1、2、4 分鐘
 var DECO_MS = { tree: 2 * 60 * 1000, fountain: 5 * 60 * 1000, tower: 10 * 60 * 1000 }; // 果樹 2 分、噴水池 5 分、瞭望塔 10 分
 /* 商店島：船（0 號免費）、金幣換物資 */
@@ -145,7 +145,9 @@ var HOUSE = [null, { wood: 5, stone: 3 }, { wood: 10, stone: 8, iron: 3 }, { woo
   { wood: 30, stone: 20, iron: 10 }, { wood: 45, stone: 30, iron: 15 },
   { wood: 65, stone: 45, iron: 22 }, { wood: 90, stone: 60, iron: 30 },
   { wood: 120, stone: 80, iron: 40 }, { wood: 160, stone: 105, iron: 50 },
-  { wood: 210, stone: 135, iron: 65 }];
+  { wood: 210, stone: 135, iron: 65 },
+  { wood: 270, stone: 170, iron: 80, dia: 1 }, { wood: 340, stone: 210, iron: 100, dia: 2 }, { wood: 420, stone: 260, iron: 125, dia: 3 },   // v85 Lv11～16（擴地後開放，要鑽石）
+  { wood: 510, stone: 320, iron: 150, dia: 4 }, { wood: 610, stone: 380, iron: 180, dia: 5 }, { wood: 720, stone: 450, iron: 210, dia: 6 }];
 var FIELD = [{ wood: 3, stone: 2 }, { wood: 6, stone: 5 }, { wood: 12, stone: 8, iron: 3 }];
 var DECO = {
   tree: { name: '果樹', cost: { fruit: 6, wood: 3 }, pts: 5 },
@@ -156,19 +158,25 @@ var DECO = {
 var TREE_MAX = 6, TREE_GROW = [5 * 60 * 1000, 20 * 60 * 1000], TREE_EVERY = 20 * 60 * 1000, TREE_CAP = 3;
 function treeCost_(n) { return { fruit: 6 + 2 * n, wood: 3 + n }; }   // 第 1 棵 🍎6 🪵3，之後每多一棵貴一點
 /* 噴水池、瞭望塔可以升級到 Lv8：[null, Lv1, …, Lv8]（Lv1 = 原本的蓋法）；施工時間 = DECO_MS × LV_MULT；Lv7、Lv8 要鑽石 */
-var DECO_LV_MAX = 8;
+var DECO_LV_MAX = 14;
+var HOUSE_CAP = [0, 10, 12, 14, 16], DECO_CAP = [0, 8, 10, 12, 14];   // v85 擴地 Lv1～4 時，小屋／噴水池、瞭望塔的最高等級
 var UPC = {
   fountain: [null, { stone: 10, iron: 5 }, { stone: 20, iron: 10, wood: 8 }, { stone: 35, iron: 18 },
     { stone: 50, iron: 25, wood: 15 }, { stone: 70, iron: 35, wood: 25 }, { stone: 95, iron: 50, wood: 35 },
-    { stone: 125, iron: 65, wood: 50, dia: 1 }, { stone: 160, iron: 85, wood: 70, dia: 2 }],
+    { stone: 125, iron: 65, wood: 50, dia: 1 }, { stone: 160, iron: 85, wood: 70, dia: 2 },
+    { stone: 200, iron: 105, wood: 90, dia: 3 }, { stone: 250, iron: 130, wood: 110, dia: 4 }, { stone: 310, iron: 160, wood: 135, dia: 5 },   // v85 Lv9～14
+    { stone: 380, iron: 195, wood: 165, dia: 6 }, { stone: 460, iron: 235, wood: 200, dia: 7 }, { stone: 550, iron: 280, wood: 240, dia: 8 }],
   tower: [null, { iron: 15, wood: 10 }, { iron: 30, wood: 18, stone: 12 }, { iron: 50, wood: 30, stone: 25 },
     { iron: 70, wood: 40, stone: 35 }, { iron: 95, wood: 55, stone: 50 }, { iron: 125, wood: 70, stone: 65 },
-    { iron: 160, wood: 90, stone: 85, dia: 1 }, { iron: 200, wood: 115, stone: 110, dia: 2 }]
+    { iron: 160, wood: 90, stone: 85, dia: 1 }, { iron: 200, wood: 115, stone: 110, dia: 2 },
+    { iron: 250, wood: 140, stone: 135, dia: 3 }, { iron: 310, wood: 175, stone: 165, dia: 4 }, { iron: 380, wood: 215, stone: 200, dia: 5 },
+    { iron: 460, wood: 260, stone: 245, dia: 6 }, { iron: 550, wood: 310, stone: 295, dia: 7 }, { iron: 650, wood: 370, stone: 350, dia: 8 }]
 };
-var FT_PTS = { fountain: [0, 10, 20, 35, 50, 70, 95, 125, 160], tower: [0, 20, 40, 70, 100, 140, 190, 250, 320] };
-var LV_MULT = [1, 1.6, 3, 4.5, 6, 8, 10, 12];
+var FT_PTS = { fountain: [0, 10, 20, 35, 50, 70, 95, 125, 160, 200, 245, 295, 350, 410, 475], tower: [0, 20, 40, 70, 100, 140, 190, 250, 320, 400, 490, 590, 700, 820, 950] };
+var LV_MULT = [1, 1.6, 3, 4.5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24];
 /* v82 擴地 Lv1～4：陸地變大、開放新設施（Lv1 就是原本的島） */
 var LAND = [null, {}, { wood: 40, stone: 30, iron: 15 }, { wood: 90, stone: 70, iron: 40, dia: 1 }, { wood: 180, stone: 140, iron: 80, dia: 3 }];
+var LAND_SHIP = [0, 0, 1, 2, 3], TEMPLE_SHIP = [0, 0, 0, 0, 4];   // v85 擴地 Lv2～4、神殿 Lv4 要先擁有的船（商店島買）
 var LAND_MS = [0, 0, 30, 120, 360].map(function (m) { return m * 60000; }), LAND_MAX = 4;
 /* v82 生產設施：自動產出物資、存在設施裡，要自己來收（存滿就停）。r = 每小時產量、cap = 最多存幾個；倉庫每一級讓存放上限 +DEPOT_PCT% */
 var FAC_R = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5], FAC_CAP = [0, 8, 12, 16, 20, 24, 28, 32, 40];
@@ -251,6 +259,78 @@ function monList_(o) {
   return [['🏠', '小屋蓋到 Lv10', o.h >= 10], ['🏝️', '擴地到 Lv4', o.xl >= 4], ['🌸', '花園裝飾擺滿 8 樣', o.gd.length >= Object.keys(GARDEN).length],
     ['⛩️', '五行神殿升到 Lv4', o.tl >= 4], ['🐲', '在試煉島召喚出 5 種神獸', earnN_(btOf_(o)) >= 5], ['📖', '神獸圖鑑點亮 10 格', Object.keys(o.cx || {}).length >= 10],
     ['🏭', '伐木場、採石場、鍛鐵爐都到 Lv8', three], ['🏯', '五行塔爬到第 30 層', num_((o.tw || {}).top) >= TW_FLOORS]];
+}
+/* v84 神獸分靈守護島：論壇教學島各有 1 個守護位子。答對該島題庫的試煉（8 題、6 題以上）就能放上神獸分靈，守護 3 小時。
+   題庫 QBANK 放在 Apps Script 另一個私人檔案（qbank.gs，不進公開 repo），網頁拿不到答案；守護狀態存在 ScriptProperties「guards」。 */
+var RUSH_DIA = 1, RETRY_DIA = 2, SAND_DIA = 3;   // v85 鑽石用途
+var GUARD_MS = 3 * 3600000, GUARD_DROP_MS = 30 * 60000, GUARD_DROPS = 6, GUARD_CD = 3600000, GUARD_PASS = 6, GT_DAY = 3, GUARD_READ_MAX = 20, GQ_N = 8, GQ_TTL = 30 * 60000;
+var SAND_DAY = 3, SAND_ISLES = 2, SAND_LV = 5, SAND_GACHA_P = 0.03, SAND_TOWER_P = 0.15, SAND_CX = 3;
+var SPLIT = [null, null, { lv: 5, pass: 7, cost: { bfruit: 5 } }, { lv: 10, aw: 1, pass: 8, cost: { bfruit: 10, dia: 3 } }];
+var GUARD_DROP = [['coin', 30], ['res', 30], ['bfruit', 14], ['shard', 10], ['dia', 8], ['sand', 8]];
+var BOARD_NAME = { beginner: '初階入門島', cad2d: '2D 討論島', quiz: '測驗練習島', cad3d: '3D 討論島', f44: '專案報告島', videos: '影片教學島', advanced: '進階討論島',
+  courses: '光碟課程島', realtime: '即時動態島', announce: '最新公告島', career: '職場交流島', plugins: '外掛工具島', memberb: '專屬 B 資源島', sponsora: '贊助 A 資源島' };
+function qbank_() { return typeof QBANK !== 'undefined' && QBANK ? QBANK : {}; }
+function guardsGet_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('guards') || '{}') || {}; } catch (e) { return {}; } }
+function guardsPut_(g) { PropertiesService.getScriptProperties().setProperty('guards', JSON.stringify(g)); CacheService.getScriptCache().remove('guardsPub'); }
+function guOf_(o) {
+  var u = o.gu && typeof o.gu === 'object' ? o.gu : {}, td = day_();
+  u.sp = u.sp && typeof u.sp === 'object' ? u.sp : {}; u.gh = Array.isArray(u.gh) ? u.gh : []; u.cd = u.cd && typeof u.cd === 'object' ? u.cd : {}; u.sand = num_(u.sand);
+  if (u.d !== td) { u.d = td; u.t = {}; u.sd = 0; }
+  u.t = u.t && typeof u.t === 'object' ? u.t : {}; o.gu = u; return u;
+}
+function guardPub_(G, now) { var m = {}; Object.keys(G).forEach(function (is) { var g = G[is]; if (!g || num_(g.e) <= now) return; m[is] = { nick: g.nick, fid: g.fid, bk: g.bk, iv: g.iv, aw: g.aw ? 1 : 0, sh: g.sh ? 1 : 0, lv: g.lv, sc: g.sc, ms: g.ms, s: g.s, e: g.e, shd: num_(g.shd) > now ? g.shd : 0 }; }); return m; }
+/* 守護結束（時間到或被換下）：紀錄搬到守護者自己的 gu.gh，等他回來領獎勵 */
+function guardEnd_(G, is, rows, touched, endT) {
+  var g = G[is]; delete G[is]; if (!g) return;
+  var j = find_(rows, g.code); if (j < 0) return;
+  var o = isleOf_(rows[j]), u = guOf_(o);
+  u.gh.push({ is: is, code: g.code, s: g.s, e: endT, full: endT >= g.e ? 1 : 0, c: num_(g.c), rd: num_(g.rd), rp: num_(g.rp) });
+  if (u.gh.length > 30) u.gh = u.gh.slice(-30);
+  u.cd[is] = endT + GUARD_CD;
+  rows[j][C.isle] = JSON.stringify(o); touched[j] = 1;
+}
+function guardSweep_(G, rows, touched, now) { Object.keys(G).forEach(function (is) { if (G[is] && num_(G[is].e) <= now) guardEnd_(G, is, rows, touched, num_(G[is].e)); }); }
+function guardDrop_(r, o, rr) {
+  var tot = 0, x, k = GUARD_DROP[0][0]; GUARD_DROP.forEach(function (d) { tot += d[1]; }); x = rr() * tot;
+  for (var i = 0; i < GUARD_DROP.length; i++) { if (x < GUARD_DROP[i][1]) { k = GUARD_DROP[i][0]; break; } x -= GUARD_DROP[i][1]; }
+  if (k === 'coin') { var n = 3 + Math.floor(rr() * 6); r[C.bal] = num_(r[C.bal]) + n; r[C.earned] = num_(r[C.earned]) + n; return { k: 'coin', n: n }; }
+  if (k === 'res') { var rk = ['wood', 'stone', 'iron'][Math.floor(rr() * 3)], rn = 10 + Math.floor(rr() * 11); r[BAG_COL[rk]] = num_(r[BAG_COL[rk]]) + rn; return { k: rk, n: rn }; }
+  if (k === 'bfruit') { var fn = 1 + Math.floor(rr() * 2); btOf_(o).fr += fn; return { k: 'bfruit', n: fn }; }
+  if (k === 'shard') { var sb = BEASTS[Math.floor(rr() * BEASTS.length)], spp = BT_PARTS[Math.floor(rr() * 3)], bt = btOf_(o); bt.sh[sb + '.' + spp] = num_(bt.sh[sb + '.' + spp]) + 1; return { k: 'shard', n: 1, b: sb, part: spp }; }
+  if (k === 'dia') { var dn = 1 + Math.floor(rr() * 2); r[C.dia] = num_(r[C.dia]) + dn; return { k: 'dia', n: dn }; }
+  guOf_(o).sand++; return { k: 'sand', n: 1 };
+}
+/* 領一筆守護的獎勵（到 upto 為止該掉的隨機獎勵＋讀文章金幣＋守滿 3 小時的寶箱）；同一筆紀錄的每一次掉落是固定的（用種子算），不會重複拿 */
+function guardPay_(r, o, rec, upto, got) {
+  var due = Math.min(GUARD_DROPS, Math.floor((Math.min(upto, rec.e || upto) - rec.s) / GUARD_DROP_MS));
+  for (var i = num_(rec.c); i < due; i++) got.push(guardDrop_(r, o, rng_(hash_('gd|' + rec.code + '|' + rec.is + '|' + rec.s + '|' + i))));
+  rec.c = Math.max(num_(rec.c), due);
+  var rc = Math.min(GUARD_READ_MAX, num_(rec.rd)) - num_(rec.rp);
+  if (rc > 0) { r[C.bal] = num_(r[C.bal]) + rc; r[C.earned] = num_(r[C.earned]) + rc; rec.rp = num_(rec.rp) + rc; got.push({ k: 'read', n: rc }); }
+  if (rec.full && !rec.chest) {
+    rec.chest = 1; r[C.dia] = num_(r[C.dia]) + 1; got.push({ k: 'chest', n: 1 });
+    var cr = rng_(hash_('gc|' + rec.code + '|' + rec.is + '|' + rec.s)), big = Math.floor(cr() * 4);
+    if (big === 0) { r[C.bal] = num_(r[C.bal]) + 20; r[C.earned] = num_(r[C.earned]) + 20; got.push({ k: 'coin', n: 20 }); }
+    else if (big === 1) { ['wood', 'stone', 'iron'].forEach(function (k) { r[BAG_COL[k]] = num_(r[BAG_COL[k]]) + 30; }); got.push({ k: 'res3', n: 30 }); }
+    else if (big === 2) { btOf_(o).fr += 5; got.push({ k: 'bfruit', n: 5 }); }
+    else { guOf_(o).sand++; got.push({ k: 'sand', n: 1 }); }
+  }
+}
+function guardPend_(o, G, code, now) {
+  var u = guOf_(o), n = 0;
+  function cnt(rec, upto) { n += Math.max(0, Math.min(GUARD_DROPS, Math.floor((Math.min(upto, rec.e) - rec.s) / GUARD_DROP_MS)) - num_(rec.c)) + Math.max(0, Math.min(GUARD_READ_MAX, num_(rec.rd)) - num_(rec.rp)) + (rec.full && !rec.chest ? 1 : 0); }
+  u.gh.forEach(function (h) { cnt(h, h.e); });
+  Object.keys(G).forEach(function (is) { var g = G[is]; if (g && g.code === code && num_(g.e) > now) cnt(g, now); else if (g && g.code === code) cnt({ s: g.s, e: g.e, c: g.c, rd: g.rd, rp: g.rp, full: 1 }, g.e); });
+  return n;
+}
+function gqPick_(pool, nE, nM, nH) {
+  var by = { 1: [], 2: [], 3: [] }, out = [];
+  pool.forEach(function (p) { var d = Math.max(1, Math.min(3, num_(p.q.d) || 2)); by[d].push(p); });
+  function take(arr, n) { for (var i = 0; i < n && arr.length; i++) out.push(arr.splice(Math.floor(Math.random() * arr.length), 1)[0]); }
+  take(by[1], nE); take(by[2], nM); take(by[3], nH);
+  var rest = by[1].concat(by[2], by[3]); take(rest, GQ_N - out.length);
+  for (var i = out.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = out[i]; out[i] = out[j]; out[j] = t; }
+  return out;
 }
 function beastKinds_(o) { var m = {}; (o.pets || []).forEach(function (p) { if (isBeast_(p.k)) m[p.k] = 1; }); var col = o.bcol && typeof o.bcol === 'object' ? o.bcol : {}; Object.keys(col).forEach(function (k) { if (ANIMALS[k] && Array.isArray(col[k]) && col[k].length) m[k] = 1; }); return Object.keys(m).length; }
 var FEED_AFF_DAY = 2; // 餵食也會加親密度：每隻寵物每天最多 +2
@@ -420,6 +500,22 @@ function ann83_() {
   if (props.getProperty('ann83')) return;
   props.setProperty('ann83', '1');
   try { sheet_('留言板', M_HEAD).appendRow(['M' + Date.now().toString(36).toUpperCase() + 'AN', new Date(), '論壇資源島', 'SYSTEM', '📢', '🆕 新玩法上線：我的小島大升級＋神獸新玩法！\n\n🏝️ 擴地 Lv1～4：島變大，開放新設施\n・擴地 Lv2：🪚 伐木場、⛏️ 採石場、📦 倉庫\n・擴地 Lv3：⚒️ 鍛鐵爐、🍳 料理小屋、🎣 釣魚碼頭\n・擴地 Lv4：📐 CAD 繪圖工作室\n🪚⛏️⚒️ 生產設施會自動產出木材、石頭、鐵礦，存滿就停，記得回來收；📦 倉庫讓存放上限變大\n🎣 釣魚碼頭：魚標游到綠色區按「拉竿」，可以釣到魚、物資、金幣，運氣好還有神獸果或鑽石\n🍳 料理小屋：用水果、蔬菜、魚做料理餵寵物，飽足度更高\n📐 CAD 繪圖工作室：接設計案，畫好交稿拿金幣（大案子有鑽石）\n🌸 花園裝飾 8 樣：買一次就擺好，島主分加分\n🏆 榮譽紀念碑：完成成就，紀念碑自動長高\n\n⛩️ 五行神殿可以升級 Lv1～4（要先收集到足夠種類的神獸）：\n・Lv1 📖 神獸圖鑑：集滿送鑽石、神獸果，還有隱藏的 ✨ 異色神獸（召喚時 1%）\n・Lv2 🧬 神獸技能：島上的神獸幫你種菜、生產更快\n・Lv3 🏯 五行塔：在 🐲 神獸試煉島挑戰，每週 30 層、每 5 層一個魔王\n・Lv4 🔥 神獸覺醒：Lv10 的神獸可以覺醒，技能加倍\n\n到 🏝️ 我的小島「🏗️ 建造」開始吧！', '', '', '', '', '', '']); bump_('msgs'); } catch (e) {}
+}
+/* v85 站長要求：上線時直接編輯更新 11/28 那篇新玩法公告（不另貼新的），留下修改時間；只做一次 */
+function ann85_() {
+  var props; try { props = PropertiesService.getScriptProperties(); } catch (e) { return; }
+  if (props.getProperty('ann85')) return;
+  props.setProperty('ann85', '1');
+  try {
+    var sh = sheet_('留言板', M_HEAD), n = sh.getLastRow() - 1; if (n < 1) return;
+    var v = sh.getRange(2, 1, n, M_HEAD.length).getValues();
+    for (var x = v.length - 1; x >= 0; x--) {
+      if (/AN$/.test(String(v[x][0])) && String(v[x][5]).indexOf('新玩法上線') >= 0) {
+        v[x][5] = "🆕 新玩法上線：我的小島大升級＋神獸新玩法＋神獸分靈守護島！（11/29 更新）\n\n🏝️ 擴地 Lv1～4：島變大，開放新設施，小屋／噴水池／瞭望塔的最高等級也跟著提高（小屋最高 Lv16、噴水池瞭望塔最高 Lv14）\n・擴地 Lv2：🪚 伐木場、⛏️ 採石場、📦 倉庫（要先有 ⛵ 彩旗帆船）\n・擴地 Lv3：⚒️ 鍛鐵爐、🍳 料理小屋、🎣 釣魚碼頭（要先有 ⛵ 海盜大帆船）\n・擴地 Lv4：📐 CAD 繪圖工作室（要先有 ⛵ 商賈雙桅船）\n🪚⛏️⚒️ 生產設施自動產出木材、石頭、鐵礦，存滿就停；📦 倉庫讓存放上限變大\n🎣 釣魚碼頭、🍳 料理小屋、📐 CAD 繪圖工作室、🌸 花園裝飾、🏆 榮譽紀念碑\n📂 我的小島改成分類選單：點哪一類才展開，畫面不再一長串；點小屋、神殿、紀念碑會有特效和說明\n\n⛩️ 五行神殿 Lv1～4（要先收集神獸種類；Lv4 還要 ⛵ 皇家旗艦）：\n・Lv1 📖 神獸圖鑑（含隱藏的 ✨ 異色神獸）・Lv2 🧬 神獸技能＋🛡️ 守護試煉・Lv3 🏯 五行塔＋✨ 結界砂・Lv4 🔥 神獸覺醒\n\n🛡️ 神獸分靈守護島（新！）：\n・每座論壇教學島都有一個守護位子，回答這座島的文章題目（每份 8 題，答對 6 題通過），就能放上你的神獸分靈守護 3 小時\n・分數比現任守護者高（同分比速度）就能換下他；每座島每天可以挑戰 3 次\n・守護期間每 30 分鐘掉一次隨機獎勵（金幣、物資、神獸果、碎片、鑽石、結界砂），有人來讀文章再加金幣，守滿 3 小時還有守護寶箱\n・✨ 五行結界砂：撒在你守護的島上，結界期間別人不能挑戰\n・🌌 靈脈試煉：讓一隻神獸最多分靈 3 隻，守護更多島\n・讀越多文章，越容易佔領！挑你擅長的島去攻略吧\n\n💎 鑽石新用途：施工 💎1 立即完成、💎2 再挑戰一次（五行塔、守護試煉）、💎3 換 1 把結界砂，高等級建築也要用鑽石\n\n到 🏝️ 我的小島「🏗️ 建造」開始吧！"; v[x][11] = new Date();
+        sh.getRange(x + 2, 1, 1, M_HEAD.length).setValues([v[x]]); bump_('msgs'); return;
+      }
+    }
+  } catch (e) {}
 }
 function migrate78_(sh, rows) {
   var props; try { props = PropertiesService.getScriptProperties(); } catch (e) { return; }   // 測試環境沒有 PropertiesService
@@ -680,6 +776,7 @@ function handle_(q) {
   if (a === 'voyage') return voyage_();
   if (a === 'drops') return dropsPub_();
   if (a === 'isl') return islLite_();
+  if (a === 'guards') { var gpc = cget_('guardsPub'); if (gpc) return { ok: true, guards: gpc, now: Date.now() }; var gpv = guardPub_(guardsGet_(), Date.now()); cput_('guardsPub', gpv, 60); return { ok: true, guards: gpv, now: Date.now() }; }   // v84
   if (a === 'island' && !q.fid) return islandOwn_(q); // 看自己的小島：只讀、不排隊等鎖，快很多
   if (a === 'friends') { // 好友清單：只讀、不排隊等鎖
     var fRows = rows_(players_()), fi = find_(fRows, q.code);
@@ -731,6 +828,7 @@ function handle_(q) {
     if (i < 0) return { ok: false, err: 'nocode' };
     migrate78_(sh, rows);   // v78：只跑一次
     ann83_();   // v83：新玩法公告貼到留言碼頭（只貼一次）
+    ann85_();   // v85：編輯更新新玩法公告（只做一次）
     var r = rows[i];
     if (!r[C.fid]) r[C.fid] = newFid_(rows);
     resetDay_(r);
@@ -820,6 +918,7 @@ function handle_(q) {
           else if (pick[0]==='shard'){var gsb=btOf_(gIsle),gsk=BEASTS[Math.floor(Math.random()*BEASTS.length)],gsp=partRoll_();gsb.sh[gsk+'.'+gsp]=num_(gsb.sh[gsk+'.'+gsp])+1;gr.b=gsk;gr.part=gsp;gr.name=ANIMALS[gsk].name;gr.el=ANIMALS[gsk].beast;}
           else if (pick[0]==='bfruit'){var gfb=btOf_(gIsle);gfb.fr+=pick[1];}
           else r[BAG_COL[pick[0]]]=num_(r[BAG_COL[pick[0]]])+pick[1];
+          if (Math.random() < SAND_GACHA_P) { guOf_(gIsle).sand++; gr.sand = 1; }   // v84 扭蛋額外掉五行結界砂
           ga.n=num_(ga.n)+1;res.gacha=gr;
           ga.receipts.push({id:gid,result:gr,t:Date.now()});if(ga.receipts.length>50)ga.receipts=ga.receipts.slice(-50);
         }
@@ -1107,6 +1206,7 @@ function handle_(q) {
       var rkey = String(q.key || '').replace(/[^0-9a-z_\/-]/gi, '').slice(0, 40);
       if (!/^[a-z0-9]+\/t\d{1,6}$/.test(rkey)) return { ok: false, err: 'bad', p: me };
       var ro = isleOf_(r), rtd = day_();
+      try { var rbd = rkey.split('/')[0], RG = guardsGet_(), rg = RG[rbd]; if (rg && rg.code !== String(r[C.code]).toUpperCase() && num_(rg.e) > Date.now() && num_(rg.rd) < GUARD_READ_MAX) { rg.rd = num_(rg.rd) + 1; guardsPut_(RG); } } catch (e) {}   // v84 守護者：有人來讀文章 +1 金幣
       if (!ro.rr || ro.rr.d !== rtd || !Array.isArray(ro.rr.won)) ro.rr = { d: rtd, won: [] };
       var roll = hash_(String(r[C.code]) + '|' + rtd + '|' + rkey + '|rd') / 4294967296;
       if (roll < READ_DIA_P && ro.rr.won.indexOf(rkey) < 0 && ro.rr.won.length < READ_DIA_DAY) {
@@ -1193,7 +1293,7 @@ function handle_(q) {
     } else if (a === 'setopen') {
       r[C.open] = q.o ? '' : '否';
       res.island = islePub_(r, true);
-    } else if (a === 'build' || a === 'plant' || a === 'harvest' || a === 'pick' || a === 'moveitem' || a === 'chopwood' || a === 'adopt' || a === 'feed' || a === 'pat' || a === 'pethome' || a === 'collect' || a === 'fish' || a === 'cook' || a === 'job' || a === 'jobdone' || a === 'cxclaim' || a === 'tower' || a === 'awaken') {
+    } else if (a === 'build' || a === 'plant' || a === 'harvest' || a === 'pick' || a === 'moveitem' || a === 'chopwood' || a === 'adopt' || a === 'feed' || a === 'pat' || a === 'pethome' || a === 'collect' || a === 'fish' || a === 'cook' || a === 'job' || a === 'jobdone' || a === 'cxclaim' || a === 'tower' || a === 'awaken' || a === 'rush' || a === 'diaretry' || a === 'buysand') {
       var out = isleAct_(a, q, r, me);
       if (out.err) return { ok: false, err: out.err, miss: out.miss, need: out.need, p: me };
       if (out.add) res.add = out.add;
@@ -1216,6 +1316,103 @@ function handle_(q) {
         }
       }
       ot.tarot=ts; r[C.isle]=JSON.stringify(ot); res.tarot=ts;
+    } else if (a === 'gtest') {   // v84 守護試煉／靈脈試煉：出 8 題（不給答案）
+      var go = isleOf_(r), gu2 = guOf_(go), gis = String(q.isle || ''), QB = qbank_(), gnow = Date.now(), gbk = String(q.bk || ''), gsplit = gis === '*', gcode = String(r[C.code]).toUpperCase();
+      if (go.tl < 2) return { ok: false, err: 'needtemple', need: 2, p: me };
+      var gpet = null; go.pets.forEach(function (p) { if (p.k === gbk && isBeast_(p.k)) gpet = p; });
+      if (!gpet) return { ok: false, err: 'nobeast2', p: me };
+      if (num_(gu2.t[gis]) >= GT_DAY) return { ok: false, err: 'gtmax', p: me };
+      var pool = [];
+      if (gsplit) {
+        var tg2 = num_(gu2.sp[gbk]) + 1; if (tg2 < 2) tg2 = 2;
+        if (tg2 > 3) return { ok: false, err: 'maxed', p: me };
+        var SP2 = SPLIT[tg2];
+        if (petLv_(gpet) < SP2.lv) return { ok: false, err: 'splitlv', need: SP2.lv, p: me };
+        if (SP2.aw && !gpet.aw) return { ok: false, err: 'splitaw', p: me };
+        Object.keys(QB).forEach(function (b) { (QB[b] || []).forEach(function (qq, ix) { if (num_(qq.d) >= 2) pool.push({ b: b, i: ix, q: qq }); }); });
+      } else {
+        if (!BOARD_NAME[gis]) return { ok: false, err: 'bad', p: me };
+        (QB[gis] || []).forEach(function (qq, ix) { pool.push({ b: gis, i: ix, q: qq }); });
+        if (num_(gu2.cd[gis]) > gnow) return { ok: false, err: 'gcool', left: num_(gu2.cd[gis]) - gnow, p: me };
+        var GG = guardsGet_(), gc = GG[gis];
+        if (gc && num_(gc.e) > gnow && gc.code === gcode) return { ok: false, err: 'gmine', p: me };
+        if (gc && num_(gc.e) > gnow && num_(gc.shd) > gnow) return { ok: false, err: 'shielded', left: num_(gc.shd) - gnow, p: me };
+      }
+      if (pool.length < GQ_N) return { ok: false, err: 'noqbank', p: me };
+      var paper = gsplit ? gqPick_(pool, 0, 5, 3) : gqPick_(pool, 3, 3, 2);
+      gu2.t[gis] = num_(gu2.t[gis]) + 1;
+      go.gp = { is: gis, bk: gbk, t: gnow, ids: paper.map(function (p) { return [p.b, p.i]; }), pm: paper.map(function (p) { var o4 = p.q.o.map(function (x, k) { return k; }); for (var z = o4.length - 1; z > 0; z--) { var w = Math.floor(Math.random() * (z + 1)), tt = o4[z]; o4[z] = o4[w]; o4[w] = tt; } return o4; }) };
+      res.paper = { is: gis, bk: gbk, ttl: GQ_TTL, qs: paper.map(function (p, k) { return { q: p.q.q, o: go.gp.pm[k].map(function (ix) { return p.q.o[ix]; }), d: num_(p.q.d) || 2 }; }), left: GT_DAY - gu2.t[gis] };
+      r[C.isle] = JSON.stringify(go);
+    } else if (a === 'gsubmit') {   // v84 交卷：批改；通過就放上分靈（或換下分數較低的守護者）
+      var so = isleOf_(r), su = guOf_(so), sp = so.gp, snow = Date.now(), QB2 = qbank_(), scode = String(r[C.code]).toUpperCase();
+      if (!sp) return { ok: false, err: 'nopaper', p: me };
+      so.gp = null; r[C.isle] = JSON.stringify(so);   // 同一份考卷只能交一次
+      if (snow - sp.t > GQ_TTL) return { ok: false, err: 'gexpired', p: me };
+      var ans = Array.isArray(q.ans) ? q.ans : [], score = 0, right = [];
+      sp.ids.forEach(function (id, k) { var qq = (QB2[id[0]] || [])[id[1]]; var okk = !!qq && sp.pm[k][num_(ans[k])] === num_(qq.a) && ans[k] != null && ans[k] !== ''; if (okk) score++; right.push({ ok: okk ? 1 : 0, a: qq ? sp.pm[k].indexOf(num_(qq.a)) : -1, why: qq && qq.w ? qq.w : '' }); });
+      var sms = snow - sp.t, sres = { score: score, n: sp.ids.length, ms: sms, right: right, is: sp.is };
+      var spet = null; so.pets.forEach(function (p) { if (p.k === sp.bk && isBeast_(p.k)) spet = p; });
+      if (sp.is === '*') {
+        var tg3 = Math.max(2, num_(su.sp[sp.bk]) + 1), SP3 = SPLIT[tg3];
+        sres.pass = SP3 && score >= SP3.pass ? 1 : 0; sres.need = SP3 ? SP3.pass : GQ_N;
+        if (sres.pass) {
+          var lack3 = {}; Object.keys(SP3.cost).forEach(function (k) { var h = needHave_(r, so, k === 'dia' ? 'dia' : k); if (k === 'dia') h = num_(r[C.dia]); if (h < SP3.cost[k]) lack3[k] = SP3.cost[k] - h; });
+          if (Object.keys(lack3).length) { sres.pass = 0; sres.miss = lack3; }
+          else { Object.keys(SP3.cost).forEach(function (k) { if (k === 'dia') r[C.dia] = num_(r[C.dia]) - SP3.cost[k]; else needPay_(r, so, k, SP3.cost[k]); }); su.sp[sp.bk] = tg3; sres.split = tg3; }
+        }
+        r[C.isle] = JSON.stringify(so); res.gres = sres;
+      } else {
+        sres.pass = score >= GUARD_PASS ? 1 : 0; sres.need = GUARD_PASS;
+        if (sres.pass && spet) {
+          var SG = guardsGet_(); guardSweep_(SG, rows, touched, snow);
+          so = isleOf_(r); su = guOf_(so);   // 掃過期守護時可能改到自己這一列，重新讀一次
+          var cap = Math.max(1, num_(su.sp[sp.bk])), used = Object.keys(SG).filter(function (k) { return SG[k].code === scode && SG[k].bk === sp.bk; }).length, cur = SG[sp.is];
+          if (cur && cur.code === scode) sres.place = 'mine';
+          else if (num_(su.cd[sp.is]) > snow) sres.place = 'cool';
+          else if (used >= cap) sres.place = 'nosplit';
+          else if (cur && num_(cur.shd) > snow) sres.place = 'shield';
+          else if (cur && !(score > num_(cur.sc) || (score === num_(cur.sc) && sms < num_(cur.ms)))) { sres.place = 'lose'; sres.cur = { nick: cur.nick, sc: cur.sc, ms: cur.ms }; }
+          else {
+            if (cur) {
+              var oldNick = cur.nick, jo = find_(rows, cur.code);
+              guardEnd_(SG, sp.is, rows, touched, snow);
+              if (jo >= 0) { rows[jo][C.unread] = num_(rows[jo][C.unread]) + 1; touched[jo] = 1; try { giftNote_(r, rows[jo], '🛡️ 你在「' + BOARD_NAME[sp.is] + '」的守護神獸，被船長「' + plain_(r[C.nick]) + '」用 ' + score + '/' + GQ_N + ' 題的成績換下了。已經累積的守護獎勵還在，到 🏝️ 我的小島「🛡️ 守護」領取。'); } catch (e) {} }
+              sres.beat = oldNick;
+              so = isleOf_(r); su = guOf_(so);
+            }
+            SG[sp.is] = { code: scode, nick: plain_(r[C.nick]), fid: String(r[C.fid] || ''), bk: sp.bk, iv: ivOf_(spet), aw: spet.aw ? 1 : 0, sh: spet.sh ? 1 : 0, lv: Math.min(BEAST_LV_MAX, petLv_(spet)), sc: score, ms: sms, s: snow, e: snow + GUARD_MS, c: 0, rd: 0, rp: 0, shd: 0 };
+            sres.place = 'ok';
+          }
+          guardsPut_(SG); res.guards = guardPub_(SG, snow);
+        }
+        r[C.isle] = JSON.stringify(so); res.gres = sres;
+      }
+      sheet_('小島紀錄', L_HEAD).appendRow([new Date(), r[C.nick], r[C.code], sp.is === '*' ? '靈脈試煉' : '守護試煉', (BOARD_NAME[sp.is] || '綜合') + ' ' + score + '/' + GQ_N + (sres.place ? ' ' + sres.place : '') + (sres.split ? ' 分靈' + sres.split : '')]);
+      res.island = islePub_(r, true);
+    } else if (a === 'gclaim') {   // v84 領守護獎勵
+      var co = isleOf_(r), cu = guOf_(co), cnow = Date.now(), ccode = String(r[C.code]).toUpperCase(), CG = guardsGet_(), cgot = [];
+      guardSweep_(CG, rows, touched, cnow); co = isleOf_(r); cu = guOf_(co);
+      cu.gh.forEach(function (h) { h.code = h.code || ccode; guardPay_(r, co, h, h.e, cgot); });
+      cu.gh = [];
+      Object.keys(CG).forEach(function (is) { var g = CG[is]; if (g.code !== ccode) return; var rec = { code: ccode, is: is, s: g.s, e: g.e, c: g.c, rd: g.rd, rp: g.rp }; guardPay_(r, co, rec, cnow, cgot); g.c = rec.c; g.rp = rec.rp; });
+      guardsPut_(CG);
+      if (!cgot.length) return { ok: false, err: 'nogpend', p: me };
+      r[C.isle] = JSON.stringify(co); res.ggot = cgot; res.island = islePub_(r, true);
+      sheet_('小島紀錄', L_HEAD).appendRow([new Date(), r[C.nick], r[C.code], '守護獎勵', JSON.stringify(cgot).slice(0, 300)]);
+    } else if (a === 'gshield') {   // v84 撒五行結界砂
+      var ho = isleOf_(r), hu = guOf_(ho), hnow = Date.now(), hcode = String(r[C.code]).toUpperCase(), HG = guardsGet_(), his = String(q.isle || ''), hg = HG[his];
+      if (!hg || hg.code !== hcode || num_(hg.e) <= hnow) return { ok: false, err: 'notguard', p: me };
+      if (ho.tl < 3) return { ok: false, err: 'needtemple', need: 3, p: me };
+      var hpet = null; ho.pets.forEach(function (p) { if (p.k === hg.bk) hpet = p; });
+      if (!hpet || petLv_(hpet) < SAND_LV) return { ok: false, err: 'sandlv', p: me };
+      if (num_(hg.shd) > hnow) return { ok: false, err: 'shielded2', p: me };
+      if (hu.sand < 1) return { ok: false, err: 'nosand', p: me };
+      if (num_(hu.sd) >= SAND_DAY) return { ok: false, err: 'sandmax', p: me };
+      if (Object.keys(HG).filter(function (k) { return HG[k].code === hcode && num_(HG[k].shd) > hnow; }).length >= SAND_ISLES) return { ok: false, err: 'sandisles', p: me };
+      hu.sand--; hu.sd = num_(hu.sd) + 1; hg.shd = hg.e;
+      guardsPut_(HG); r[C.isle] = JSON.stringify(ho); res.guards = guardPub_(HG, hnow); res.island = islePub_(r, true);
+      sheet_('小島紀錄', L_HEAD).appendRow([new Date(), r[C.nick], r[C.code], '結界砂', BOARD_NAME[his]]);
     } else if (a === 'water') {
       var jw = findFid_(rows, q.fid);
       if (jw < 0 || jw === i) return { ok: false, err: 'bad', p: me };
@@ -1812,13 +2009,16 @@ function islePub_(r, mine, viewer) {
     out.jd = o.jd && o.jd.d === tdy ? num_(o.jd.n) : 0; out.fs = o.fs && o.fs.d === tdy ? num_(o.fs.n) : 0;
     out.cx = o.cx; out.cxc = o.cxc; out.bfr = num_(btOf_(o).fr); out.bsh = btOf_(o).sh;
     out.tw = { fl: twp.fl, top: num_(twp.top), lost: num_(twp.lost) === tdy ? 1 : 0, next: twp.fl < TW_FLOORS ? twGuard_(twp.wk, twp.fl + 1) : null };
+    var gG = guardsGet_(), gu = guOf_(o), myCode = String(r[C.code]).toUpperCase();   // v84 守護
+    out.gu = { sand: gu.sand, sd: gu.sd, sp: gu.sp, t: gu.t, cd: gu.cd, pend: guardPend_(o, gG, myCode, now), mine: Object.keys(gG).filter(function (is) { return gG[is].code === myCode && num_(gG[is].e) > now; }).map(function (is) { return { is: is, bk: gG[is].bk, e: gG[is].e, shd: num_(gG[is].shd) > now ? gG[is].shd : 0 }; }) };
     out.skills = EL_KEYS.map(function (el) { return { el: el, pct: Math.round(skillPct_(o, el) * 100) }; }).filter(function (x) { return x.pct > 0; });
     out.twChance = {}; o.pets.forEach(function (p) { if (isBeast_(p.k) && out.tw.next) out.twChance[p.id] = { p: Math.round(twChance_(p, out.tw.next) * 100), pw: beastPow_(p) }; });
   }
   if (mine) { out.open = r[C.open] !== '否'; out.vis = o.vis.map(function (x) { return { n: x.n, a: x.a, t: x.t, f: x.f }; }); out.veg = o.veg; out.rules = { house: HOUSE, houseMs: HOUSE_MS, fieldMs: FIELD_MS, decoMs: DECO_MS, field: FIELD, deco: DECO,
     up: UPC, upPts: FT_PTS, upMult: LV_MULT, treeMax: TREE_MAX, treeCost: Array.apply(null, Array(TREE_MAX)).map(function (x, n) { return o.starterTree && n===0 ? {} : treeCost_(n); }), treeGrow: TREE_GROW, treeEvery: TREE_EVERY, treeCap: TREE_CAP, veg: VEG, animals: ANIMALS, fruitFood: FRUIT_FOOD,
+    guard: { ms: GUARD_MS, drop: GUARD_DROP_MS, drops: GUARD_DROPS, pass: GUARD_PASS, n: GQ_N, day: GT_DAY, cd: GUARD_CD, readMax: GUARD_READ_MAX, sandDay: SAND_DAY, sandIsles: SAND_ISLES, sandLv: SAND_LV, split: SPLIT, boards: Object.keys(qbank_()).filter(function (k) { return (qbank_()[k] || []).length >= GQ_N; }) },
     fishDay: FISH_DAY, fishFood: FISH_FOOD, dish: DISH, jobs: JOBS, jobDay: JOB_DAY, skill: SKILL, cxRow: CX_ROW, cxCol: CX_COL, cxAll: CX_ALL, awCost: AW_COST, twFloors: TW_FLOORS, beastLvMax: BEAST_LV_MAX,
-    land: LAND, landMs: LAND_MS, temple: TEMPLE, templeNeed: TEMPLE_NEED, templeMs: TEMPLE_MS, templeOpen: TEMPLE_OPEN, garden: GARDEN, facMs: FAC_MS, depotPct: DEPOT_PCT,
+    land: LAND, landMs: LAND_MS, landShip: LAND_SHIP, templeShip: TEMPLE_SHIP, shipNames: SHIPS.map(function (x) { return x.name; }), houseCap: HOUSE_CAP, decoCap: DECO_CAP, rushDia: RUSH_DIA, retryDia: RETRY_DIA, sandDia: SAND_DIA, temple: TEMPLE, templeNeed: TEMPLE_NEED, templeMs: TEMPLE_MS, templeOpen: TEMPLE_OPEN, garden: GARDEN, facMs: FAC_MS, depotPct: DEPOT_PCT,
     fac: (function () { var m = {}; Object.keys(FAC).forEach(function (k) { var x = FAC[k], c = [null]; for (var l = 1; l <= x.max; l++) c.push(facCost_(k, l)); m[k] = { name: x.name, res: x.res || '', xl: x.xl, max: x.max, cost: c, r: x.r || null, cap: x.cap || null }; }); return m; })() }; }
   else out.watered = wd.indexOf(out.fid) >= 0;
   return out;
@@ -1830,7 +2030,7 @@ function isleAct_(a, q, r, me) {
     var kind = String(q.k || ''), cost, label, tgt = 0, bms = 0, gk = '';
     if (kind === 'house') {
       if (o.hb) return { err: 'building' };
-      if (o.h >= 10) return { err: 'maxed' };
+      if (o.h >= HOUSE_CAP[o.xl]) return o.xl >= LAND_MAX ? { err: 'maxed' } : { err: 'needland', need: o.xl + 1 };   // v85
       cost = HOUSE[o.h + 1]; label = '小屋 Lv' + (o.h + 1) + '（施工 ' + Math.round(HOUSE_MS[o.h + 1] / 60000) + ' 分鐘）';
     } else if (kind === 'field') {
       if (o.bb.field) return { err: 'building' };
@@ -1843,19 +2043,21 @@ function isleAct_(a, q, r, me) {
         tgt = 0; cost = o.starterTree && !o.trees.length ? {} : treeCost_(o.trees.length); label = '果樹 第 ' + (o.trees.length + 1) + ' 棵（施工 ' + Math.round(DECO_MS.tree / 60000) + ' 分鐘）';
       } else {
         var curLv = num_(o.dl[kind]) || (o.deco.indexOf(kind) >= 0 ? 1 : 0);
-        if (curLv >= DECO_LV_MAX) return { err: 'maxed' };
+        if (curLv >= DECO_CAP[o.xl]) return o.xl >= LAND_MAX ? { err: 'maxed' } : { err: 'needland', need: o.xl + 1 };   // v85
         tgt = curLv + 1; cost = UPC[kind][tgt];
         label = DECO[kind].name + ' Lv' + tgt + '（施工 ' + Math.round(decoMs_(kind, tgt) / 60000) + ' 分鐘）';
       }
     } else if (kind === 'land') {   // v82 擴地
       if (o.bb.land) return { err: 'building' };
       if (o.xl >= LAND_MAX) return { err: 'maxed' };
-      tgt = o.xl + 1; cost = LAND[tgt]; bms = LAND_MS[tgt]; label = '擴地 Lv' + tgt + '（施工 ' + Math.round(bms / 60000) + ' 分鐘）';
+      tgt = o.xl + 1; cost = LAND[tgt]; bms = LAND_MS[tgt];
+      if (LAND_SHIP[tgt] && o.ship.own.indexOf(LAND_SHIP[tgt]) < 0) return { err: 'needship', need: LAND_SHIP[tgt] }; label = '擴地 Lv' + tgt + '（施工 ' + Math.round(bms / 60000) + ' 分鐘）';
     } else if (kind === 'temple') {   // v82 五行神殿升級
       if (o.bb.temple) return { err: 'building' };
       if (o.tl >= TEMPLE_MAX) return { err: 'maxed' };
       tgt = o.tl + 1;
       if (beastKinds_(o) < TEMPLE_NEED[tgt]) return { err: 'needbeast', need: TEMPLE_NEED[tgt] };
+      if (TEMPLE_SHIP[tgt] && o.ship.own.indexOf(TEMPLE_SHIP[tgt]) < 0) return { err: 'needship', need: TEMPLE_SHIP[tgt] };
       cost = TEMPLE[tgt]; bms = TEMPLE_MS[tgt]; label = '五行神殿 Lv' + tgt + '（施工 ' + Math.round(bms / 60000) + ' 分鐘）';
     } else if (FAC[kind]) {   // v82 生產設施、倉庫
       if (o.bb[kind]) return { err: 'building' };
@@ -1917,13 +2119,14 @@ function isleAct_(a, q, r, me) {
     o.fs.n = num_(o.fs.n) + 1;
     if (!num_(q.hit)) { out.got = { k: 'miss', n: 0 }; out.log = ['釣魚', '魚跑掉了']; }
     else {
-      var mp = skillPct_(o, 'metal'), T = [['fish', 58], ['res', 22], ['coin', 10], ['bfruit', 4 + fsl + mp * 20], ['dia', 1 + fsl * 0.5 + mp * 10]], tot0 = 0, x0;
+      var mp = skillPct_(o, 'metal'), T = [['fish', 58], ['res', 22], ['coin', 10], ['bfruit', 4 + fsl + mp * 20], ['dia', 1 + fsl * 0.5 + mp * 10], ['sand', 1]], tot0 = 0, x0;
       T.forEach(function (t) { tot0 += t[1]; }); x0 = Math.random() * tot0;
       var pick = T[T.length - 1][0]; for (var ti = 0; ti < T.length; ti++) { if (x0 < T[ti][1]) { pick = T[ti][0]; break; } x0 -= T[ti][1]; }
       if (pick === 'fish') { var fn = Math.random() < 0.4 ? 2 : 1; o.fish += fn; out.got = { k: 'fish', n: fn }; }
       else if (pick === 'res') { var rk = ['wood', 'stone', 'iron'][Math.floor(Math.random() * 3)], rn = 3 + Math.floor(Math.random() * 3); r[BAG_COL[rk]] = num_(r[BAG_COL[rk]]) + rn; out.got = { k: rk, n: rn }; }
       else if (pick === 'coin') { var cn2 = 2 + Math.floor(Math.random() * 3); out.add = cn2; out.got = { k: 'coin', n: cn2 }; }
       else if (pick === 'bfruit') { btOf_(o).fr++; out.got = { k: 'bfruit', n: 1 }; }
+      else if (pick === 'sand') { guOf_(o).sand++; out.got = { k: 'sand', n: 1 }; }
       else { r[C.dia] = num_(r[C.dia]) + 1; out.got = { k: 'dia', n: 1 }; }
       out.log = ['釣魚', out.got.k + '×' + out.got.n];
     }
@@ -1961,6 +2164,7 @@ function isleAct_(a, q, r, me) {
     if (rw.dia) r[C.dia] = num_(r[C.dia]) + rw.dia;
     if (rw.bfruit) btOf_(o).fr += rw.bfruit;
     o.cxc[cc] = 1; out.got = { k: rw.dia ? 'dia' : 'bfruit', n: rw.dia || rw.bfruit }; out.log = ['圖鑑', cc];
+    if (cc === 'all') { guOf_(o).sand += SAND_CX; out.got.sand = SAND_CX; }
   } else if (a === 'tower') {   // v83 五行塔
     if (o.tl < 3) return { err: 'needtemple', need: 3 };
     var tw = twOf_(o), tp = null;
@@ -1973,7 +2177,7 @@ function isleAct_(a, q, r, me) {
     if (win) {
       tw.fl++; tw.top = Math.max(num_(tw.top), tw.fl);
       var tc = 2 + Math.floor(tw.fl / 5); out.add = tc; out.got = { k: 'coin', n: tc };
-      if (g.boss) { btOf_(o).fr += 2; out.got.bfruit = 2; }
+      if (g.boss) { btOf_(o).fr += 2; out.got.bfruit = 2; if (Math.random() < SAND_TOWER_P) { guOf_(o).sand++; out.got.sand = 1; } }
       out.log = ['五行塔', '第 ' + tw.fl + ' 層過關'];
     } else { tw.lost = day_(); out.log = ['五行塔', '第 ' + g.fl + ' 層落敗']; }
   } else if (a === 'awaken') {   // v83 覺醒
@@ -1989,6 +2193,24 @@ function isleAct_(a, q, r, me) {
     ab.fr -= AW_COST.bfruit; BT_PARTS.forEach(function (pp) { ab.sh[ap.k + '.' + pp] -= AW_COST.shard; if (!ab.sh[ap.k + '.' + pp]) delete ab.sh[ap.k + '.' + pp]; });
     r[C.dia] = num_(r[C.dia]) - AW_COST.dia; ap.aw = 1; o.cx[ap.k + '.aw'] = 1;
     out.log = ['覺醒', ANIMALS[ap.k].name];
+  } else if (a === 'rush') {   // v85 用 💎 1 立刻完成施工
+    var rk2 = String(q.k || '');
+    if (rk2 === 'house') { if (!o.hb || num_(o.hb.e) <= now) return { err: 'bad' }; }
+    else if (!o.bb[rk2] || num_(o.bb[rk2].e) <= now) return { err: 'bad' };
+    if (num_(r[C.dia]) < RUSH_DIA) return { err: 'few', miss: { dia: RUSH_DIA - num_(r[C.dia]) } };
+    r[C.dia] = num_(r[C.dia]) - RUSH_DIA;
+    if (rk2 === 'house') o.hb.e = now; else o.bb[rk2].e = now;
+    out.log = ['加速', rk2 + ' 💎' + RUSH_DIA];
+  } else if (a === 'diaretry') {   // v85 用 💎 2 再挑戰一次（五行塔輸了、守護試煉次數用完）
+    var dk2 = String(q.k || '');
+    if (num_(r[C.dia]) < RETRY_DIA) return { err: 'few', miss: { dia: RETRY_DIA - num_(r[C.dia]) } };
+    if (dk2 === 'tower') { var dtw = twOf_(o); if (num_(dtw.lost) !== day_()) return { err: 'bad' }; dtw.lost = 0; }
+    else if (dk2 === 'guard') { var dgu = guOf_(o), dis = String(q.isle || ''); if (num_(dgu.t[dis]) < GT_DAY) return { err: 'bad' }; dgu.t[dis] = num_(dgu.t[dis]) - 1; }
+    else return { err: 'bad' };
+    r[C.dia] = num_(r[C.dia]) - RETRY_DIA; out.log = ['再挑戰', dk2 + ' 💎' + RETRY_DIA];
+  } else if (a === 'buysand') {   // v85 用 💎 3 換 1 把五行結界砂
+    if (num_(r[C.dia]) < SAND_DIA) return { err: 'few', miss: { dia: SAND_DIA - num_(r[C.dia]) } };
+    r[C.dia] = num_(r[C.dia]) - SAND_DIA; guOf_(o).sand++; out.got = { k: 'sand', n: 1 }; out.log = ['換結界砂', '💎' + SAND_DIA];
   } else if (a === 'moveitem') {
     var mk = String(q.k || ''), x = Number(q.x), y = Number(q.y), valid = mk === 'house' && (o.h > 0 || o.hb);
     var fm = /^field(\d+)$/.exec(mk), tm = /^tree(\d+)$/.exec(mk);

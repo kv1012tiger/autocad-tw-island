@@ -1138,10 +1138,31 @@ button.lk{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .cx-g .cx{padding:6px 0;border-radius:8px;background:#e5e7eb;font-size:20px;filter:grayscale(1);opacity:.45}.cx-g .cx.on{background:#fef3c7;filter:none;opacity:1}
 .cx-g .cx.sh.on{background:linear-gradient(135deg,#fde68a,#f9a8d4,#a5b4fc)}.cx-g b{font-size:11px}
 .mi-chk{display:grid;gap:4px;font-size:13px}.mi-chk span.ok{color:#15803d;font-weight:800}
-.mi-mon{font-size:34px;pointer-events:none}
+.mi-mon{font-size:34px}
 .mi-pet.shn .sv,.mi-pet.shn u{filter:hue-rotate(150deg) saturate(1.5) drop-shadow(0 0 6px #f0abfc)}
 .mi-pet.aw .sv{filter:drop-shadow(0 0 6px #fde047) drop-shadow(0 0 14px #f59e0b)}
-.tw-st{font-size:13px;margin:4px 0}.tw-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tw-st{font-size:13px;margin:4px 0}
+/* v85 分類選單、Lv9 以上徽章、可點的小屋／神殿／紀念碑 */
+.mi-cats{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.mi-cat{border:1px solid rgba(253,224,71,.55);background:rgba(255,255,255,.08);color:inherit;border-radius:999px;padding:6px 11px;font-weight:800;font-size:13px;cursor:pointer}
+.mi-cat.on{background:#fde047;color:#1f2937}.mi-cat.dot::after{content:'●';color:#ef4444;margin-left:4px;font-size:10px;vertical-align:top}
+.mi-lv.l9,.mi-lv.l10,.mi-lv.l11,.mi-lv.l12,.mi-lv.l13,.mi-lv.l14{background:linear-gradient(90deg,#f59e0b,#ec4899,#8b5cf6,#06b6d4)}
+.mi-house.lv11 span,.mi-house.lv12 span,.mi-house.lv13 span,.mi-house.lv14 span,.mi-house.lv15 span,.mi-house.lv16 span{font-size:112px}
+.mi-scene [data-info]{cursor:pointer;pointer-events:auto}.mi-temple[data-info]{pointer-events:auto}
+.mi-wip .wr .rush{margin-left:6px;padding:2px 8px;font-size:12px}
+/* v84 神獸分靈守護 */
+#sceneGuard{max-width:1100px;margin:10px auto 0;padding:0 12px}
+.gdb{border-radius:16px;padding:12px 14px;background:rgba(10,40,60,.82);color:#f8fafc;border:1px solid rgba(253,224,71,.35);font-size:14px;line-height:1.6}
+.gdb h4{margin:0 0 4px;font-size:16px}.gdb .gdr{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.gdb small{color:#cbd5e1}
+.gdb.shd{box-shadow:0 0 0 2px #a78bfa,0 0 18px rgba(167,139,250,.6)}
+.gd-mk{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-size:22px;filter:drop-shadow(0 0 6px #fde047);pointer-events:none;z-index:5}
+.gd-mk.shd{filter:drop-shadow(0 0 6px #a78bfa) drop-shadow(0 0 12px #c4b5fd)}
+.gq-ov{position:fixed;inset:0;z-index:9000;background:rgba(2,12,24,.86);overflow:auto;padding:16px}
+.gq-box{max-width:640px;margin:0 auto;background:#fffbeb;color:#1f2937;border-radius:18px;padding:16px}
+.gq-box h3{margin:0 0 6px}.gq-q{margin:12px 0;padding:10px;border-radius:12px;background:#fff;border:1px solid #fde68a}
+.gq-q b{display:block;margin-bottom:6px}.gq-q label{display:block;padding:6px 8px;margin:4px 0;border-radius:8px;background:#f8fafc;cursor:pointer}
+.gq-q label.sel{background:#fde68a}.gq-q.ok{border-color:#22c55e;background:#f0fdf4}.gq-q.ng{border-color:#ef4444;background:#fef2f2}
+.gq-q .ans{font-size:13px;color:#166534;margin-top:4px}.gq-tm{float:right;font-weight:800;color:#b45309}.tw-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 /* 五行神殿：島的右上角，擁有哪一種神獸就點亮那顆光球；沒有神獸時整座是灰暗的石頭，五種到齊整座發金光 */
 .mi-temple{position:absolute;left:75%;top:7%;width:150px;margin-left:-75px;text-align:center;line-height:1;pointer-events:none;z-index:1}
 .mi-temple svg{display:block;width:150px;height:auto;overflow:visible;filter:drop-shadow(0 6px 5px rgba(0,0,0,.35))}
@@ -2279,7 +2300,7 @@ function layout(){
   SP.forEach(function(s,i){var c=cells[i],jx=(rnd(i,5)-.5)*.3,jy=(rnd(i,6)-.5)*.26;s.x=Math.round(pad+(c[0]+.5+jx)*cw);s.y=Math.round(pad+(c[1]+.5+jy)*ch)});
   /* 同一排的兩座島靠太近（主島放大後燈塔、光圈會疊到旁邊的島）就左右推開，主島不動、兩座一般島各讓一半，多跑幾輪讓旁邊的島也順著讓開 */
   for(var rr=0;rr<10;rr++)SP.forEach(function(a,i){SP.forEach(function(b,j){if(j<=i)return;var dx=b.x-a.x,need=Math.round((a.w+b.w)/2*1.24);if(Math.abs(b.y-a.y)>=160||Math.abs(dx)>=need)return;var sg=dx<0?-1:1,mv=need-Math.abs(dx);if(b.major&&!a.major)a.x-=sg*mv;else if(a.major&&!b.major)b.x+=sg*mv;else{a.x-=sg*mv/2;b.x+=sg*mv/2}})});
-  SP.forEach(function(s){s.el.style.left=s.x+'px';s.el.style.top=s.y+'px'});
+  SP.forEach(function(s){s.el.style.left=s.x+'px';s.el.style.top=s.y+'px'});if(typeof gdMarks==='function'&&GD)gdMarks();
   G={w:W,h:H};map.style.width=W+'px';map.style.height=H+'px';
   var route=$('route');route.setAttribute('viewBox','0 0 '+W+' '+H);route.setAttribute('width',W);route.setAttribute('height',H);
   var d=crPath(SP);$('r1').setAttribute('d',d);$('r2').setAttribute('d',d);
@@ -2402,7 +2423,7 @@ $('logBtn').addEventListener('click',openLog);
 $('logClose').addEventListener('click',closeLog);
 var gb=$('guideBox'),gbT;
 /* 進場第一則泡泡：新增神獸試煉島（點了直接去試煉島）；收起後恢復原本的金幣提示 */
-var GB_ANN='🆕 新玩法上線！我的小島可以擴地，蓋伐木場、採石場、鍛鐵爐、倉庫、釣魚碼頭、料理小屋、CAD 繪圖工作室；五行神殿升級開放神獸圖鑑、技能、五行塔、覺醒 👉 點我到留言碼頭看細節',gbAnn=false;
+var GB_ANN='🆕 神獸分靈守護島上線！到論壇教學島回答文章題目，放上你的神獸守護 3 小時、領豐盛獎勵；小島擴地、生產設施、鑽石新用途也都更新了 👉 點我到留言碼頭看細節',gbAnn=false;
 function gbClose(){gb.hidden=true;if(gbAnn){gbAnn=false;refresh()}}
 function showGuide(ann){gbAnn=!!ann;if(gbAnn)$('guideTxt').textContent=GB_ANN;gb.hidden=false;clearTimeout(gbT);gbT=setTimeout(gbClose,gbAnn?12000:9000)}
 gb.addEventListener('click',function(){var go=gbAnn;clearTimeout(gbT);gbClose();if(go)location.hash='#msg'});
@@ -2505,6 +2526,7 @@ function showScene(s){
   scene.hidden=false;drawScene();scene.scrollTop=0;placeBoat(s.si,true);
   var sv=$('sceneVis');if(!sv){sv=document.createElement('div');sv.id='sceneVis';sv.style.cssText='max-width:1100px;margin:10px auto 0;padding:0 12px';land.parentNode.insertBefore(sv,land)}
   sv.innerHTML='<div></div>';COINS.visit('isle-'+s.id,s.name,sv.firstChild);
+  gdShow(s);   /* v84 守護神獸 */
 }
 function hideScene(){if(!SCN)return;SCN=null;scene.hidden=true;land.innerHTML='';sceneHud(false)}
 /* 島上時：回大海、島名、分享、收藏併進最上面那一列 */
@@ -3430,6 +3452,7 @@ window.AIKB_GACHA={
       if(!j||!j.ok){if(j&&j.err!=='bad'){GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}}return {ok:false,msg:j&&j.err==='gachamax'?'今天 3 次抽完了，明天再來':COINS.errText(j)}}
       GA.pend=null;try{localStorage.removeItem(gaKey())}catch(e){}
       if(j.gacha&&j.gacha.k==='beast'&&MI.data&&!MI.fid)MI.at=0;
+      if(j.gacha&&j.gacha.sand)setTimeout(function(){toast('✨ 額外掉了一把「五行結界砂」！可以撒在你守護的島上')},2600);
       return {ok:true,gacha:j.gacha};
     }).catch(function(){return {ok:false,msg:'網路不穩，再按一次會確認剛才那一抽（不會重複扣）'}});
   },
@@ -3440,7 +3463,7 @@ window.AIKB_GACHA={
 };
 /* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
 function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
-(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now());localStorage.setItem('aikb-bn-new83','1')}catch(x){}return}location.hash=e.target.closest('[data-bnann]')?'msg':'gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
+(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now());localStorage.setItem('aikb-bn-new85','1')}catch(x){}return}location.hash=e.target.closest('[data-bnann]')?'msg':'gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
   var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null;GA.err=false}
   if(GA.left==null&&code)GA.left=gaLeftCached();
@@ -3470,6 +3493,99 @@ function renderTrial(){
   $('pStep').textContent='🐲 神獸試煉島';footSimple('← 回地圖','');pNext.hidden=true;
   twLoad();
 }
+/* v85 我的小島分類選單：點哪一類才展開，記住上次的選擇；有東西可以收的分類會亮紅點 */
+var MICAT=[['build','🏗️ 建造'],['prod','🏭 生產'],['farm','🥕 菜園果樹'],['pets','🐾 寵物'],['beast','🐲 神獸守護'],['garden','🌸 花園'],['vis','👣 訪客']];
+var MICAT_OF=[['🏗️','build'],['🏭','prod'],['🎣','prod'],['🍳','prod'],['📐','prod'],['🥕','farm'],['🌳','farm'],['🐾','pets'],['⛩️','beast'],['🌸','garden'],['👣','vis']];
+function miCatApply(box){
+  var secs=[].slice.call(box.children).filter(function(e){return e.classList&&e.classList.contains('p-sec')}),first=null,has={},dot={};
+  secs.forEach(function(e){var h=e.querySelector('h4');if(!h)return;var t=h.textContent.trim(),c=null;MICAT_OF.some(function(m){if(t.indexOf(m[0])===0){c=m[1];return true}});if(!c)return;e.setAttribute('data-cat',c);has[c]=1;if(!first)first=e;if(e.querySelector('[data-harvest],[data-collect],[data-jobdone],[data-gclaim],[data-cx]'))dot[c]=1});
+  if(!first)return;
+  var cur=MI.cat;if(!cur){try{cur=localStorage.getItem('aikb-micat')}catch(x){}}if(!has[cur])cur='build';MI.cat=cur;
+  var bar=document.createElement('div');bar.className='mi-cats';
+  bar.innerHTML=MICAT.filter(function(c){return has[c[0]]}).map(function(c){return '<button type="button" class="mi-cat'+(c[0]===cur?' on':'')+(dot[c[0]]&&c[0]!==cur?' dot':'')+'" data-micat="'+c[0]+'">'+c[1]+'</button>'}).join('');
+  first.parentNode.insertBefore(bar,first);
+  secs.forEach(function(e){var c=e.getAttribute('data-cat');if(c)e.hidden=c!==cur});
+}
+/* v85 點小屋、五行神殿、紀念碑：特效＋說明 */
+function miInfo(t,kind){
+  var d=MI.data;if(!d)return;var R=d.rules||{},h='',ttl='',em=[];
+  if(kind==='house'){var HC=((R.houseCap||[0,10])[d.xl||1])||10;ttl=HOUSEI[d.h]+' 小屋 Lv'+d.h;em=['🏠','✨','🔨'];
+    h='<p>小屋越高級，能養的寵物越多（現在最多 '+Math.min(d.h,8)+' 隻，Lv8 以上養 8 隻），島主分也越高（每級 +10）。</p><p>這塊地小屋最高 Lv'+HC+'；擴地到 Lv2／Lv3／Lv4 後，最高可以升到 Lv12／Lv14／Lv16（Lv11 以上要 💎）。</p>'+(d.hb?'<p>🔨 正在升 Lv'+d.hb.t+'，可以在施工中按「💎 立即完成」。</p>':'')}
+  else if(kind==='temple'){var have={};(d.pets||[]).forEach(function(p){var e=PV_BEAST[p.k];if(e)have[e]=1});var tl=d.tl||1;ttl='⛩️ 五行神殿 Lv'+tl;em=['💧','🔥','🌿','⚙️','⛰️'];
+    h='<p>島上有哪一種神獸，就點亮那一顆光球（'+TEMPLE_EL.map(function(e){return (have[e[0]]?'●':'○')+e[2]}).join(' ')+'），五種到齊整座發金光。</p><div class="mi-chk">'+[1,2,3,4].map(function(l){return '<span class="'+(tl>=l?'ok':'')+'">'+(tl>=l?'✅':'🔒')+' Lv'+l+'：'+TEMPLE_ABOUT[l]+'</span>'}).join('')+'</div><p>升級條件：Lv2 要 1 種神獸、Lv3 要 3 種、Lv4 要 5 種＋⛵ 皇家旗艦。到下方「🏗️ 建造」升級。</p>'}
+  else{var M=d.mon||[],n=M.filter(function(m){return m[2]}).length;ttl='🏆 榮譽紀念碑 '+n+' / '+M.length;em=['🏆','👑','✨','🎉'];
+    h='<p>完成越多成就，紀念碑就越高、越華麗，別人參觀也看得到。不能花錢買。</p><div class="mi-chk">'+M.map(function(m){return '<span class="'+(m[2]?'ok':'')+'">'+(m[2]?'✅':'⬜')+' '+m[0]+' '+m[1]+'</span>'}).join('')+'</div>'}
+  fxAt(t,em);playSfx('chest');
+  var ov=document.createElement('div');ov.className='gq-ov';ov.innerHTML='<div class="gq-box"><h3>'+ttl+'</h3>'+h+'<button class="btn btn-primary btn-sm" type="button">知道了</button></div>';
+  document.body.appendChild(ov);ov.addEventListener('click',function(e){if(e.target===ov||e.target.closest('button'))ov.remove()});
+}
+/* v84 神獸分靈守護：論壇教學島的守護位子、守護試煉考卷、靈脈試煉 */
+var GD={g:{},t:0,ld:null},GDN={beginner:'初階入門島',cad2d:'2D 討論島',quiz:'測驗練習島',cad3d:'3D 討論島',f44:'專案報告島',videos:'影片教學島',advanced:'進階討論島',courses:'光碟課程島',realtime:'即時動態島',announce:'最新公告島',career:'職場交流島',plugins:'外掛工具島',memberb:'專屬 B 資源島',sponsora:'贊助 A 資源島'};
+function hms(ms){ms=Math.max(0,ms);var h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return (h?h+' 小時 ':'')+m+' 分'}
+function gdLoad(force){if(!force&&GD.ld&&Date.now()-GD.t<60000)return GD.ld;GD.t=Date.now();GD.ld=COINS.api({a:'guards'}).then(function(j){if(j&&j.ok){GD.g=j.guards||{};gdMarks()}return GD.g}).catch(function(){return GD.g});return GD.ld}
+function gdSet(g){if(g){GD.g=g;GD.t=Date.now();GD.ld=Promise.resolve(g);gdMarks()}}
+function gdMarks(){SP.forEach(function(s){if(s.k!=='forum'||!s.el)return;var g=GD.g[s.id],m=s.el.querySelector('.gd-mk');if(!g||g.e<=Date.now()){if(m)m.remove();return}if(!m){m=document.createElement('span');m.className='gd-mk';s.el.appendChild(m)}m.textContent=(ANI[g.bk]||['🐲'])[0];m.classList.toggle('shd',!!(g.shd&&g.shd>Date.now()));m.title='守護神獸：'+g.nick})}
+function gdMyIsle(){var c=miCacheGet();if(c&&Date.now()-c.t<60000)return Promise.resolve(c.d);return COINS.api({a:'island'}).then(function(j){if(j&&j.ok&&j.island){miCachePut(j.island);return j.island}return c?c.d:null}).catch(function(){return c?c.d:null})}
+function gdPaint(s){
+  var box=$('sceneGuard');if(!box||!SCN||SCN!==s)return;var g=GD.g[s.id],now=Date.now(),w=COINS.get();
+  var o='<div class="gdb'+(g&&g.shd>now?' shd':'')+'"><h4>🛡️ 守護神獸</h4>';
+  if(g&&g.e>now){var a=ANI[g.bk]||['🐲',''];o+='<div>'+a[0]+' 船長 <b>'+esc(g.nick)+'</b> 的 '+(g.aw?'覺醒':'')+(g.sh?'✨異色':'')+a[1]+' Lv'+g.lv+'（IV '+g.iv+'）</div><small>試煉成績 '+g.sc+' / 8・用時 '+Math.round(g.ms/1000)+' 秒・守護還剩 '+hms(g.e-now)+(g.shd>now?'・✨ 五行結界中，'+hms(g.shd-now)+' 內不能挑戰':'')+'</small>'}
+  else o+='<div>這座島還沒有守護神獸，第一個通過試煉的船長就能放上神獸分靈！</div>';
+  o+='<small style="display:block;margin-top:4px">回答這座島的文章題目（8 題、答對 6 題通過）。通過後放上你的神獸分靈守護 3 小時，期間每 30 分鐘掉一次隨機獎勵、有人來讀文章再加金幣，守滿還有寶箱。分數比現任守護者高（同分比速度）就能換下他。</small>';
+  o+='<div class="gdr">'+(w.code?'<button class="btn btn-primary btn-sm" type="button" data-gtry="'+s.id+'">🐲 挑戰守護試煉</button>':'<button class="btn btn-primary btn-sm" type="button" data-glogin>⚓ 登島後挑戰</button>')+'</div></div>';
+  box.innerHTML=o;
+}
+function gdShow(s){var sv=$('sceneVis');if(!sv)return;var b=$('sceneGuard');if(!b){b=document.createElement('div');b.id='sceneGuard';sv.parentNode.insertBefore(b,sv)}b.innerHTML='';gdLoad().then(function(){gdPaint(s)})}
+/* 選神獸：只能選島上有、而且還有分靈名額的神獸 */
+function gdPick(isle,d,cb){
+  var bp=(d.pets||[]).filter(function(p){return PV_BEAST[p.k]}),sp=(d.gu&&d.gu.sp)||{},mine=(d.gu&&d.gu.mine)||[];
+  if(!bp.length){toast('🐲 你的小島上還沒有神獸，先到 🐲 神獸試煉島或 🎁 扭蛋島取得神獸');return}
+  var ov=document.createElement('div');ov.className='gq-ov';
+  ov.innerHTML='<div class="gq-box"><h3>'+(isle==='*'?'🌌 靈脈試煉：選一隻神獸':'🐲 選一隻神獸分靈去守護 '+esc(GDN[isle]||''))+'</h3><p style="font-size:13px">'+(isle==='*'?'通過靈脈試煉，這隻神獸就能多分靈 1 隻（最多 3 隻）。第 2 隻：Lv5、答對 7 題、🍑×5；第 3 隻：Lv10＋已覺醒、8 題全對、🍑×10 💎×3。':'每隻神獸能分靈的數量有限，用完要先等守護結束，或到我的小島做「靈脈試煉」增加分靈。')+'</p>'+
+    bp.map(function(p){var a=ANI[p.k]||['🐲',''],cap=Math.max(1,sp[p.k]||1),used=mine.filter(function(m){return m.bk===p.k}).length;
+      return '<button class="btn btn-primary btn-sm" style="display:block;width:100%;margin:6px 0;text-align:left" type="button" data-gpk="'+p.k+'">'+a[0]+' '+(p.aw?'覺醒':'')+esc(p.n)+' Lv'+p.lv+'・分靈 '+(isle==='*'?cap+' / 3':used+' / '+cap+' 使用中')+'</button>'}).join('')+
+    '<button class="btn btn-ghost btn-sm" type="button" data-gx>取消</button></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;ov.remove();if(t.dataset.gpk)cb(t.dataset.gpk)});
+}
+function gdTry(isle){
+  COINS.need(function(){gdMyIsle().then(function(d){
+    if(!d){toast('⚠️ 暫時連不上，請稍後再試');return}
+    if((d.tl||1)<2){toast('⛩️ 五行神殿要升到 Lv2 才能挑戰守護試煉，先到 🏝️ 我的小島升級神殿');return}
+    var GR=(d.rules&&d.rules.guard)||{};if(GR.boards&&isle!=='*'&&GR.boards.indexOf(isle)<0){toast('📝 這座島的題庫還在準備中，敬請期待');return}
+    gdPick(isle,d,function(bk){gdExam(isle,bk)});
+  })});
+}
+function gdExam(isle,bk){
+  COINS.api({a:'gtest',isle:isle,bk:bk}).then(function(j){
+    if(j&&j.err==='gtmax'&&isle!=='*'){if(confirm('今天這座島的挑戰次數用完了，要花 💎 2 再考一次嗎？'))COINS.api({a:'diaretry',k:'guard',isle:isle}).then(function(x){if(x&&x.ok){if(x.island)miCachePut(x.island);gdExam(isle,bk)}else toast('⚠️ '+COINS.errText(x))});return}
+    if(!j||!j.ok){toast('⚠️ '+COINS.errText(j)+(j&&j.left?'（還要 '+hms(j.left)+'）':''));return}
+    var P=j.paper,t0=Date.now(),sel=P.qs.map(function(){return null}),ov=document.createElement('div');ov.className='gq-ov';
+    function draw(){ov.innerHTML='<div class="gq-box"><span class="gq-tm" id="gqT"></span><h3>'+(isle==='*'?'🌌 靈脈試煉':'🐲 守護試煉・'+esc(GDN[isle]||''))+'</h3><p style="font-size:13px">共 '+P.qs.length+' 題，'+Math.round(P.ttl/60000)+' 分鐘內交卷；同分時比答題速度。今天這座島還可以再考 '+P.left+' 次。</p>'+
+      P.qs.map(function(q,k){return '<div class="gq-q"><b>'+(k+1)+'. '+esc(q.q)+' <small>'+['','⭐','⭐⭐','⭐⭐⭐'][q.d]+'</small></b>'+q.o.map(function(x,i){return '<label class="'+(sel[k]===i?'sel':'')+'" data-gk="'+k+'" data-gi="'+i+'">'+'ABCD'[i]+'. '+esc(x)+'</label>'}).join('')+'</div>'}).join('')+
+      '<button class="btn btn-primary" type="button" data-gsub>📤 交卷</button> <button class="btn btn-ghost btn-sm" type="button" data-gx>放棄</button></div>'}
+    draw();document.body.appendChild(ov);
+    var tm=setInterval(function(){var e=$('gqT');if(!e||!ov.isConnected){clearInterval(tm);return}var l=P.ttl-(Date.now()-t0);e.textContent='⏱️ '+Math.floor(l/60000)+':'+('0'+Math.floor(l%60000/1000)).slice(-2);if(l<=0)clearInterval(tm)},500);
+    ov.addEventListener('click',function(e){var lb=e.target.closest('[data-gk]');if(lb){sel[+lb.dataset.gk]=+lb.dataset.gi;lb.parentNode.querySelectorAll('label').forEach(function(x){x.classList.toggle('sel',x===lb)});return}
+      var b=e.target.closest('button');if(!b)return;
+      if(b.dataset.gx!=null){if(confirm('確定放棄這份考卷嗎？已經用掉 1 次挑戰機會。')){ov.remove();clearInterval(tm)}return}
+      if(b.dataset.gsub!=null){if(sel.some(function(x){return x==null})&&!confirm('還有題目沒作答，確定交卷？'))return;b.disabled=true;
+        COINS.api({a:'gsubmit',ans:sel.map(function(x){return x==null?'':x})}).then(function(r){clearInterval(tm);
+          if(!r||!r.ok){ov.remove();toast('⚠️ '+COINS.errText(r));return}
+          if(r.guards)gdSet(r.guards);if(r.island&&!MI.fid){miCachePut(r.island);if(V.t==='mine'){MI.data=r.island;MI.at=Date.now();paintMine()}}
+          var g=r.gres,PL={ok:'🛡️ 你的神獸分靈已經開始守護這座島 3 小時！'+(g.beat?'（換下了船長 '+esc(g.beat)+'）':''),lose:'現任守護者成績 '+(g.cur?g.cur.sc+' / 8、'+Math.round(g.cur.ms/1000)+' 秒':'')+'，要考得比他好才能換下他。',shield:'這座島正在五行結界中，暫時不能換下守護者。',cool:'你剛卸任這座島，1 小時後才能再守。',nosplit:'這隻神獸的分靈都在守護中，等守護結束，或做靈脈試煉增加分靈。',mine:'你已經在守護這座島。'};
+          var msg=isle==='*'?(g.split?'🌌 通過！這隻神獸現在可以分靈 '+g.split+' 隻。':g.miss?'通過了，但材料不夠：'+missText(g.miss):'要答對 '+g.need+' 題才通過。'):(g.pass?(PL[g.place]||''):'要答對 '+g.need+' 題才通過，再讀讀這座島的文章吧！');
+          ov.querySelector('.gq-box').innerHTML='<h3>'+(g.pass?'🎉 通過！':'😵 沒通過')+' '+g.score+' / '+g.n+'・'+Math.round(g.ms/1000)+' 秒</h3><p>'+msg+'</p>'+
+            P.qs.map(function(q,k){var rt=g.right[k]||{};return '<div class="gq-q '+(rt.ok?'ok':'ng')+'"><b>'+(rt.ok?'✅':'❌')+' '+(k+1)+'. '+esc(q.q)+'</b><div>你選：'+(sel[k]==null?'（沒作答）':'ABCD'[sel[k]]+'. '+esc(q.o[sel[k]]))+'</div>'+(rt.ok?'':'<div class="ans">正確答案：'+'ABCD'[rt.a]+'. '+esc(q.o[rt.a]||'')+'</div>')+(rt.why?'<div class="ans">💡 '+esc(rt.why)+'</div>':'')+'</div>'}).join('')+
+            '<button class="btn btn-primary" type="button" data-gx2>完成</button>';
+          if(g.pass){fxAt(ov.querySelector('h3'),['🎉','🛡️','✨']);playSfx('chest')}
+          if(SCN)gdPaint(SCN);
+        }).catch(function(){b.disabled=false;toast('⚠️ 網路不穩，交卷沒有成功，請再按一次')})}
+      if(b.dataset.gx2!=null)ov.remove();
+    });
+  }).catch(function(){toast('⚠️ 暫時連不上，請稍後再試')});
+}
+document.addEventListener('click',function(e){var t=e.target.closest('[data-gtry],[data-glogin]');if(!t)return;if(t.dataset.glogin!=null){COINS.need(function(){if(SCN)gdPaint(SCN)});return}gdTry(t.dataset.gtry)});
 /* v83 五行塔：每週一重置 30 層、每 5 層魔王；神殿 Lv3 才能挑戰（沒到的人點了會提示去升級神殿） */
 var TW={d:null,busy:false};
 function twPaint(){
@@ -3480,6 +3596,7 @@ function twPaint(){
   if((d.tl||1)<3){b.innerHTML=head+'<p class="mi-note">🔒 你的五行神殿是 Lv'+(d.tl||1)+'，要升到 <b>Lv3</b> 才能挑戰五行塔。</p><button class="btn btn-primary btn-sm need" type="button" data-twlock>🏯 挑戰五行塔</button>';return}
   var T=d.tw||{},g=T.next,bp=d.pets.filter(function(p){return PV_BEAST[p.k]});
   var o=head+'<p class="tw-st">本週已爬到第 <b>'+(T.fl||0)+'</b> / '+((d.rules&&d.rules.twFloors)||30)+' 層・最高紀錄 '+(T.top||0)+' 層'+(T.lost?'・<b style="color:#b91c1c">今天輸了，明天再來</b>':'')+'</p>';
+  if(T.lost)o+='<div class="tw-b"><button class="btn btn-primary btn-sm" type="button" data-twretry>💎'+((d.rules&&d.rules.retryDia)||2)+' 再挑戰一次</button></div>';
   if(g)o+='<p class="tw-st">下一層：第 '+g.fl+' 層'+(g.boss?' 👹 魔王':'')+'・守衛 '+ELN[g.el][0]+' '+ELN[g.el][1]+'屬性・戰力 '+g.pw+'</p>';else o+='<p class="tw-st">🎉 這週已經爬到塔頂了！</p>';
   if(!bp.length)o+='<p class="mi-note">你的小島上還沒有神獸，先到上面試煉，或到 🎁 扭蛋島抽一隻。</p>';
   else if(g&&!T.lost)o+='<div class="tw-b">'+bp.map(function(p){var c=(d.twChance||{})[p.id]||{};return '<button class="btn btn-primary btn-sm" type="button" data-tw="'+esc(p.id)+'">⚔️ '+(ANI[p.k]||['🐲'])[0]+' '+(p.aw?'覺醒':'')+esc(p.n)+'（戰力 '+(c.pw||'?')+'・勝率 '+(c.p||'?')+'%）</button>'}).join('')+'</div>';
@@ -3487,7 +3604,8 @@ function twPaint(){
 }
 function twLoad(){TW.d=null;twPaint();if(!COINS.get().code)return;COINS.api({a:'island'}).then(function(j){if(j&&j.ok&&j.island){TW.d=j.island;if(!MI.fid)miCachePut(j.island)}twPaint()}).catch(function(){var b=$('twBox');if(b)b.innerHTML='<h4>🏯 五行塔</h4><p class="mi-note">⚠️ 暫時連不上，請稍後再試</p>'})}
 pBody.addEventListener('click',function(e){
-  if(V.t!=='trial')return;var t=e.target.closest('[data-tw],[data-twlock],[data-twlogin]');if(!t)return;
+  if(V.t!=='trial')return;var t=e.target.closest('[data-tw],[data-twlock],[data-twlogin],[data-twretry]');if(!t)return;
+  if(t.dataset.twretry!=null){t.disabled=true;COINS.api({a:'diaretry',k:'tower'}).then(function(j){if(!j||!j.ok){toast('⚠️ '+COINS.errText(j));t.disabled=false;return}if(j.island)TW.d=j.island;toast('💎 可以再挑戰一次了！');twPaint()}).catch(function(){t.disabled=false;toast('⚠️ 暫時連不上')});return}
   if(t.dataset.twlogin!=null){COINS.need(function(){twLoad()});return}
   if(t.dataset.twlock!=null){toast('⛩️ 五行神殿要升到 Lv3 才能挑戰五行塔，先到 🏝️ 我的小島升級神殿');return}
   if(TW.busy)return;TW.busy=true;t.disabled=true;
@@ -3761,7 +3879,7 @@ function petArt(k,st){
 var VEGI={carrot:['🥕','胡蘿蔔',1,'4 小時',2,20],cabbage:['🥬','高麗菜',2,'8 小時',3,35],pumpkin:['🎃','南瓜',3,'24 小時',2,60]};
 var VEG_KEYS=['carrot','cabbage','pumpkin'];
 var DECOI={tree:['🌳','果樹',5],fountain:['⛲','噴水池',10],tower:['🗼','瞭望塔',20]};
-var HOUSEI=['🚧','🛖','🏠','🏡','🏡','🏡','🏘️','🏘️','🏰','🏰','🏰'];
+var HOUSEI=['🚧','🛖','🏠','🏡','🏡','🏡','🏘️','🏘️','🏰','🏰','🏰','🏯','🏯','🏯','🏯','🏯','🏯'];
 var TREEN=['幼苗','小樹','結果樹'],TREE_POS=[[14,58],[26,74],[8,40],[36,82],[3,70],[19,88]];
 /* 果樹現在的樣子：後台回報的是「讀取當下」的狀態，這裡依經過的時間往前推（幼苗→小樹→結果樹、果子一顆顆長出來） */
 function treeView(t,d){
@@ -3804,7 +3922,7 @@ function wipHTML(d){
   });
   return '<div class="mi-wip"><h4>🚧 施工中・完工倒數</h4>'+rows.map(function(r){
     var pct=Math.max(0,Math.min(100,(1-bLeft(d,r[0])/r[3])*100));
-    return '<div class="wr"><span class="wn">'+r[1]+' '+esc(r[2])+'</span><b class="mi-hbt" data-k="'+r[0]+'">'+bText(d,r[0])+'</b><div class="wbar"><i class="mi-wb" data-k="'+r[0]+'" data-t="'+r[3]+'" style="width:'+pct.toFixed(1)+'%"></i></div></div>';
+    return '<div class="wr"><span class="wn">'+r[1]+' '+esc(r[2])+'</span><b class="mi-hbt" data-k="'+r[0]+'">'+bText(d,r[0])+'</b>'+(d.mine?'<button class="btn btn-ghost btn-sm rush" type="button" data-rush="'+r[0]+'">💎'+((R.rushDia)||1)+' 立即完成</button>':'')+'<div class="wbar"><i class="mi-wb" data-k="'+r[0]+'" data-t="'+r[3]+'" style="width:'+pct.toFixed(1)+'%"></i></div></div>';
   }).join('')+'</div>';
 }
 /* 停泊的船：參觀別人的島（或看自己的島）會看到岸邊停著他買過的船和船名 */
@@ -3930,7 +4048,7 @@ function templeHTML(d){
   o+='</g>';
   TEMPLE_EL.forEach(function(e,i){var x=19+i*28,on=have[e[0]];
     o+='<path d="M'+(x-5)+' 116h10v8h-10z" fill="'+(gold?'#c9a24a':'#7b8189')+'"/><circle class="orb'+(on?' on':'')+'" style="--oc:'+e[1]+'" cx="'+x+'" cy="111" r="6"/>'});
-  return '<div class="mi-temple'+(n?'':' dim')+(gold?' full':'')+'" title="五行神殿：取得神獸就會點亮對應的光球">'+o+'</svg><em>⛩️ 五行神殿'+((d.tl||1)>1?' Lv'+d.tl:'')+' '+n+' / 5</em></div>';
+  return '<div class="mi-temple'+(n?'':' dim')+(gold?' full':'')+'" data-info="temple" role="button" aria-label="五行神殿說明" title="五行神殿：取得神獸就會點亮對應的光球">'+o+'</svg><em>⛩️ 五行神殿'+((d.tl||1)>1?' Lv'+d.tl:'')+' '+n+' / 5</em></div>';
 }
 function sceneHTML(d){
   var t=3,o='<div class="mi-sea"><div class="mi-scene xl'+(d.xl||1)+'"><div class="mi-land t3"></div>';   /* 陸地一律是整片大陸地（不再依等級由小變大） */
@@ -3938,14 +4056,14 @@ function sceneHTML(d){
   if(t>=2)o+='<span class="mi-sc" style="left:40%;top:76%;font-size:22px">🌸</span><span class="mi-sc" style="left:79%;top:66%;font-size:26px">🪨</span>';
   if(t>=3)o+='<span class="mi-sc" style="left:88%;top:46%;font-size:40px">🌴</span><span class="mi-sc" style="left:28%;top:86%;font-size:20px">🌷</span><span class="mi-sc" style="left:9%;top:64%;font-size:34px">🌴</span>';
   o+=templeHTML(d);
-  o+='<div class="mi-house lv'+d.h+'"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
+  o+='<div class="mi-house lv'+d.h+'" data-info="house" role="button" aria-label="小屋說明"><span>'+HOUSEI[d.h]+'</span><em>'+(d.hb?'🔨 Lv'+d.hb.t+' <b class="mi-hbt" data-k="house">'+hbText(d)+'</b>':d.h?'小屋 Lv'+d.h:'空地')+'</em></div>';
   o+='<div class="mi-fields">'+d.f.map(function(c,i){if(!c)return '<i class="mi-plot"></i>';var cv=cropView(c);return '<i class="mi-plot'+(cv.ready?' ready':'')+'"'+(cv.ready&&d.mine?' data-harvest="'+i+'" role="button" aria-label="收成第 '+(i+1)+' 塊田"':'')+'><b>'+cv.e+'</b></i>'}).join('')+(d.bb&&d.bb.field!=null?'<i class="mi-plot bld"><b>🚧</b></i>':'')+'</div>';
   var dp={tower:[52,8],fountain:[14,54]},dl=d.dl||{};   /* 瞭望塔在小屋右上、噴水池在小屋正下方，都緊靠小屋 */
-  d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(8,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" data-dfx="'+k+'" data-lv="'+lv+'" role="button" aria-label="'+DECOI[k][1]+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,lv-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
+  d.deco.forEach(function(k){if(!dp[k])return;var lv=Math.min(14,dl[k]||1),pp=dp[k];o+='<span class="mi-deco'+(lv>=4?' hi':'')+'" data-dfx="'+k+'" data-lv="'+lv+'" role="button" aria-label="'+DECOI[k][1]+'" style="left:'+pp[0]+'%;top:'+pp[1]+'%;font-size:'+(44+(Math.min(lv,3)-1)*9+Math.max(0,Math.min(lv,10)-3)*2)+'px">'+DECOI[k][0]+(lv>=6?'<i class="mi-spk" style="left:-8px;top:2px">✨</i>':'')+(lv>=7?'<i class="mi-spk b" style="right:-8px;top:30%">✨</i>':'')+(lv>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+lv+'">Lv'+lv+'</em></span>'});
   Object.keys(d.fac||{}).forEach(function(k){var I=FACI[k],f=d.fac[k];if(!I||!f)return;var pp=FAC_POS[k],v=I[2]&&d.mine?facView(d,k):null;   /* v82 生產設施：有產出就點一下收 */
     o+='<span class="mi-deco mi-fac'+(v&&v.n>=v.cap?' full':'')+'"'+(v&&v.n?' data-collect="'+k+'" role="button" aria-label="收'+I[1]+'的'+COSTN[I[3]]+'"':'')+' style="left:'+pp[0]+'%;top:'+pp[1]+'%">'+I[0]+(v&&v.n?'<i class="mi-fr">'+I[2]+'<b>'+v.n+'</b></i>':'')+'<em class="mi-lv l'+Math.min(8,f.lv)+'">'+I[1]+' Lv'+f.lv+'</em></span>'});
   var mn0=(d.mon||[]).filter(function(m){return m[2]}).length;   /* v83 榮譽紀念碑：成就越多越大 */
-  if(mn0)o+='<span class="mi-deco mi-mon" style="left:8%;top:28%;font-size:'+(28+mn0*4)+'px">🏆'+(mn0>=5?'<i class="mi-spk" style="left:-6px;top:0">✨</i>':'')+(mn0>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+Math.min(8,mn0)+'">紀念碑 '+mn0+'</em></span>';
+  if(mn0)o+='<span class="mi-deco mi-mon" data-info="mon" role="button" aria-label="榮譽紀念碑說明" style="left:8%;top:28%;font-size:'+(28+mn0*4)+'px">🏆'+(mn0>=5?'<i class="mi-spk" style="left:-6px;top:0">✨</i>':'')+(mn0>=8?'<i class="mi-spk" style="left:30%;top:-14px;font-size:18px">👑</i>':'')+'<em class="mi-lv l'+Math.min(8,mn0)+'">紀念碑 '+mn0+'</em></span>';
   (d.gd||[]).forEach(function(g,i){var pp=GD_POS[i%GD_POS.length];o+='<span class="mi-deco mi-gd" style="left:'+pp[0]+'%;top:'+pp[1]+'%">'+(GDI[g]||'🌸')+'</span>'});
   (d.trees||[]).forEach(function(t,i){
     var v=treeView(t,d),pp=TREE_POS[i%TREE_POS.length];
@@ -4010,7 +4128,7 @@ function miZoom(){
   function up(e){var had=ptrs[e.pointerId];delete ptrs[e.pointerId];var left=Object.keys(ptrs).length;if(left<2)pinch=null;
     if(left===1){var id=Object.keys(ptrs)[0];drag={x:ptrs[id].x,y:ptrs[id].y,sx:st.x,sy:st.y}}
     if(!left&&had&&!moved&&MZ){   /* 點到寵物、果樹、菜田、木材或泡泡按鈕：轉給真正的小島 */
-      var hit=document.elementFromPoint(e.clientX,e.clientY),tg=hit&&MZ.cl.contains(hit)&&hit.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-collect]');
+      var hit=document.elementFromPoint(e.clientX,e.clientY),tg=hit&&MZ.cl.contains(hit)&&hit.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-collect],[data-info]');
       if(tg&&MZ.cl.contains(tg)){var real=mzAt(MZ.src,mzPath(MZ.cl,tg));if(real){lastTap=0;real.click();drag=null;return}}
       if(PW.sel&&!(hit&&hit.closest('.pbub'))){petBubClose()}}
     if(!left&&had&&!moved){var now=Date.now();if(now-lastTap<320){lastTap=0;zoomAt(st.s>1.2?1:2.5,e.clientX,e.clientY)}else lastTap=now}
@@ -4177,7 +4295,8 @@ function paintMine(){
   var R=d.rules,w=COINS.get(),fruit=(w.bag||{}).fruit||0;
   /* 建造 */
   var B=[];
-  B.push(d.hb?{e:'🚧',n:'小屋 Lv'+d.hb.t+' 施工中',t:'還要 <b class="mi-hbt" data-k="house">'+hbText(d)+'</b> 才會完工',done:1}:d.h<10?{k:'house',e:HOUSEI[d.h+1],n:'小屋 Lv'+(d.h+1),t:'可以養 '+Math.min(d.h+1,8)+' 隻寵物・施工要 '+Math.round((R.houseMs[d.h+1])/60000)+' 分鐘',cost:R.house[d.h+1]}:{e:HOUSEI[10],n:'小屋 Lv10',t:'已經蓋到最高級・最多養 8 隻寵物',done:1});
+  var HC=((R.houseCap||[0,10])[d.xl||1])||10;
+  B.push(d.hb?{e:'🚧',n:'小屋 Lv'+d.hb.t+' 施工中',t:'還要 <b class="mi-hbt" data-k="house">'+hbText(d)+'</b> 才會完工',done:1}:d.h>=HC&&(d.xl||1)<4?{e:HOUSEI[d.h],n:'小屋 Lv'+d.h,t:'這塊地最高 Lv'+HC+'・🔒 擴地 Lv'+((d.xl||1)+1)+' 後可以升到 Lv'+(R.houseCap||[])[(d.xl||1)+1],done:1}:d.h<HC?{k:'house',e:HOUSEI[d.h+1],n:'小屋 Lv'+(d.h+1),t:'可以養 '+Math.min(d.h+1,8)+' 隻寵物・施工要 '+Math.round((R.houseMs[d.h+1])/60000)+' 分鐘',cost:R.house[d.h+1]}:{e:HOUSEI[d.h],n:'小屋 Lv'+d.h,t:'已經蓋到最高級・最多養 8 隻寵物',done:1});
   var FMS=R.fieldMs||[60000,120000,240000],DMS=R.decoMs||{tree:120000,fountain:300000,tower:600000};
   B.push(d.bb&&d.bb.field!=null?{e:'🚧',n:'菜田 第 '+(d.fields+1)+' 塊 施工中',t:'還要 <b class="mi-hbt" data-k="field">'+bText(d,'field')+'</b> 才會完工',done:1}:d.fields<R.field.length?{k:'field',e:'🟫',n:'菜田 第 '+(d.fields+1)+' 塊',t:'可以多種一種菜・施工要 '+bmin(FMS[d.fields])+' 分鐘',cost:R.field[d.fields]}:{e:'🟫',n:'菜田 3 塊',t:'菜田已經蓋滿了',done:1});
   /* 果樹：可以種很多棵（會自己長大、結果） */
@@ -4185,9 +4304,9 @@ function paintMine(){
   B.push(d.bb&&d.bb.tree!=null?{e:'🚧',n:'果樹 第 '+(nT+1)+' 棵 施工中',t:'還要 <b class="mi-hbt" data-k="tree">'+bText(d,'tree')+'</b> 才會完工',done:1}:nT<TM?{k:'tree',e:'🌳',n:'果樹 第 '+(nT+1)+' 棵',t:'會自己長大、長出水果・島主分 +3～8・施工要 '+bmin(DMS.tree)+' 分鐘',cost:(R.treeCost||[])[nT]||R.deco.tree.cost}:{e:'🌳',n:'果樹 '+TM+' 棵',t:'果樹園已經種滿了',done:1});
   /* 噴水池、瞭望塔：蓋好之後可以升到 Lv8（最高級數看後台給的升級表） */
   ['fountain','tower'].forEach(function(k){
-    var x=R.deco[k],lv=decoLv(d,k),UP=R.up&&R.up[k],PT=(R.upPts&&R.upPts[k])||[0,x.pts],MU=R.upMult||[1,1.6,3],tg=lv+1,MX=UP?UP.length-1:3;
+    var x=R.deco[k],lv=decoLv(d,k),UP=R.up&&R.up[k],PT=(R.upPts&&R.upPts[k])||[0,x.pts],MU=R.upMult||[1,1.6,3],tg=lv+1,MX=Math.min(UP?UP.length-1:3,((R.decoCap||[0,8])[d.xl||1])||8);
     if(d.bb&&d.bb[k]!=null){var tt=(d.bt&&d.bt[k])||tg;B.push({e:'🚧',n:x.name+' Lv'+tt+(lv?' 升級':'')+' 施工中',t:'還要 <b class="mi-hbt" data-k="'+k+'">'+bText(d,k)+'</b> 才會完工',done:1});return}
-    if(lv>=MX){B.push({e:DECOI[k][0],n:x.name+' Lv'+MX,t:'已經升到最高級・島主分 +'+PT[MX],done:1});return}
+    if(lv>=MX){B.push({e:DECOI[k][0],n:x.name+' Lv'+lv,t:((d.xl||1)<4?'這塊地最高 Lv'+MX+'・🔒 擴地 Lv'+((d.xl||1)+1)+' 後可以升到 Lv'+(R.decoCap||[])[(d.xl||1)+1]:'已經升到最高級')+'・島主分 +'+PT[lv],done:1});return}
     B.push({k:k,e:DECOI[k][0],n:lv?x.name+' Lv'+lv+' → Lv'+tg:x.name,t:(lv?'升級':'裝飾')+'・島主分 +'+PT[tg]+(lv?'（現在 +'+PT[lv]+'）':'')+'・施工要 '+bmin(Math.round(DMS[k]*MU[tg-1]))+' 分鐘',cost:UP?UP[tg]:x.cost,bt:lv?'⬆️ 升級':'🔨 建造'});
   });
   /* v82 擴地、五行神殿、生產設施 */
@@ -4195,13 +4314,14 @@ function paintMine(){
   if(RL.length){
     if(d.bb&&d.bb.land!=null)B.push({e:'🚧',n:'擴地 Lv'+(xl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="land">'+bText(d,'land')+'</b> 才會完工',done:1});
     else if(xl<RL.length-1){var op=Object.keys(RF).filter(function(k){return RF[k].xl===xl+1}).map(function(k){return FACI[k][0]+' '+RF[k].name});
-      B.push({k:'land',e:'🏝️',n:'擴地 Lv'+xl+' → Lv'+(xl+1),t:'陸地變大・'+(op.length?'開放 '+op.join('、'):'更大的空地（📐 CAD 繪圖工作室之後開放）')+'・島主分 +20・施工要 '+leftText(R.landMs[xl+1]),cost:RL[xl+1],bt:'⬆️ 擴地'})}
+      var sn=(R.landShip||[])[xl+1],shipOk=!sn||(d.ships||[]).some(function(x){return x.k===sn});
+      B.push({lock:shipOk?'':'🔒 要先在 🏪 商店島買到 ⛵ '+((R.shipNames||[])[sn]||'船'),k:'land',e:'🏝️',n:'擴地 Lv'+xl+' → Lv'+(xl+1),t:'陸地變大・小屋最高 Lv'+(R.houseCap||[])[xl+1]+'、噴水池／瞭望塔最高 Lv'+(R.decoCap||[])[xl+1]+'・'+(op.length?'開放 '+op.join('、'):'更大的空地（📐 CAD 繪圖工作室之後開放）')+'・島主分 +20・施工要 '+leftText(R.landMs[xl+1]),cost:RL[xl+1],bt:'⬆️ 擴地'})}
     else B.push({e:'🏝️',n:'擴地 Lv'+xl,t:'已經擴到最大了',done:1});
   }
   if(RT.length){
     if(d.bb&&d.bb.temple!=null)B.push({e:'🚧',n:'五行神殿 Lv'+(tl+1)+' 施工中',t:'還要 <b class="mi-hbt" data-k="temple">'+bText(d,'temple')+'</b> 才會完工',done:1});
     else if(tl<RT.length-1){var nd=R.templeNeed[tl+1];
-      B.push({k:'temple',e:'⛩️',n:'五行神殿 Lv'+tl+' → Lv'+(tl+1),t:'之後開放 '+R.templeOpen[tl+1]+'・需要 '+nd+' 種神獸（你有 '+(d.bk||0)+' 種）・島主分 +15・施工要 '+leftText(R.templeMs[tl+1]),cost:RT[tl+1],bt:'⬆️ 升級',lock:(d.bk||0)<nd?'🔒 還要再收集 '+(nd-(d.bk||0))+' 種神獸（到 🐲 試煉島或 🎁 扭蛋島）':''})}
+      B.push({k:'temple',e:'⛩️',n:'五行神殿 Lv'+tl+' → Lv'+(tl+1),t:'之後開放 '+R.templeOpen[tl+1]+'・需要 '+nd+' 種神獸（你有 '+(d.bk||0)+' 種）・島主分 +15・施工要 '+leftText(R.templeMs[tl+1]),cost:RT[tl+1],bt:'⬆️ 升級',lock:(d.bk||0)<nd?'🔒 還要再收集 '+(nd-(d.bk||0))+' 種神獸（到 🐲 試煉島或 🎁 扭蛋島）':(R.templeShip||[])[tl+1]&&!(d.ships||[]).some(function(x){return x.k===R.templeShip[tl+1]})?'🔒 要先在 🏪 商店島買到 ⛵ '+(R.shipNames||[])[R.templeShip[tl+1]]:''})}
     else B.push({e:'⛩️',n:'五行神殿 Lv'+tl,t:'已經升到最高級',done:1});
   }
   Object.keys(RF).forEach(function(k){var x=RF[k],f=(d.fac||{})[k],lv=f?f.lv:0,I=FACI[k]||['🏭',x.name,''];
@@ -4246,6 +4366,12 @@ function paintMine(){
   var AC=R.awCost||{bfruit:10,shard:2,dia:5},LVM=R.beastLvMax||10;
   o+='<h4>🔥 神獸覺醒</h4>'+(tl2<4?'<p class="mi-note">🔒 五行神殿升到 Lv4 才能覺醒。覺醒要神獸 Lv'+LVM+'，花 🍑 神獸果 ×'+AC.bfruit+'、同種碎片頭身腳各 ×'+AC.shard+'、💎 ×'+AC.dia+'。</p>':
     (bpets.length?'<div class="mi-build">'+bpets.map(function(p){var a=ANI[p.k]||['🐲',''];return '<div class="mi-bd'+(p.aw?' done':'')+'"><span class="mi-be">'+a[0]+'</span><div><b>'+(p.aw?'覺醒':'')+esc(p.n)+' Lv'+p.lv+'</b><small>'+(p.aw?'已經覺醒・技能加倍、五行塔戰力 ×1.3':'要 Lv'+LVM+'・🍑 ×'+AC.bfruit+'（有 '+(d.bfr||0)+'）・碎片頭身腳各 ×'+AC.shard+'・💎 ×'+AC.dia)+'</small>'+(p.aw?'':'<button class="btn btn-primary btn-sm" type="button" data-awaken="'+esc(p.id)+'"'+(p.lv<LVM?' disabled':'')+'>🔥 覺醒</button>')+'</div></div>'}).join('')+'</div>':'<p class="mi-note">島上還沒有神獸。</p>'));
+  var GU=d.gu||{},GRu=(R.guard)||{};   /* v84 守護 */
+  o+='<h4>🛡️ 神獸分靈守護</h4>'+(tl2<2?'<p class="mi-note">🔒 五行神殿升到 Lv2，就能到論壇教學島挑戰守護試煉，放上神獸分靈守護 3 小時。</p>':
+    '<div class="mi-chk">'+((GU.mine||[]).length?(GU.mine||[]).map(function(m){return '<span class="ok">'+(ANI[m.bk]||['🐲'])[0]+' 守護 '+esc(GDN[m.is]||m.is)+'・還剩 '+hms(m.e-Date.now())+(m.shd?'・✨ 結界中':'')+'</span>'+(m.shd?'':'<button class="btn btn-ghost btn-sm" type="button" data-gshd="'+m.is+'"'+(GU.sand?'':' disabled')+'>✨ 撒五行結界砂</button>')}).join(''):'<span>目前沒有守護任何島。到地圖上的論壇教學島，點「🐲 挑戰守護試煉」。</span>')+'</div>'+
+    '<p class="mi-note">✨ 五行結界砂 ×'+(GU.sand||0)+'（今天撒了 '+(GU.sd||0)+' / '+(GRu.sandDay||3)+'）：撒在你守護的島上，結界期間別人不能挑戰。要神殿 Lv3、守護的神獸 Lv'+(GRu.sandLv||5)+' 以上，同時最多保護 '+(GRu.sandIsles||2)+' 座島。結界砂從守護獎勵、五行塔魔王、扭蛋、釣魚、圖鑑全滿隨機取得。</p>'+
+    '<button class="btn btn-ghost btn-sm" type="button" data-gbuysand>💎'+((R.sandDia)||3)+' 換 1 把結界砂</button> '+(GU.pend?'<button class="btn btn-primary btn-sm" type="button" data-gclaim>🎁 領守護獎勵（'+GU.pend+' 份）</button>':'<p class="mi-note">守護期間每 30 分鐘掉一次獎勵，回來這裡領。</p>')+
+    '<p class="mi-note">🌌 分靈數：'+bpets.map(function(p){return (ANI[p.k]||['🐲'])[0]+' '+Math.max(1,(GU.sp||{})[p.k]||1)+' / 3'}).join('、')+'</p><button class="btn btn-ghost btn-sm" type="button" data-gsplit>🌌 靈脈試煉（增加分靈）</button>');
   var MON=d.mon||[],mn=MON.filter(function(m){return m[2]}).length;
   o+='<h4>🏆 榮譽紀念碑（'+mn+' / '+MON.length+'）</h4><div class="mi-chk">'+MON.map(function(m){return '<span class="'+(m[2]?'ok':'')+'">'+(m[2]?'✅':'⬜')+' '+m[0]+' '+m[1]+'</span>'}).join('')+'</div><p class="mi-note">完成越多成就，島上的紀念碑越高、越華麗，別人參觀也看得到。</p></div>';
   /* v82 花園裝飾：每樣買一次、馬上擺好 */
@@ -4285,7 +4411,7 @@ function paintMine(){
     }).join('')+'</div><p class="mi-note">點島上的每棵果樹個別摘果。 果樹會自己長大：幼苗 → 小樹 → 結果樹；結果樹每約 '+Math.round((R.treeEvery||1200000)/60000)+' 分鐘長 1 顆水果，每棵最多存 '+(R.treeCap||3)+' 顆，摘下來變成背包裡的 🍎 水果（可換種子、餵寵物）。</p></div>';
   }
   o+='<div class="p-sec"><h4>👣 最近訪客</h4>'+(d.vis&&d.vis.length?'<div class="mi-vis">'+d.vis.map(function(v){return '<span class="mi-v"><i>'+esc(v.a||'🙂')+'</i>'+esc(v.n)+'<small>'+ago(v.t)+'</small></span>'}).join('')+'</div>':'<p class="mi-note">還沒有人來拜訪。開放參觀後，別人就能航向你的島。</p>')+'</div>';
-  box.innerHTML=o;fitIslandItems();pwStart();
+  box.innerHTML=o;miCatApply(box);fitIslandItems();pwStart();
 }
 /* 小島動作一次只送一個，避免舊的回覆蓋掉新的畫面 */
 function mineAct(q,btn,okFn){
@@ -4511,7 +4637,11 @@ function fitIslandItems(){
   }
 }
 pBody.addEventListener('click',function(e){
-  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx],[data-collect]');if(!t||V.t!=='mine'||t.disabled)return;
+  var t=e.target.closest('button,[data-mpet],[data-pick],[data-harvest],[data-chop],[data-dfx],[data-collect],[data-info]');if(!t||V.t!=='mine'||t.disabled)return;
+  if(t.dataset.info){miInfo(t,t.dataset.info);return}
+  if(t.dataset.micat){MI.cat=t.dataset.micat;try{localStorage.setItem('aikb-micat',MI.cat)}catch(x){}var bx=$('miBox');bx.querySelectorAll('.mi-cat').forEach(function(b){b.classList.toggle('on',b===t);if(b===t)b.classList.remove('dot')});bx.querySelectorAll('.p-sec[data-cat]').forEach(function(s2){s2.hidden=s2.getAttribute('data-cat')!==MI.cat});return}
+  if(t.dataset.rush){var rk=t.dataset.rush;if(!confirm('花 💎 '+((MI.data&&MI.data.rules&&MI.data.rules.rushDia)||1)+' 讓這項施工立刻完成？'))return;mineAct({a:'rush',k:rk},t,function(){fxAt(t,['💎','🔨','✨','🎉']);playSfx('chest');toast('💎 施工完成！')});return}
+  if(t.dataset.gbuysand!=null){if(!confirm('花 💎 '+((MI.data&&MI.data.rules&&MI.data.rules.sandDia)||3)+' 換 1 把五行結界砂？'))return;mineAct({a:'buysand'},t,function(){fxAt(t,['✨','🔮']);playSfx('chest');toast('✨ 換到 1 把五行結界砂')});return}
   var d=t.dataset,patId=null;
   if(d.dfx){decoFx(t,d.dfx,+d.lv||1);return}
   if(d.pbx!=null){petBubClose();return}
@@ -4538,6 +4668,10 @@ pBody.addEventListener('click',function(e){
   if(d.fish!=null){var fm=$('fzM'),bar=fm&&fm.parentNode;if(!fm)return;var fb=bar.getBoundingClientRect(),fr=fm.getBoundingClientRect(),pos=(fr.left+fr.width/2-fb.left)/fb.width,hit=pos>=.38&&pos<=.62?1:0;fm.style.animationPlayState='paused';
     var FG={fish:['🐟','魚'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],coin:['🪙','金幣'],bfruit:['🍑','神獸果'],dia:['💎','鑽石']};
     mineAct({a:'fish',hit:hit},t,function(j){var g=j.got||{};if(g.k==='miss'){toast('💨 太早或太晚了，魚跑掉了…');return}var gi=FG[g.k]||['🎁',''];fxAt(t,[gi[0],gi[0],'✨','🎣']);playSfx('candy');toast('🎣 釣到 '+gi[0]+' '+gi[1]+' ×'+g.n+'！')});return}
+  if(d.gclaim!=null){var GK={coin:['🪙','金幣'],wood:['🪵','木材'],stone:['🪨','石頭'],iron:['🔩','鐵礦'],bfruit:['🍑','神獸果'],shard:['🧩','神獸碎片'],dia:['💎','鑽石'],sand:['✨','五行結界砂'],read:['📖','讀文章金幣'],chest:['🎁','守護寶箱'],res3:['📦','木石鐵各']};
+    mineAct({a:'gclaim'},t,function(j){var m={};(j.ggot||[]).forEach(function(g){var k=g.k==='read'?'coin':g.k;m[k]=(m[k]||0)+g.n});fxAt(t,['🎁','🪙','✨','💎']);playSfx('chest');toast('🛡️ 守護獎勵：'+Object.keys(m).map(function(k){var x=GK[k]||['🎁',k];return x[0]+' '+x[1]+' ×'+m[k]}).join('、'))});return}
+  if(d.gshd){mineAct({a:'gshield',isle:d.gshd},t,function(j){if(j.guards)gdSet(j.guards);fxAt(t,['✨','🔮','✨']);playSfx('chest');toast('✨ 結界張開了！守護結束前別人都不能挑戰')});return}
+  if(d.gsplit!=null){gdTry('*');return}
   if(d.cook){var cn=d.cook;mineAct({a:'cook',d:cn},t,function(){fxAt(t,[DISHI[cn],'🔥','✨']);playSfx('chest');toast('🍳 開始煮 '+DISHI[cn]+'，煮好會自動放進料理庫存')});return}
   if(d.job){var jn=+d.job;mineAct({a:'job',j:jn},t,function(){fxAt(t,['📐','✏️','✨']);playSfx('chest');toast('✏️ 接下案子，開始畫圖！')});return}
   if(d.jobdone!=null){mineAct({a:'jobdone'},t,function(j){var g=j.got||{};fxAt(t,['🪙','🪙','📤','✨']);playSfx('candy');toast('📤 交稿完成！拿到 🪙 '+(g.n||0)+(g.dia?' 💎 '+g.dia:''))});return}
@@ -5026,7 +5160,7 @@ function msgNote(ma){
   if(ma>seen&&MSGA.toasted!==ma){MSGA.toasted=ma;toast('📮 留言碼頭有新留言，到地圖上點紅色「新留言」去看看')}
 }
 /* 喜報跑馬燈：船長在扭蛋島抽到、或在試煉島召喚出神獸（後台給最近 24 小時、最多 10 則；src 標明來源，舊資料沒有就寫「得到」） */
-var BN_NEW_UNTIL=Date.UTC(2026,11,12),BN_NEW='🆕 新玩法上線：小島擴地、生產設施、釣魚、料理、CAD 工作室，神殿升級開放圖鑑、技能、五行塔、覺醒！👉 點我到留言碼頭看細節';
+var BN_NEW_UNTIL=Date.UTC(2026,11,14),BN_NEW='🆕 神獸分靈守護島上線：答對教學島題目就能守護 3 小時、領豐盛獎勵！小島擴地、神殿、鑽石新用途一起更新 👉 點我到留言碼頭看細節';
 var BN={list:[],sig:null},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
 function bnAgo(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前'}
 function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> '+(x.src==='trial'?'在試煉島召喚成功':x.src==='gacha'?'在扭蛋島抽到':'得到')+' '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
@@ -5036,7 +5170,7 @@ function bnSet(list){
   if(sig===BN.sig)return;BN.sig=sig;BN.list=list;
   var el=$('bnTick'),tx=$('bnText');if(!el)return;
   var closedT=0;try{closedT=+localStorage.getItem('aikb-bn-closed')||0}catch(e){}
-  var ann=Date.now()<BN_NEW_UNTIL;try{if(localStorage.getItem('aikb-bn-new83'))ann=false}catch(e){}   /* v83 新玩法公告：兩週內固定排在跑馬燈第一則，按 ✕ 就不再出現 */
+  var ann=Date.now()<BN_NEW_UNTIL;try{if(localStorage.getItem('aikb-bn-new85'))ann=false}catch(e){}   /* v83 新玩法公告：兩週內固定排在跑馬燈第一則，按 ✕ 就不再出現 */
   if(!ann&&(!list.length||list[0].t<=closedT)){el.hidden=true;return}   /* 船長按了 ✕：同一批喜報不再顯示，有更新的才出現 */
   var shown=list.length&&list[0].t>closedT?list:[];
   tx.innerHTML=(ann?'<i data-bnann>'+BN_NEW+'</i>':'')+shown.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
@@ -5619,7 +5753,7 @@ dnTick();setInterval(dnTick,60000);
 
 if(window.IntersectionObserver&&MINE_SPOT&&MINE_SPOT.el)new IntersectionObserver(function(es){if(es.some(function(e){return e.isIntersecting}))minePrefetch()},{rootMargin:'300px'}).observe(MINE_SPOT.el);
 setTimeout(msgPrefetch,6000); /* 不管看不看得到留言碼頭，閒下來就先抓一份，打開時才不用等 */
-guideMaybe(COINS.get());layout();refresh();favPaint();route();centerOn(HASH_SP>=0?HASH_SP:0,false);showGuide(true);
+guideMaybe(COINS.get());layout();refresh();favPaint();route();setTimeout(function(){gdLoad(true)},1500);setInterval(function(){gdLoad(true)},300000);centerOn(HASH_SP>=0?HASH_SP:0,false);showGuide(true);
 })();
 </script>
 <script>
