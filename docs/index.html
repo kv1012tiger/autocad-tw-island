@@ -1918,6 +1918,7 @@ SP.push({k:'slot',e:'🎰',name:'拉霸角子島',sub:'1 枚金幣・試試手�
 SP.push({k:'gacha',e:'🎁',name:'扭蛋島',sub:'5 枚金幣・抽神獸',c:'#c084fc',g:['#e9d5ff','#7e22ce'],dc:['✨','🐉','💎']});
 SP.push({k:'trial',e:'🐲',name:'神獸試煉島',sub:'過關拿碎片・召喚神獸',c:'#34d399',g:['#a7f3d0','#047857'],st:{land:'#6ee7b7',deep:'#047857',tree:'#065f46',leaf:'#a7f3d0',sand:['#92400e','#d97706','#fde68a'],dirt:'#78350f',n:5,glow:'#fbbf24'},dc:['🧩','🍑','✨']});
 SP.push({k:'rps',e:'✊',name:'剪刀石頭島',sub:'1 枚金幣・猜拳對決',c:'#fb7185',g:['#fda4af','#be123c'],dc:['✋','✌️','⭐']});
+SP.push({k:'cmdwiki',id:'cmdwiki',e:'📚',name:'指令百科島',sub:'第 15 座守護島・AutoCAD 原廠指令',c:'#60a5fa',g:['#bfdbfe','#1d4ed8'],dc:['📐','🧊','🛡️'],res:[['🦉','f'],['🐢','w'],['🐬','w']]});   /* v88 第 15 座守護島：沒有文章，只考 AutoCAD 2000～2027 原廠 2D／3D 指令 */
 /* 「找到蘋果爸」的 6 個連結也做成小島（和商店島一樣大），點進去先看介紹，再按「前往 ↗」用新分頁開 */
 var LINK_SPOTS=[
   {e:'🍄',name:'蘋果爸愛分享頻道',sub:'免費教學影片看到飽',url:'https://www.youtube.com/user/kv1012tiger',c:'#ef4444',g:['#fecaca','#b91c1c'],dc:['🎬','📺','▶️'],go:'到 YouTube 看影片',desc:'蘋果爸的 YouTube 頻道：AutoCAD 從基礎到進階的免費教學影片，邊看邊做最好學。'},
@@ -2534,7 +2535,7 @@ function showScene(s){
   sv.innerHTML='<div></div>';COINS.visit('isle-'+s.id,s.name,sv.firstChild);
   gdShow(s);   /* v84 守護神獸 */
 }
-function hideScene(){if(!SCN)return;SCN=null;scene.hidden=true;land.innerHTML='';sceneHud(false)}
+function hideScene(){if(!SCN)return;if(GDS===SCN)GDS=null;SCN=null;scene.hidden=true;land.innerHTML='';sceneHud(false)}
 /* 島上時：回大海、島名、分享、收藏併進最上面那一列 */
 function sceneHud(on){
   document.documentElement.classList.toggle('in-scene',on);
@@ -2549,7 +2550,7 @@ function route(){
   if((m=h.match(/^qa-(\d+)$/))&&ISLES[+m[1]]){openPanel('isle',+m[1]);placeBoat(ISLES[+m[1]].si,true)}
   else if(h==='tarot'){openPanel('search',1);placeBoat(spotIdx('search'),true)}
   else if(h==='game-2'){openPanel('game',1);placeBoat(GAME_SPOTS[1].si,true)}
-  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'||h==='trial'){openPanel(h);placeBoat(spotIdx(h),true)}
+  else if(h==='home'||h==='castle'||h==='search'||h==='dock'||h==='msg'||h==='game'||h==='mine'||h==='pets'||h==='shop'||h==='slot'||h==='rps'||h==='gacha'||h==='trial'||h==='cmdwiki'){openPanel(h);placeBoat(spotIdx(h),true)}
   else if((m=h.match(/^res-(\d+)$/))&&RESI[+m[1]]){openPanel('res',+m[1]);placeBoat(RESI[+m[1]].si,true)}
   else if((m=h.match(/^link-(\d+)$/))&&LINK_SPOTS[+m[1]]){openPanel('link',+m[1]);placeBoat(LINK_SPOTS[+m[1]].si,true)}
   else if(!h&&panel.classList.contains('open'))closePanel();
@@ -2623,7 +2624,7 @@ FORUM.forEach(function(s,i){
   s.li=b;forumList.appendChild(b);
 });
 /* v80 清單裡的「特別島」：地圖很大，手機不好找，直接列出來 */
-(function(){var box=$('spList');['trial','gacha','mine','pets','shop','msg','slot','rps'].forEach(function(k){
+(function(){var box=$('spList');['trial','cmdwiki','gacha','mine','pets','shop','msg','slot','rps'].forEach(function(k){
   var s=SP.filter(function(x){return x.k===k})[0];if(!s)return;
   var b=document.createElement('button');b.type='button';b.className='card il';b.style.setProperty('--c',s.c);
   b.innerHTML='<span class="e">'+s.e+'</span><span><b>'+esc(s.name)+'</b><small>'+esc(s.sub)+'</small></span><span class="st">⛵ 前往</span>';
@@ -3469,7 +3470,7 @@ window.AIKB_GACHA={
 };
 /* 跑馬燈放在上方選單的下面（手機版選單是浮在地圖上的小按鈕，--hud 為 0） */
 function bnPos(){var el=$('bnTick'),h=$('hud');if(!el||!h||el.hidden)return;var y=0;[].forEach.call(h.children,function(c){var r=c.getBoundingClientRect();if(r.height&&r.bottom>y)y=r.bottom});el.style.top=Math.round(Math.max(y,0)+6)+'px'}
-(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now());localStorage.setItem('aikb-bn-new85','1')}catch(x){}return}location.hash=e.target.closest('[data-bnann]')?'msg':'gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
+(function(){var b=$('bnTick');if(!b)return;b.addEventListener('click',function(e){if(e.target.closest('#bnClose')){e.stopPropagation();b.hidden=true;try{localStorage.setItem('aikb-bn-closed',(BN.list[0]||{}).t||Date.now());localStorage.setItem('aikb-bn-new88','1')}catch(x){}return}location.hash=e.target.closest('[data-bnann]')?'msg':'gacha'});addEventListener('resize',bnPos);try{new MutationObserver(function(){setTimeout(bnPos,320)}).observe($('hud'),{attributes:true,attributeFilter:['class']})}catch(e){}})();
 function renderGacha(){
   var code=COINS.get().code||'';if(GA.owner!==code){GA.owner=code;GA.left=null;GA.log=[];GA.pend=null;GA.err=false}
   if(GA.left==null&&code)GA.left=gaLeftCached();
@@ -3491,6 +3492,16 @@ window.AIKB_TRIAL={
   size:function(h){var f=$('trF');if(f&&V.t==='trial'&&h>200)f.style.height=Math.ceil(h)+'px'},
   toast:function(t){toast(t)}
 };
+/* v88 指令百科島：第 15 座守護島，面板裡直接放守護框（題庫在後台私人檔） */
+function renderCmdwiki(){
+  pBody.innerHTML='<div class="ph" style="--c:#60a5fa"><span class="ph-e">📚</span><div><div class="p-kicker">COMMAND WIKI・第 15 座守護島</div><h3 id="pTitle">指令百科島</h3><p>AutoCAD 2000～2027 原廠 2D／3D 指令題庫，答對就能放神獸守護</p></div></div>'+
+    '<div id="sceneGuard"></div>'+
+    '<div class="p-sec"><h4>📖 這座島考什麼</h4><p>題目依 AutoCAD 原廠 F1 說明的觀念出題，共 200 題（2D 120 題、3D 80 題），每份考卷隨機 8 題：簡單 3、中等 3、困難 2。</p>'+
+    '<p>📐 2D：繪圖、修改、圖層、標註、文字表格、圖塊屬性、外部參考、配置出圖、參數式約束、動態圖塊。<br>🧊 3D：實體、曲面、網格、UCS、視覺型式、布林運算、斷面、由 3D 產生工程圖、彩現。<br>📅 少部分題目會考「哪一版開始有這個功能」。不考 AutoLISP、VBA 等程式。</p>'+
+    '<p class="mi-note">這座島沒有論壇文章，所以沒有「讀文章加分」，大家同一個起跑點。神殿要 Lv2 才能挑戰；每天 3 次，用完可以花 💎 2 再考一次。</p></div>';
+  $('pStep').textContent='📚 指令百科島';footSimple('← 回地圖','');pNext.hidden=true;
+  var s=SP[spotIdx('cmdwiki')];GDS=s;gdLoad().then(function(){gdPaint(s)});
+}
 function renderTrial(){
   pBody.innerHTML='<div class="ph" style="--c:#34d399"><span class="ph-e">🐲</span><div><div class="p-kicker">BEAST TRIAL・神獸試煉島</div><h3 id="pTitle">神獸試煉島</h3><p>過關拿神獸碎片，湊齊頭、身、腳召喚五行神獸</p></div></div>'+
     '<iframe class="bet-f" id="trF" src="assets/bet/trial.html?v='+TRIAL_V+'" title="神獸試煉島" scrolling="no"></iframe>'+
@@ -3534,22 +3545,22 @@ function miInfo(t,kind){
   setTimeout(function(){document.body.appendChild(ov)},kind==='ship'?1100:0);ov.addEventListener('click',function(e){if(e.target===ov||e.target.closest('button'))ov.remove()});   /* 船先搖一下再出說明 */
 }
 /* v84 神獸分靈守護：論壇教學島的守護位子、守護試煉考卷、靈脈試煉 */
-var GD={g:{},t:0,ld:null},GDN={beginner:'初階入門島',cad2d:'2D 討論島',quiz:'測驗練習島',cad3d:'3D 討論島',f44:'專案報告島',videos:'影片教學島',advanced:'進階討論島',courses:'光碟課程島',realtime:'即時動態島',announce:'最新公告島',career:'職場交流島',plugins:'外掛工具島',memberb:'專屬 B 資源島',sponsora:'贊助 A 資源島'};
+var GD={g:{},t:0,ld:null},GDN={beginner:'初階入門島',cad2d:'2D 討論島',quiz:'測驗練習島',cad3d:'3D 討論島',f44:'專案報告島',videos:'影片教學島',advanced:'進階討論島',courses:'光碟課程島',realtime:'即時動態島',announce:'最新公告島',career:'職場交流島',plugins:'外掛工具島',memberb:'專屬 B 資源島',sponsora:'贊助 A 資源島',cmdwiki:'指令百科島'},GDS=null;   /* v88 GDS＝目前顯示守護框的島（論壇島場景或指令百科島面板） */
 function hms(ms){ms=Math.max(0,ms);var h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return (h?h+' 小時 ':'')+m+' 分'}
 function gdLoad(force){if(!force&&GD.ld&&Date.now()-GD.t<60000)return GD.ld;GD.t=Date.now();GD.ld=COINS.api({a:'guards'}).then(function(j){if(j&&j.ok){GD.g=j.guards||{};gdMarks()}return GD.g}).catch(function(){return GD.g});return GD.ld}
 function gdSet(g){if(g){GD.g=g;GD.t=Date.now();GD.ld=Promise.resolve(g);gdMarks()}}
-function gdMarks(){SP.forEach(function(s){if(s.k!=='forum'||!s.el)return;var g=GD.g[s.id],m=s.el.querySelector('.gd-mk');if(!g||g.e<=Date.now()){if(m)m.remove();return}if(!m){m=document.createElement('span');m.className='gd-mk';s.el.appendChild(m)}m.textContent=(ANI[g.bk]||['🐲'])[0];m.classList.toggle('shd',!!(g.shd&&g.shd>Date.now()));m.title='守護神獸：'+g.nick})}
+function gdMarks(){SP.forEach(function(s){if((s.k!=='forum'&&s.k!=='cmdwiki')||!s.el)return;var g=GD.g[s.id],m=s.el.querySelector('.gd-mk');if(!g||g.e<=Date.now()){if(m)m.remove();return}if(!m){m=document.createElement('span');m.className='gd-mk';s.el.appendChild(m)}m.textContent=(ANI[g.bk]||['🐲'])[0];m.classList.toggle('shd',!!(g.shd&&g.shd>Date.now()));m.title='守護神獸：'+g.nick})}
 function gdMyIsle(){var c=miCacheGet();if(c&&Date.now()-c.t<60000)return Promise.resolve(c.d);return COINS.api({a:'island'}).then(function(j){if(j&&j.ok&&j.island){miCachePut(j.island);return j.island}return c?c.d:null}).catch(function(){return c?c.d:null})}
 function gdPaint(s){
-  var box=$('sceneGuard');if(!box||!SCN||SCN!==s)return;var g=GD.g[s.id],now=Date.now(),w=COINS.get();
+  var box=$('sceneGuard');if(!box||!GDS||GDS!==s)return;var cw=s.k==='cmdwiki';var g=GD.g[s.id],now=Date.now(),w=COINS.get();
   var o='<div class="gdb'+(g&&g.shd>now?' shd':'')+'"><h4>🛡️ 守護神獸</h4>';
   if(g&&g.e>now){var a=ANI[g.bk]||['🐲',''];o+='<div>'+a[0]+' 船長 <b>'+esc(g.nick)+'</b> 的 '+(g.aw?'覺醒':'')+(g.sh?'✨異色':'')+a[1]+' Lv'+g.lv+'（IV '+g.iv+'）</div><small>試煉成績 '+g.sc+' / 8・用時 '+Math.round(g.ms/1000)+' 秒・守護還剩 '+hms(g.e-now)+(g.shd>now?'・✨ 五行結界中，'+hms(g.shd-now)+' 內不能挑戰':'')+'</small>'}
   else o+='<div>這座島還沒有守護神獸，第一個通過試煉的船長就能放上神獸分靈！</div>';
-  o+='<small style="display:block;margin-top:4px">回答這座島的文章題目（8 題、答對 6 題通過）。通過後放上你的神獸分靈守護 3 小時，期間每 30 分鐘掉一次隨機獎勵、有人來讀文章再加金幣，守滿還有寶箱。分數比現任守護者高（同分比速度）就能換下他。</small>';
+  o+='<small style="display:block;margin-top:4px">'+(cw?'回答 AutoCAD 2000～2027 原廠 2D／3D 指令題目（8 題、答對 6 題通過）。通過後放上你的神獸分靈守護 3 小時，期間每 30 分鐘掉一次隨機獎勵，守滿還有寶箱。':'回答這座島的文章題目（8 題、答對 6 題通過）。通過後放上你的神獸分靈守護 3 小時，期間每 30 分鐘掉一次隨機獎勵、有人來讀文章再加金幣，守滿還有寶箱。')+'分數比現任守護者高（同分比速度）就能換下他。</small>';
   o+='<div class="gdr">'+(w.code?'<button class="btn btn-primary btn-sm" type="button" data-gtry="'+s.id+'">🐲 挑戰守護試煉</button>':'<button class="btn btn-primary btn-sm" type="button" data-glogin>⚓ 登島後挑戰</button>')+'</div></div>';
   box.innerHTML=o;
 }
-function gdShow(s){var sv=$('sceneVis');if(!sv)return;var b=$('sceneGuard');if(!b){b=document.createElement('div');b.id='sceneGuard';sv.parentNode.insertBefore(b,sv)}b.innerHTML='';gdLoad().then(function(){gdPaint(s)})}
+function gdShow(s){GDS=s;var sv=$('sceneVis');if(!sv)return;var b=$('sceneGuard');if(!b){b=document.createElement('div');b.id='sceneGuard';sv.parentNode.insertBefore(b,sv)}b.innerHTML='';gdLoad().then(function(){gdPaint(s)})}
 /* 選神獸：只能選島上有、而且還有分靈名額的神獸 */
 function gdPick(isle,d,cb){
   var bp=(d.pets||[]).filter(function(p){return PV_BEAST[p.k]}),sp=(d.gu&&d.gu.sp)||{},mine=(d.gu&&d.gu.mine)||[];
@@ -3588,18 +3599,18 @@ function gdExam(isle,bk){
           if(!r||!r.ok){ov.remove();toast('⚠️ '+COINS.errText(r));return}
           if(r.guards)gdSet(r.guards);if(r.island&&!MI.fid){miCachePut(r.island);if(V.t==='mine'){MI.data=r.island;MI.at=Date.now();paintMine()}}
           var g=r.gres,PL={ok:'🛡️ 你的神獸分靈已經開始守護這座島 3 小時！'+(g.beat?'（換下了船長 '+esc(g.beat)+'）':''),lose:'現任守護者成績 '+(g.cur?g.cur.sc+' / 8、'+Math.round(g.cur.ms/1000)+' 秒':'')+'，要考得比他好才能換下他。',shield:'這座島正在五行結界中，暫時不能換下守護者。',cool:'你剛卸任這座島，1 小時後才能再守。',nosplit:'這隻神獸的分靈都在守護中，等守護結束，或做靈脈試煉增加分靈。',mine:'你已經在守護這座島。'};
-          var msg=isle==='*'?(g.split?'🌌 通過！這隻神獸現在可以分靈 '+g.split+' 隻。':g.miss?'通過了，但材料不夠：'+missText(g.miss):'要答對 '+g.need+' 題才通過。'):(g.pass?(PL[g.place]||''):'要答對 '+g.need+' 題才通過，再讀讀這座島的文章吧！');
+          var msg=isle==='*'?(g.split?'🌌 通過！這隻神獸現在可以分靈 '+g.split+' 隻。':g.miss?'通過了，但材料不夠：'+missText(g.miss):'要答對 '+g.need+' 題才通過。'):(g.pass?(PL[g.place]||''):'要答對 '+g.need+' 題才通過，'+(isle==='cmdwiki'?'再翻翻 AutoCAD 的 F1 說明吧！':'再讀讀這座島的文章吧！'));
           ov.querySelector('.gq-box').innerHTML='<h3>'+(g.pass?'🎉 通過！':'😵 沒通過')+' '+g.score+' / '+g.n+'・'+Math.round(g.ms/1000)+' 秒</h3><p>'+msg+'</p>'+
             P.qs.map(function(q,k){var rt=g.right[k]||{};return '<div class="gq-q '+(rt.ok?'ok':'ng')+'"><b>'+(rt.ok?'✅':'❌')+' '+(k+1)+'. '+esc(q.q)+'</b><div>你選：'+(sel[k]==null?'（沒作答）':'ABCD'[sel[k]]+'. '+esc(q.o[sel[k]]))+'</div>'+(rt.ok?'':'<div class="ans">正確答案：'+'ABCD'[rt.a]+'. '+esc(q.o[rt.a]||'')+'</div>')+(rt.why?'<div class="ans">💡 '+esc(rt.why)+'</div>':'')+'</div>'}).join('')+
             '<button class="btn btn-primary" type="button" data-gx2>完成</button>';
           if(g.pass){fxAt(ov.querySelector('h3'),['🎉','🛡️','✨']);playSfx('chest')}
-          if(SCN)gdPaint(SCN);
+          if(GDS)gdPaint(GDS);
         }).catch(function(){b.disabled=false;toast('⚠️ 網路不穩，交卷沒有成功，請再按一次')})}
       if(b.dataset.gx2!=null)ov.remove();
     });
   }).catch(function(){toast('⚠️ 暫時連不上，請稍後再試')});
 }
-document.addEventListener('click',function(e){var t=e.target.closest('[data-gtry],[data-glogin]');if(!t)return;if(t.dataset.glogin!=null){COINS.need(function(){if(SCN)gdPaint(SCN)});return}gdTry(t.dataset.gtry)});
+document.addEventListener('click',function(e){var t=e.target.closest('[data-gtry],[data-glogin]');if(!t)return;if(t.dataset.glogin!=null){COINS.need(function(){if(GDS)gdPaint(GDS)});return}gdTry(t.dataset.gtry)});
 /* v83 五行塔：每週一重置 30 層、每 5 層魔王；神殿 Lv3 才能挑戰（沒到的人點了會提示去升級神殿） */
 var TW={d:null,busy:false};
 function twPaint(){
@@ -5179,7 +5190,7 @@ function msgNote(ma){
   if(ma>seen&&MSGA.toasted!==ma){MSGA.toasted=ma;toast('📮 留言碼頭有新留言，到地圖上點紅色「新留言」去看看')}
 }
 /* 喜報跑馬燈：船長在扭蛋島抽到、或在試煉島召喚出神獸（後台給最近 24 小時、最多 10 則；src 標明來源，舊資料沒有就寫「得到」） */
-var BN_NEW_UNTIL=Date.UTC(2026,11,14),BN_NEW='🆕 神獸分靈守護島上線：答對教學島題目就能守護 3 小時、領豐盛獎勵！小島擴地、神殿、鑽石新用途一起更新 👉 點我到留言碼頭看細節';
+var BN_NEW_UNTIL=Date.UTC(2026,11,14),BN_NEW='🆕 第 15 座守護島「📚 指令百科島」開放：考 AutoCAD 原廠 2D／3D 指令，答對就能放神獸守護 3 小時！👉 點我到留言碼頭看細節';
 var BN={list:[],sig:null},BN_IC={dragon:'💧',phoenix:'🔥',qilin:'🌿',tiger:'✨',tortoise:'🪨'};
 function bnAgo(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'剛剛':m<60?m+' 分鐘前':Math.floor(m/60)+' 小時前'}
 function bnLine(x){return '船長 <b>'+esc(x.nick)+'</b> '+(x.src==='trial'?'在試煉島召喚成功':x.src==='gacha'?'在扭蛋島抽到':'得到')+' '+(BN_IC[x.b]||'🐲')+'<b>'+esc(x.name)+'</b>！'}
@@ -5189,7 +5200,7 @@ function bnSet(list){
   if(sig===BN.sig)return;BN.sig=sig;BN.list=list;
   var el=$('bnTick'),tx=$('bnText');if(!el)return;
   var closedT=0;try{closedT=+localStorage.getItem('aikb-bn-closed')||0}catch(e){}
-  var ann=Date.now()<BN_NEW_UNTIL;try{if(localStorage.getItem('aikb-bn-new85'))ann=false}catch(e){}   /* v83 新玩法公告：兩週內固定排在跑馬燈第一則，按 ✕ 就不再出現 */
+  var ann=Date.now()<BN_NEW_UNTIL;try{if(localStorage.getItem('aikb-bn-new88'))ann=false}catch(e){}   /* v83 新玩法公告：兩週內固定排在跑馬燈第一則，按 ✕ 就不再出現 */
   if(!ann&&(!list.length||list[0].t<=closedT)){el.hidden=true;return}   /* 船長按了 ✕：同一批喜報不再顯示，有更新的才出現 */
   var shown=list.length&&list[0].t>closedT?list:[];
   tx.innerHTML=(ann?'<i data-bnann>'+BN_NEW+'</i>':'')+shown.map(function(x){return '<i>'+bnLine(x)+' <small>'+bnAgo(x.t)+'</small></i>'}).join('');
@@ -5363,7 +5374,7 @@ function applySync(code){
 }
 function actsHTML(){
   var s=null,h='',title='';
-  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='trial'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='game')s=GAME_SPOTS[V.i]||GAME_SPOTS[0];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
+  if(V.t==='isle')s=ISLES[V.i];else if(V.t==='home'||V.t==='castle'||V.t==='search'||V.t==='dock'||V.t==='msg'||V.t==='slot'||V.t==='rps'||V.t==='gacha'||V.t==='trial'||V.t==='cmdwiki'||V.t==='pets'||V.t==='shop'||(V.t==='mine'&&!V.i))s=SP[spotIdx(V.t)];else if(V.t==='game')s=GAME_SPOTS[V.i]||GAME_SPOTS[0];else if(V.t==='res')s=RESI[V.i];else if(V.t==='link')s=LINK_SPOTS[V.i];else if(V.t==='session')s=SP[spotIdx('dock')];
   if(V.t==='hut'&&SCN){h=spotHash(SCN)+'/'+V.i;title=SCN.name+'・'+SCN.huts[V.i].name}
   else if(s){h=spotHash(s);title=s.name}
   if(!h)return '';
@@ -5372,7 +5383,7 @@ function actsHTML(){
 function render(dir){
   pPrev.classList.remove('btn-primary');pPrev.classList.add('btn-ghost');pNext.hidden=false;
   panel.classList.toggle('ff',V.t==='isle'||V.t==='res'||V.t==='hut');
-  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame(V.i);else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='trial')renderTrial();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
+  if(V.t==='isle')renderIsle(V.i);else if(V.t==='hut')renderHut(V.i);else if(V.t==='home')renderHome();else if(V.t==='castle')renderCastle();else if(V.t==='dock')renderDock();else if(V.t==='session')renderSession(V.i);else if(V.t==='msg')renderMsg();else if(V.t==='res')renderRes(V.i);else if(V.t==='game')renderGame(V.i);else if(V.t==='slot'||V.t==='rps')renderBet(V.t);else if(V.t==='gacha')renderGacha();else if(V.t==='trial')renderTrial();else if(V.t==='cmdwiki')renderCmdwiki();else if(V.t==='shop')renderShop();else if(V.t==='link')renderLink(V.i);else if(V.t==='mine')renderMine(V.i===1?MI.visitFid:null);else if(V.t==='pets')renderPets();else if(V.t==='sail')renderSail();else if(V.t==='voyage')renderVoyage();
   else if(V.t==='search')renderSearch();else if(V.t==='fav')renderFav();else if(V.t==='hist')renderHist();
   $('pActs').innerHTML=actsHTML();var pb=$('pFavBtn');if(pb)favBtn(pb,SP[+pb.dataset.fav]);
   pBody.scrollTop=0;

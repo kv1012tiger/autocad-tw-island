@@ -272,7 +272,7 @@ var SAND_DAY = 3, SAND_ISLES = 2, SAND_LV = 5, SAND_GACHA_P = 0.03, SAND_TOWER_P
 var SPLIT = [null, null, { lv: 5, pass: 7, cost: { bfruit: 5 } }, { lv: 10, aw: 1, pass: 8, cost: { bfruit: 10, dia: 3 } }];
 var GUARD_DROP = [['coin', 30], ['res', 30], ['bfruit', 14], ['shard', 10], ['dia', 8], ['sand', 8]];
 var BOARD_NAME = { beginner: '初階入門島', cad2d: '2D 討論島', quiz: '測驗練習島', cad3d: '3D 討論島', f44: '專案報告島', videos: '影片教學島', advanced: '進階討論島',
-  courses: '光碟課程島', realtime: '即時動態島', announce: '最新公告島', career: '職場交流島', plugins: '外掛工具島', memberb: '專屬 B 資源島', sponsora: '贊助 A 資源島' };
+  courses: '光碟課程島', realtime: '即時動態島', announce: '最新公告島', career: '職場交流島', plugins: '外掛工具島', memberb: '專屬 B 資源島', sponsora: '贊助 A 資源島', cmdwiki: '指令百科島' };   // v88 第 15 座：指令百科島（沒有文章，只考 AutoCAD 原廠指令）
 function qbank_() { return typeof QBANK !== 'undefined' && QBANK ? QBANK : {}; }
 function guardsGet_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('guards') || '{}') || {}; } catch (e) { return {}; } }
 function guardsPut_(g) { PropertiesService.getScriptProperties().setProperty('guards', JSON.stringify(g)); CacheService.getScriptCache().remove('guardsPub'); }
@@ -505,6 +505,26 @@ function ann83_() {
   props.setProperty('ann83', '1');
   try { sheet_('留言板', M_HEAD).appendRow(['M' + Date.now().toString(36).toUpperCase() + 'AN', new Date(), '論壇資源島', 'SYSTEM', '📢', '🆕 新玩法上線：我的小島大升級＋神獸新玩法！\n\n🏝️ 擴地 Lv1～4：島變大，開放新設施\n・擴地 Lv2：🪚 伐木場、⛏️ 採石場、📦 倉庫\n・擴地 Lv3：⚒️ 鍛鐵爐、🍳 料理小屋、🎣 釣魚碼頭\n・擴地 Lv4：📐 CAD 繪圖工作室\n🪚⛏️⚒️ 生產設施會自動產出木材、石頭、鐵礦，存滿就停，記得回來收；📦 倉庫讓存放上限變大\n🎣 釣魚碼頭：魚標游到綠色區按「拉竿」，可以釣到魚、物資、金幣，運氣好還有神獸果或鑽石\n🍳 料理小屋：用水果、蔬菜、魚做料理餵寵物，飽足度更高\n📐 CAD 繪圖工作室：接設計案，畫好交稿拿金幣（大案子有鑽石）\n🌸 花園裝飾 8 樣：買一次就擺好，島主分加分\n🏆 榮譽紀念碑：完成成就，紀念碑自動長高\n\n⛩️ 五行神殿可以升級 Lv1～4（要先收集到足夠種類的神獸）：\n・Lv1 📖 神獸圖鑑：集滿送鑽石、神獸果，還有隱藏的 ✨ 異色神獸（召喚時 1%）\n・Lv2 🧬 神獸技能：島上的神獸幫你種菜、生產更快\n・Lv3 🏯 五行塔：在 🐲 神獸試煉島挑戰，每週 30 層、每 5 層一個魔王\n・Lv4 🔥 神獸覺醒：Lv10 的神獸可以覺醒，技能加倍\n\n到 🏝️ 我的小島「🏗️ 建造」開始吧！', '', '', '', '', '', '']); bump_('msgs'); } catch (e) {}
 }
+/* v88 站長要求：公告加上第 15 座守護島「指令百科島」（只做一次） */
+function ann88_() {
+  var props; try { props = PropertiesService.getScriptProperties(); } catch (e) { return; }
+  if (props.getProperty('ann88')) return;
+  props.setProperty('ann88', '1');
+  try {
+    var sh = sheet_('留言板', M_HEAD), n = sh.getLastRow() - 1; if (n < 1) return;
+    var v = sh.getRange(2, 1, n, M_HEAD.length).getValues();
+    for (var x = v.length - 1; x >= 0; x--) {
+      if (/AN$/.test(String(v[x][0])) && String(v[x][5]).indexOf('新玩法上線') >= 0) {
+        var L = String(v[x][5]).split('\n'); if (L.join('\n').indexOf('指令百科島') >= 0) return;
+        var at = -1; L.forEach(function (l, k) { if (l.indexOf('讀越多文章') >= 0) at = k; });
+        if (at < 0) L.forEach(function (l, k) { if (l.indexOf('靈脈試煉') >= 0) at = k; });
+        if (at < 0) L.push('・📚 第 15 座守護島「指令百科島」開放：考 AutoCAD 2000～2027 原廠 2D／3D 指令（200 題），不用讀文章，大家同一起跑點'); else L.splice(at + 1, 0, '・📚 第 15 座守護島「指令百科島」開放：考 AutoCAD 2000～2027 原廠 2D／3D 指令（200 題），不用讀文章，大家同一起跑點');
+        v[x][5] = L.join('\n'); sh.getRange(x + 2, 1, 1, M_HEAD.length).setValues([v[x]]); bump_('msgs');
+        return;
+      }
+    }
+  } catch (e) {}
+}
 /* v86 站長要求：公告拿掉「分類選單」那一行（只做一次） */
 function ann86_() {
   var props; try { props = PropertiesService.getScriptProperties(); } catch (e) { return; }
@@ -532,7 +552,7 @@ function ann85_() {
     var v = sh.getRange(2, 1, n, M_HEAD.length).getValues();
     for (var x = v.length - 1; x >= 0; x--) {
       if (/AN$/.test(String(v[x][0])) && String(v[x][5]).indexOf('新玩法上線') >= 0) {
-        v[x][5] = "🆕 新玩法上線：我的小島大升級＋神獸新玩法＋神獸分靈守護島！（11/29 更新）\n\n🏝️ 擴地 Lv1～4：島變大，開放新設施，小屋／噴水池／瞭望塔的最高等級也跟著提高（小屋最高 Lv16、噴水池瞭望塔最高 Lv14）\n・擴地 Lv2：🪚 伐木場、⛏️ 採石場、📦 倉庫（要先有 ⛵ 彩旗帆船）\n・擴地 Lv3：⚒️ 鍛鐵爐、🍳 料理小屋、🎣 釣魚碼頭（要先有 ⛵ 海盜大帆船）\n・擴地 Lv4：📐 CAD 繪圖工作室（要先有 ⛵ 商賈雙桅船）\n🪚⛏️⚒️ 生產設施自動產出木材、石頭、鐵礦，存滿就停；📦 倉庫讓存放上限變大\n🎣 釣魚碼頭、🍳 料理小屋、📐 CAD 繪圖工作室、🌸 花園裝飾、🏆 榮譽紀念碑\n\n⛩️ 五行神殿 Lv1～4（要先收集神獸種類；Lv4 還要 ⛵ 皇家旗艦）：\n・Lv1 📖 神獸圖鑑（含隱藏的 ✨ 異色神獸）・Lv2 🧬 神獸技能＋🛡️ 守護試煉・Lv3 🏯 五行塔＋✨ 結界砂・Lv4 🔥 神獸覺醒\n\n🛡️ 神獸分靈守護島（新！）：\n・每座論壇教學島都有一個守護位子，回答這座島的文章題目（每份 8 題，答對 6 題通過），就能放上你的神獸分靈守護 3 小時\n・分數比現任守護者高（同分比速度）就能換下他；每座島每天可以挑戰 3 次\n・守護期間每 30 分鐘掉一次隨機獎勵（金幣、物資、神獸果、碎片、鑽石、結界砂），有人來讀文章再加金幣，守滿 3 小時還有守護寶箱\n・✨ 五行結界砂：撒在你守護的島上，結界期間別人不能挑戰\n・🌌 靈脈試煉：讓一隻神獸最多分靈 3 隻，守護更多島\n・讀越多文章，越容易佔領！挑你擅長的島去攻略吧\n\n💎 鑽石新用途：施工 💎1 立即完成、💎2 再挑戰一次（五行塔、守護試煉）、💎3 換 1 把結界砂，高等級建築也要用鑽石\n\n到 🏝️ 我的小島「🏗️ 建造」開始吧！"; v[x][11] = new Date();
+        v[x][5] = "🆕 新玩法上線：我的小島大升級＋神獸新玩法＋神獸分靈守護島！（11/29 更新）\n\n🏝️ 擴地 Lv1～4：島變大，開放新設施，小屋／噴水池／瞭望塔的最高等級也跟著提高（小屋最高 Lv16、噴水池瞭望塔最高 Lv14）\n・擴地 Lv2：🪚 伐木場、⛏️ 採石場、📦 倉庫（要先有 ⛵ 彩旗帆船）\n・擴地 Lv3：⚒️ 鍛鐵爐、🍳 料理小屋、🎣 釣魚碼頭（要先有 ⛵ 海盜大帆船）\n・擴地 Lv4：📐 CAD 繪圖工作室（要先有 ⛵ 商賈雙桅船）\n🪚⛏️⚒️ 生產設施自動產出木材、石頭、鐵礦，存滿就停；📦 倉庫讓存放上限變大\n🎣 釣魚碼頭、🍳 料理小屋、📐 CAD 繪圖工作室、🌸 花園裝飾、🏆 榮譽紀念碑\n\n⛩️ 五行神殿 Lv1～4（要先收集神獸種類；Lv4 還要 ⛵ 皇家旗艦）：\n・Lv1 📖 神獸圖鑑（含隱藏的 ✨ 異色神獸）・Lv2 🧬 神獸技能＋🛡️ 守護試煉・Lv3 🏯 五行塔＋✨ 結界砂・Lv4 🔥 神獸覺醒\n\n🛡️ 神獸分靈守護島（新！）：\n・每座論壇教學島都有一個守護位子，回答這座島的文章題目（每份 8 題，答對 6 題通過），就能放上你的神獸分靈守護 3 小時\n・分數比現任守護者高（同分比速度）就能換下他；每座島每天可以挑戰 3 次\n・守護期間每 30 分鐘掉一次隨機獎勵（金幣、物資、神獸果、碎片、鑽石、結界砂），有人來讀文章再加金幣，守滿 3 小時還有守護寶箱\n・✨ 五行結界砂：撒在你守護的島上，結界期間別人不能挑戰\n・🌌 靈脈試煉：讓一隻神獸最多分靈 3 隻，守護更多島\n・讀越多文章，越容易佔領！挑你擅長的島去攻略吧\n・📚 第 15 座守護島「指令百科島」開放：考 AutoCAD 2000～2027 原廠 2D／3D 指令（200 題），不用讀文章，大家同一起跑點\n\n💎 鑽石新用途：施工 💎1 立即完成、💎2 再挑戰一次（五行塔、守護試煉）、💎3 換 1 把結界砂，高等級建築也要用鑽石\n\n到 🏝️ 我的小島「🏗️ 建造」開始吧！"; v[x][11] = new Date();
         sh.getRange(x + 2, 1, 1, M_HEAD.length).setValues([v[x]]); bump_('msgs'); return;
       }
     }
@@ -851,6 +871,7 @@ function handle_(q) {
     ann83_();   // v83：新玩法公告貼到留言碼頭（只貼一次）
     ann85_();   // v85：編輯更新新玩法公告（只做一次）
     ann86_();   // v86：公告拿掉分類選單那行（只做一次）
+    ann88_();   // v88：公告加上指令百科島（只做一次）
     var r = rows[i];
     if (!r[C.fid]) r[C.fid] = newFid_(rows);
     resetDay_(r);
